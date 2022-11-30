@@ -8,5 +8,5 @@ int main()
     Compiler compiler("scripts\\main.kej");
 
     compiler.Compile();
-
+    int aaklf = 1;
 }

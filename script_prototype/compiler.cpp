@@ -32,8 +32,12 @@ bool Compiler::Compile()
 		expression_str.push_back(ch);
 	}
 	
+	//std::cout << std::format("[{}]", RemoveBlanksFromBeginningAndEnd(expr->preOP))
+
 	Expression expr(expression_str);
-	std::cout << "expression: " << expr.RemoveWhiteSpaces(expression_str) << '\n';
+
+	expr.EvaluateExpression();
+	//std::cout << "expression: " << expr.RemoveWhiteSpaces(expression_str) << '\n';
 
 //	expr.RemoveWhiteSpaces(expression_str);
 

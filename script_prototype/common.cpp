@@ -54,6 +54,43 @@ size_t RemoveBlank(std::string& expr, std::string& out)
 
     return out.size();
 }
+std::string RemoveBlanksFromBeginningAndEnd(std::string& in)
+{
+    std::string out;
+
+    bool parseBeginning = true;
+    bool parseEnd = false;
+    int32_t index(-1);
+    for (auto& i : in) {
+        index++;
+        if (parseBeginning && std::isblank(i)) {
+            
+            continue;
+        }
+
+        parseBeginning = false;
+
+        
+
+        if (std::isblank(i)) {
+
+            //test if the rest of the characters are also blank
+            int chars_left = in.size() - index;
+            int blanks_found(0);
+            for (int j = index; j < in.size(); j++) {
+                if (std::isblank(in[j]))
+                    ++blanks_found;
+            }
+            if (chars_left == blanks_found)
+                return out;
+
+        }
+        
+        out.push_back(i);
+
+    }
+    return out;
+}
 void CompilerError(std::string str, ...)
 {
     str += std::format("\n\nLine: {}\nColumn: {}", fs::file.lines_read, fs::file.current_column);
