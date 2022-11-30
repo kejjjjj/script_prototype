@@ -1,221 +1,150 @@
 #include "pch.h"
 
-//function expects a string: 
-//a <operand> b
-ExpressionType_e Expression::GetExpressionType()
-{
-	size_t const assigntokens = GetStringTokens(expression_str, '=');
-
-	if (assigntokens == 1)
-		return ExpressionType_e::EXPR_ASSIGNMENT; //a = 1
-
-	else if(assigntokens == 2)
-		return ExpressionType_e::EXPR_COMPARE; // a == 1
-
-	return ExpressionType_e::EXPR_CALCULATION; // a + 1
-}
-
-//remove all whitespaces
-//keep all quoted strings
-std::string Expression::RemoveWhiteSpaces(std::string& expr)
-{
-
-	//parsing is easier when there are no unnecessary characters
-	std::string converted_str, temp;
-	size_t tokens = GetStringTokens(expr, '"');
-
-	//this would never be valid syntax unless it is \"
-	if (tokens % 2 != 0)  CompilerError(std::format("Odd number of quotation marks in string:\n {}", expr));
-	
-	//no quotation marks so remove all whitespaces
-	if (tokens == NULL) converted_str = RemoveBlank(expr);
-
-	//string has quotation marks so remove everything outside of them
-	else {
-		std::vector<std::string> strTok;
-		TokenizeString(expr, '"', strTok);
-		std::cout << '\n';
-		int j = 0;
-		for (const auto& i : strTok) {
-
-
-
-			if (j % 2 == 0 /*|| (j == strTok.size() - 1u)*/) { //not within quotations
-				temp.clear();
-				RemoveBlank(strTok[j], temp);
-
-				
-				converted_str.resize(converted_str.size() + temp.size());
-				converted_str += temp;
-				j++;
-
-			}
-			else {
-				
-				converted_str.resize(converted_str.size() + strTok[j].size() + 2);
-				converted_str += '"';
-				converted_str += strTok[j];
-				converted_str += '"';
-				j++;
-			}
-			//std::cout << std::format("[{}]: {}\n", j++, i);
-			
-
-
-		}
-
-	}
-
-	return converted_str;
-}
-
-
-//expects a full string formatted like:
-// a <operand> b
 void Expression::TokenizeExpression(expression_s* expr)
 {
 
-	bool firstOperand = FALSE;
 	bool Operand_processed = FALSE; //true after parsing the expression operators 
 	std::string token;
+	int32_t idx = -1;
 	for (auto& i : expression_str) {
-
+		idx++;
 		if (!Operand_processed) {
 
-			const bool isOperandCharacter = (i == '+' || i == '-' || i == '*' || i == '/' || i == '=');
+			const bool isOperandCharacter = (i == '=');
 
 			//first operand
-			if (!firstOperand && isOperandCharacter) {
-				expr->Operand.push_back(i);
-				firstOperand = true;
-				expr->preOP = token; //store left side
-				token.clear();
-				continue;
-			}
+			if (isOperandCharacter) {
+				
 
-			//second operand
-			else if (firstOperand && isOperandCharacter) { //2 operators (+= , /=)
+				char p = expression_str[idx < 1 ? 0 : idx - 1]; //p = previous character
+
+				if(p == '+' || p == '-' || p == '=' || p == '/' || p == '*')
+					expr->Operand.push_back(p);
+
 				expr->Operand.push_back(i);
+
+
+				p = expression_str[idx + 1 < expression_str.size() ?  idx + 1 : expression_str.size()  - 1]; //next character
+
+				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*')
+					expr->Operand.push_back(p);
+
+				expr->preOP = token; //store left side
+
+				token.clear();
+
+
+
 				Operand_processed = true;
+				
 				continue;
 			}
-			if(firstOperand)
-				Operand_processed = true;
 		}
 
 		token.push_back(i);
 	}
-	expr->postOP = token;
+	if (expr->preOP.empty())
+		expr->preOP = token;
 
-	if (expr->preOP.empty() || expr->postOP.empty() || expr->Operand.empty()) {
-		CompilerError("Expected an expression");
-	}
-}
-//returns false if there are syntax errors
-//removes unnecessary blank characters from the strings
-bool Expression::AssignmentIsSane(expression_s* expr)
-{
-	/*TODO
-		logic for functions some day... if ever
-	*/
-
-
-
-	//pre-operand rules:
-	//1. first character cannot be a number
-	//2. only alphanumerical characters 
-
-	//remove all blanks before and after the string
-	expr->preOP = RemoveBlanksFromBeginningAndEnd(expr->preOP);
-
-	//1. first character cannot be a number
-	if (std::isdigit(expr->preOP[0])) {
-		CompilerError("Expected an identifier");
-		return false;
-	}
-
-
-	//2. only alphanumerical characters
-	for (auto& i : expr->preOP) {
-		if (!std::isalnum(i)) {
-			CompilerError("Expected an identifier");
-			return false;
-		}
-	}
-
-	//operand rules:
-	//1. maximum of 2 characters
-	//2. is operator character (already checked in TokenizeExpression)
-	if (expr->Operand.size() > 2) {
-		CompilerError("Too many operators in expression");
-		return false;
-	}
-
-	//post-operand rules
-	//1. allow everything if there are two quotation marks
-	//2. if there are more than 2 quotation marks, fail
-
-	//remove all blanks before and after the string
-	expr->postOP = RemoveBlanksFromBeginningAndEnd(expr->postOP);
-
-	size_t const quotationmarks = GetStringTokens(expr->postOP, '"');
-
-	if (quotationmarks > 0) { //string contains quotation marks
-
-		if (quotationmarks > 2) { //not allowed yet
-			CompilerError("Too many quotation marks post-operand");
-			return false;
-		}
-
-		//first and last characters have to be quotation marks
-		if (expr->postOP[0] != '"' || expr->postOP[expr->postOP.size() - 1] != '"') {
-			CompilerError("Illegal usage of quotation marks post-operand");
-			return false;
-		}
-	}
-	//there are no quotation marks if this is else statement executes
-	else {
-
-		//1. first character cannot be a number
-		if (std::isdigit(expr->postOP[0])) {
-			//test if all characters are numbers
-			for (auto& i : expr->postOP) {
-
-				//error if there is non-digit
-				if (!std::isdigit(i)) {
-					CompilerError("Expected an identifier");
-					return false;
-				}
-			}
-
-		}
-
-
-		//2. only alphanumerical characters
-		for (auto& i : expr->preOP) {
-			if (!std::isalnum(i)) {
-				CompilerError("Expected an identifier");
-				return false;
-			}
-		}
-	}
-
-
-	std::cout << std::format("preOP: {}\nOperand: {}\npostOP: {}\n", expr->preOP, expr->Operand, expr->postOP);
+	else
+		expr->postOP = token;
 
 }
+// ONLY PASS NUMBERS
+// ALLOWED CHARACTERS: + - / *
 bool Expression::EvaluateExpression()
 {
 
 	expression_s expression;
 
-	expression.type = GetExpressionType();
 	TokenizeExpression(&expression);
 
-	if (!AssignmentIsSane(&expression))
+	std::vector<std::string> tokens;
+	std::vector<expression_stack> expressionstack;
+
+
+	size_t opTokens = TokenizeStringOperands(expression.preOP, tokens);
+
+	if (opTokens == NULL || opTokens % 2 == 0) {
+		CompilerError("Expected an expression");
 		return false;
+	}
+
+	for (int i = 0; i < (int)tokens.size()-1; i += 2) {
+
+		expressionstack.push_back({ tokens[i], tokens[i+1]});
+
+	}
+	expressionstack.push_back({ tokens[tokens.size() - 1], "" });
+
+	for (auto& i : expressionstack) {
+		std::cout << std::format("{} -> {} | ", i.content, i.Operator);
+	}
+	std::cout << '\n';
+
+	EvaluateExpressionStack(expressionstack);
 
 
+	int a = 1 + 1 * 3 * 4;
 
 	return true;
+}
+float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
+{
+
+
+	std::vector<float> values;
+
+	for (int i = 0; i < es.size(); i++) {
+		try {
+			values.push_back(std::stof(es[i].content));
+
+			//std::cout << std::format("value[{}]: {}\n", i, values[i]);
+		}
+		catch (std::exception& ex) {
+			std::cout << "EvaluateExpressionStack(): " << ex.what() << '\n';
+		}
+	}
+
+	//ok now we have:
+	//sequence of floating point numbers
+	//sequence of operands
+
+	OperatorPriority op, next_op;
+
+
+	size_t amount_calculated = 0;
+	float next_number;
+	while(values.size() > 1){
+
+		int i = 0;
+
+		op = GetOperandPriority(es[i].Operator[0]);
+		next_op = GetOperandPriority(es[i+1].Operator[0]);
+
+
+		while (next_op > op) {
+			op = GetOperandPriority(es[i].Operator[0]);
+			next_op = GetOperandPriority(es[i + 1].Operator[0]);
+			if (next_op <= op)
+				break;
+			i++;
+		}
+
+		float result = Eval(values[i], values[i + 1], es[i].Operator[0]);
+
+		std::cout << std::format("{} {} {}\n", values[i], es[i].Operator[0], values[i + 1]);
+		amount_calculated++;
+
+		values.erase(values.begin() + i, values.begin()+i+1);
+		es.erase(es.begin() + i, es.begin() + i + 1);
+
+		values[i] = result;
+
+	}
+	constexpr float a = 101.f + 2.f * 3.f / 1.f * 3.f + 2.f - 30.f * 2.f - 5.f * 25.f / 2.f * 4.f - 4.f + 24.f / 2.f * 3.f;
+	std::cout << "end result: " << values[0] << '\n';
+
+	return 0;
+
 }

@@ -1,5 +1,22 @@
 #include "pch.h"
 
+float Eval(float a, float b, char op)
+{
+    switch (op) {
+
+    case '+':
+        return a + b;
+    case '-':
+        return a - b;
+    case '*':
+        return a * b;
+    case '/':
+        return a / b;
+
+    }
+    return 0;
+}
+
 std::string RemoveFromString(std::string& str, char a)
 {
     std::string string;
@@ -23,6 +40,16 @@ SIZE_T GetStringTokens(std::string& expr, char delim)
 
     return tokens; //apparently this can never be 0?
 }
+SIZE_T GetStringOperandTokens(std::string& expr)
+{
+    SIZE_T tokens(0);
+
+    for (const auto& i : expr)
+        if (i == '+' || i == '-' || i == '*' || i == '/')
+            ++tokens;
+
+    return tokens;
+}
 SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& tokens)
 {
     std::stringstream ss(expr);
@@ -37,6 +64,31 @@ SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& t
 
     return tokens.size();
 }
+SIZE_T TokenizeStringOperands(std::string& expr, std::vector<std::string>& tokens)
+{
+    std::string token;
+
+    expr = RemoveBlank(expr);
+    int32_t idx = -1;
+    for (auto& i : expr) {
+        idx++;
+        if (i == '+' || i == '-' || i == '*' || i == '/') {
+            tokens.push_back(token);
+            token.clear();
+            token.push_back(i);
+            tokens.push_back(token);
+            token.clear();
+
+            continue;
+        }
+
+        token.push_back(i);
+    }
+    tokens.push_back(token);
+
+    return tokens.size();
+}
+
 std::string RemoveBlank(std::string& expr)
 {
     std::string fixed;
@@ -108,5 +160,19 @@ void CompilerError(std::string str, ...)
 
     MessageBoxA(NULL, v2, "Compiler Error!", MB_ICONERROR);
     exit(-1);
+
+}
+
+
+OperatorPriority GetOperandPriority(char op)
+{
+    if (op == '+' || op == '-')
+        return LOW;
+
+    if (op == '*' || op == '/')
+        return MEDIUM;
+
+
+    return LOW;
 
 }

@@ -19,12 +19,18 @@ enum class Operand_e {
 	DIVISION
 };
 
-struct expression_s {
-
+struct expression_s
+{
 	std::string preOP;
 	std::string Operand;
 	std::string postOP;
-	ExpressionType_e type;
+
+};
+
+struct expression_stack
+{
+	std::string content;
+	std::string Operator;
 };
 
 class Expression
@@ -32,17 +38,13 @@ class Expression
 public:
 	Expression(const std::string expr) : expression_str(expr){};
 
-	std::string RemoveWhiteSpaces(std::string& expr);
-	void TokenizeExpression(expression_s* expr);
+	void TokenizeExpression(expression_s* expr);  
 
 	bool EvaluateExpression();
-	bool AssignmentIsSane(expression_s* expr);
 
-	ExpressionType_e GetExpressionType();
-
+	float EvaluateExpressionStack(std::vector<expression_stack>& es);
 
 	std::string expression_str;
-
 };
 
 #endif
