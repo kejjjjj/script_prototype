@@ -5,18 +5,10 @@
 
 #include "pch.h"
 
-enum class ExpressionType_e
+enum class ExpressionType
 {
-	EXPR_ASSIGNMENT,
-	EXPR_COMPARE,
-	EXPR_CALCULATION
-};
-
-enum class Operand_e {
-	ADDITION,
-	SUBTRACTION,
-	MULTIPLICATION,
-	DIVISION
+	EXPR_ASSIGNMENT, // a = 1; 
+	EXPR_CALCULATION //100 + 100 / 3
 };
 
 struct expression_s
@@ -24,7 +16,7 @@ struct expression_s
 	std::string preOP;
 	std::string Operand;
 	std::string postOP;
-
+	ExpressionType type;
 };
 
 struct expression_stack
@@ -38,9 +30,10 @@ class Expression
 public:
 	Expression(const std::string expr) : expression_str(expr){};
 
-	void TokenizeExpression(std::string& expr_str, expression_s* expr);  
+	void TokenizeExpression(const std::string_view& expr_str, expression_s* expr);  
+	ExpressionType EvaluateExpressionType(const std::string_view& operand);
 
-	float EvaluateExpression(std::string& expr);
+	float EvaluateExpression(const std::string_view& expr);
 	bool ParseExpression(std::string &expr);
 	bool ParseExpressionNumbers(std::string& expr);
 

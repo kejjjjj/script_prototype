@@ -36,6 +36,12 @@
     <ClCompile Include="common.cpp">
       <Filter>Source Files\scripting</Filter>
     </ClCompile>
+    <ClCompile Include="allocations.cpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="variables.cpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -51,6 +57,12 @@
       <Filter>Source Files\scripting</Filter>
     </ClInclude>
     <ClInclude Include="common.hpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="allocations.hpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="variables.hpp">
       <Filter>Source Files\scripting</Filter>
     </ClInclude>
   </ItemGroup>

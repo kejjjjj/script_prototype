@@ -34,18 +34,18 @@ bool Compiler::Compile()
 	
 	//std::cout << std::format("[{}]", RemoveBlanksFromBeginningAndEnd(expr->preOP))
 
-	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
+	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
 
 	Expression expr(expression_str);
 
 	expr.ParseExpression(expression_str);
 
-	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-	//std::chrono::duration<float> difference = now - old;
+	std::chrono::duration<float> difference = now - old;
 
-	//printf("time taken: %.6f\n", difference.count());
+	printf("time taken: %.6f\n", difference.count());
 
 	//std::cout << "expression: " << expr.RemoveWhiteSpaces(expression_str) << '\n';
 

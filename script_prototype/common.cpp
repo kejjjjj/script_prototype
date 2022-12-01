@@ -1,6 +1,6 @@
 #include "pch.h"
 
-float Eval(float a, float b, char op)
+float Eval(const float& a, const float& b, char op)
 {
     switch (op) {
 
@@ -11,6 +11,10 @@ float Eval(float a, float b, char op)
     case '*':
         return a * b;
     case '/':
+        if (b == 0) {
+            CompilerError("Division by zero");
+            return 0;
+        }
         return a / b;
 
     }
@@ -40,7 +44,7 @@ SIZE_T GetStringTokens(std::string& expr, char delim)
 
     return tokens; //apparently this can never be 0?
 }
-SIZE_T GetStringOperandTokens(std::string& expr)
+SIZE_T GetStringOperandTokens(std::string_view& expr)
 {
     SIZE_T tokens(0);
 
@@ -64,48 +68,59 @@ SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& t
 
     return tokens.size();
 }
-SIZE_T TokenizeStringOperands(std::string& expr, std::vector<std::string>& tokens)
+SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::string>& tokens)
 {
+    //TODO: FIX SITUATIONS WHERE THE RIGHT SIDE OF THE OPERAND IS A NEGATIVE NUMBER
+    //1 + -20 CAUSES AN ERROR!
+    
     std::string token;
 
-    expr = RemoveBlank(expr);
+    std::string a = RemoveBlank(expr);
     int32_t idx = -1;
-    for (auto& i : expr) {
+    char previous_character{'\0'};
+
+    for (const auto& i : a) {
         idx++;
         if (i == '+' || i == '-' || i == '*' || i == '/') {
+
+            if (i == '-' && previous_character != '\0') {
+                token.push_back(i);
+                previous_character = '\0';
+                std::cout << "negative value detected after an operand.. skipping!\n";
+                continue;
+            }
             tokens.push_back(token);
             token.clear();
             token.push_back(i);
             tokens.push_back(token);
             token.clear();
-
+            previous_character = i;
             continue;
         }
 
         token.push_back(i);
+        previous_character = '\0';
     }
     tokens.push_back(token);
 
     return tokens.size();
 }
-Parenthesis_s GetStringWithinParenthesis(std::string& expr)
+Parenthesis_s GetStringWithinParenthesis(const std::string_view& expr)
 {
-    std::string string;
-
     int32_t idx = -1;
     int32_t opening{0}, closing{0}, count_opening{0}, count_closing{0};
-    for (auto& i : expr) {
+    for (const auto& i : expr) {
         idx++;
 
-        std::cout << "i[" << idx << "] = " << i << '\n';
+      //  std::cout << "i[" << idx << "] = " << i << '\n';
         switch (i) {
 
             case '(':
-                count_opening++;
+                count_opening = 1;
                 opening = idx;
                 break;
             case ')':
-                count_closing++;
+                count_closing = 1;
                 closing = idx;
                 break;
 
@@ -119,11 +134,12 @@ Parenthesis_s GetStringWithinParenthesis(std::string& expr)
         
         
     }
-    std::cout << std::format("( count = {}\n) count = {}\n( = {}\n) = {}\n", count_opening, count_closing, opening, closing);
 
-    return { count_opening, count_closing, opening, closing, expr.substr(opening + 1, closing - opening - count_opening) };
+  //  std::cout << std::format("( count = {}\n) count = {}\n( = {}\n) = {}\n", count_opening, count_closing, opening, closing);
+    const int len = closing - opening - count_opening;
+    return { count_opening, count_closing, opening, len, expr.substr(opening + 1, len) };
 }
-std::string RemoveBlank(std::string& expr)
+std::string RemoveBlank(const std::string_view& expr)
 {
     std::string fixed;
     for (const auto& i : expr)
@@ -132,7 +148,7 @@ std::string RemoveBlank(std::string& expr)
 
     return fixed;
 }
-size_t RemoveBlank(std::string& expr, std::string& out)
+size_t RemoveBlank(std::string_view& expr, std::string& out)
 {
     for (const auto& i : expr)
         if (!std::isblank(i))
@@ -177,33 +193,36 @@ std::string RemoveBlanksFromBeginningAndEnd(std::string& in)
     }
     return out;
 }
-void CompilerError(std::string str, ...)
-{
-    str += std::format("\n\nLine: {}\nColumn: {}", fs::file.lines_read, fs::file.current_column);
-
-    const char* msg = str.c_str();
-    char v2[4096];
-
-
-
-    va_list va;
-
-    va_start(va, msg);
-    _vsnprintf_s(v2, 0x1000u, msg, va);
-    v2[4095] = 0;
-
-    MessageBoxA(NULL, v2, "Compiler Error!", MB_ICONERROR);
-    exit(-1);
-
-}
+//void CompilerError(std::string str, ...)
+//{
+//    str += std::format("\n\nLine: {}\nColumn: {}", fs::file.lines_read, fs::file.current_column);
+//
+//    const char* msg = str.c_str();
+//    char v2[4096];
+//
+//
+//
+//    va_list va;
+//
+//    va_start(va, msg);
+//    _vsnprintf_s(v2, 0x1000u, msg, va);
+//    v2[4095] = 0;
+//
+//    MessageBoxA(NULL, v2, "Compiler Error!", MB_ICONERROR);
+//    exit(-1);
+//
+//}
 
 
 OperatorPriority GetOperandPriority(char op)
 {
+
+    //return ((op == '+' || op == '-') == true) ? LOW : MEDIUM;
+
     if (op == '+' || op == '-')
         return LOW;
 
-    if (op == '*' || op == '/')
+    else if (op == '*' || op == '/')
         return MEDIUM;
 
 

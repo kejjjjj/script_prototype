@@ -8,5 +8,8 @@ int main()
     Compiler compiler("scripts\\main.kej");
 
     compiler.Compile();
-    int aaklf = 1;
+    
+    //CompilerError("unable to initialize index[", 3, "] for reading");
+
+    system("pause");
 }
