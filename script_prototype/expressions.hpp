@@ -38,9 +38,11 @@ class Expression
 public:
 	Expression(const std::string expr) : expression_str(expr){};
 
-	void TokenizeExpression(expression_s* expr);  
+	void TokenizeExpression(std::string& expr_str, expression_s* expr);  
 
-	bool EvaluateExpression();
+	float EvaluateExpression(std::string& expr);
+	bool ParseExpression(std::string &expr);
+	bool ParseExpressionNumbers(std::string& expr);
 
 	float EvaluateExpressionStack(std::vector<expression_stack>& es);
 

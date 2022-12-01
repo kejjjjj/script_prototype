@@ -1,12 +1,13 @@
 #include "pch.h"
 
-void Expression::TokenizeExpression(expression_s* expr)
+void Expression::TokenizeExpression(std::string& expr_str, expression_s* expr)
 {
 
 	bool Operand_processed = FALSE; //true after parsing the expression operators 
 	std::string token;
 	int32_t idx = -1;
-	for (auto& i : expression_str) {
+	char p;
+	for (auto& i : expr_str) {
 		idx++;
 		if (!Operand_processed) {
 
@@ -16,7 +17,7 @@ void Expression::TokenizeExpression(expression_s* expr)
 			if (isOperandCharacter) {
 				
 
-				char p = expression_str[idx < 1 ? 0 : idx - 1]; //p = previous character
+				p = expr_str[idx < 1 ? 0 : idx - 1]; //p = previous character
 
 				if(p == '+' || p == '-' || p == '=' || p == '/' || p == '*')
 					expr->Operand.push_back(p);
@@ -24,7 +25,7 @@ void Expression::TokenizeExpression(expression_s* expr)
 				expr->Operand.push_back(i);
 
 
-				p = expression_str[idx + 1 < expression_str.size() ?  idx + 1 : expression_str.size()  - 1]; //next character
+				p = expr_str[idx + 1 < expr_str.size() ?  idx + 1 : expr_str.size()  - 1]; //next character
 
 				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*')
 					expr->Operand.push_back(p);
@@ -50,44 +51,78 @@ void Expression::TokenizeExpression(expression_s* expr)
 		expr->postOP = token;
 
 }
-// ONLY PASS NUMBERS
-// ALLOWED CHARACTERS: + - / *
-bool Expression::EvaluateExpression()
-{
 
+bool Expression::ParseExpression(std::string& expr)
+{
 	expression_s expression;
 
-	TokenizeExpression(&expression);
+	TokenizeExpression(expr, &expression);
+
+	ParseExpressionNumbers(expr);
+}
+
+//variables and functions are not allowed here
+//only expects operands, parenthesis and numbers
+bool Expression::ParseExpressionNumbers(std::string& expr)
+{
+	
+	//1. find parenthesis																			-> 2 * (2 + 3)
+	//2. call EvaluateExpression with the expression within the parenthesis							-> 2 + 3
+	//3. convert the original parenthesis expression to the return value from EvaluateExpression	-> (2 + 3) converts to 5
+	//4. resulting string would be:																	-> 2 * 5
+
+	Parenthesis_s par = GetStringWithinParenthesis(expr);
+
+	if (par.count_opening != par.count_closing) {
+		CompilerError("mismatching parenthesis");
+		return false;
+	}
+
+	if (!par.result_string.empty()) {
+		float result = EvaluateExpression(par.result_string);
+		std::cout << std::format("str: {} = {}\n", par.result_string, result);
+		
+		int closing = par.count_closing;
+
+		//!!!!!!!!!!!FIX THIS!!!!!!!!!!!!!!!
+		expr.erase(par.opening, closing);
+
+
+
+		expr.insert(par.opening, std::to_string(result));
+
+		ParseExpressionNumbers(expr);
+	}
+
+	
+	EvaluateExpression(expr);
+	return true;
+}
+
+// ONLY PASS NUMBERS
+// ALLOWED CHARACTERS: + - / *
+float Expression::EvaluateExpression(std::string& expression)
+{
+
 
 	std::vector<std::string> tokens;
 	std::vector<expression_stack> expressionstack;
 
 
-	size_t opTokens = TokenizeStringOperands(expression.preOP, tokens);
+	size_t const opTokens = TokenizeStringOperands(expression, tokens);
 
 	if (opTokens == NULL || opTokens % 2 == 0) {
 		CompilerError("Expected an expression");
 		return false;
 	}
 
-	for (int i = 0; i < (int)tokens.size()-1; i += 2) {
-
-		expressionstack.push_back({ tokens[i], tokens[i+1]});
-
+	int i = 0;
+	for (i = 0; i < tokens.size()-1; i += 2) {
+		expressionstack.push_back({ tokens[i], tokens[i+1]}); 
 	}
 	expressionstack.push_back({ tokens[tokens.size() - 1], "" });
 
-	for (auto& i : expressionstack) {
-		std::cout << std::format("{} -> {} | ", i.content, i.Operator);
-	}
-	std::cout << '\n';
-
-	EvaluateExpressionStack(expressionstack);
-
-
-	int a = 1 + 1 * 3 * 4;
-
-	return true;
+	return EvaluateExpressionStack(expressionstack);
 }
 float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 {
@@ -99,10 +134,10 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 		try {
 			values.push_back(std::stof(es[i].content));
 
-			//std::cout << std::format("value[{}]: {}\n", i, values[i]);
+		//	std::cout << std::format("value[{}]: {}\n", i, values[i]);
 		}
 		catch (std::exception& ex) {
-			std::cout << "EvaluateExpressionStack(): " << ex.what() << '\n';
+			CompilerError(std::format("EvaluateExpressionStack(): {}", ex.what()));
 		}
 	}
 
@@ -112,12 +147,11 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 
 	OperatorPriority op, next_op;
 
-
-	size_t amount_calculated = 0;
-	float next_number;
+	float result(0);
+	int i = 0;
 	while(values.size() > 1){
 
-		int i = 0;
+		i = 0;
 
 		op = GetOperandPriority(es[i].Operator[0]);
 		next_op = GetOperandPriority(es[i+1].Operator[0]);
@@ -131,10 +165,9 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 			i++;
 		}
 
-		float result = Eval(values[i], values[i + 1], es[i].Operator[0]);
+		result = Eval(values[i], values[i + 1], es[i].Operator[0]);
 
 		std::cout << std::format("{} {} {}\n", values[i], es[i].Operator[0], values[i + 1]);
-		amount_calculated++;
 
 		values.erase(values.begin() + i, values.begin()+i+1);
 		es.erase(es.begin() + i, es.begin() + i + 1);
@@ -142,9 +175,6 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 		values[i] = result;
 
 	}
-	constexpr float a = 101.f + 2.f * 3.f / 1.f * 3.f + 2.f - 30.f * 2.f - 5.f * 25.f / 2.f * 4.f - 4.f + 24.f / 2.f * 3.f;
-	std::cout << "end result: " << values[0] << '\n';
-
-	return 0;
+	return result;
 
 }

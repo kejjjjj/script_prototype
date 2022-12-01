@@ -88,7 +88,41 @@ SIZE_T TokenizeStringOperands(std::string& expr, std::vector<std::string>& token
 
     return tokens.size();
 }
+Parenthesis_s GetStringWithinParenthesis(std::string& expr)
+{
+    std::string string;
 
+    int32_t idx = -1;
+    int32_t opening{0}, closing{0}, count_opening{0}, count_closing{0};
+    for (auto& i : expr) {
+        idx++;
+
+        std::cout << "i[" << idx << "] = " << i << '\n';
+        switch (i) {
+
+            case '(':
+                count_opening++;
+                opening = idx;
+                break;
+            case ')':
+                count_closing++;
+                closing = idx;
+                break;
+
+            default:
+                break;
+        }
+        if (count_opening > 0 && count_opening == count_closing) {
+            break;
+        }
+
+        
+        
+    }
+    std::cout << std::format("( count = {}\n) count = {}\n( = {}\n) = {}\n", count_opening, count_closing, opening, closing);
+
+    return { count_opening, count_closing, opening, closing, expr.substr(opening + 1, closing - opening - count_opening) };
+}
 std::string RemoveBlank(std::string& expr)
 {
     std::string fixed;
