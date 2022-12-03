@@ -62,6 +62,29 @@ ExpressionType Expression::EvaluateExpressionType(const std::string_view& operan
 
 
 }
+//checks if an op combo is allowed
+// -= is allowed
+// +- is not allowed
+
+bool Expression::NextOperandIsLegal(char previous_op, char op)
+{
+	if (previous_op == '\0') //no previous character 
+		return true;
+
+	switch (previous_op) {
+	case '+':
+		return op == '=' || op == '+' || op == '-'; //+= || ++ || +- (1 + -1)
+	case '-':
+		return op == '=' || op == '-'; //-= || --
+	case '*':
+		return op == '=' || op == '-'; //	*= || *- (1 * -1)
+	case '/':
+		return op == '=' || op == '-'; //	/= || /- (1 / -1)
+	}
+
+	return false;
+}
+
 bool Expression::ParseExpression(std::string& expr)
 {
 	expression_s expression;
@@ -77,16 +100,42 @@ bool Expression::ParseExpression(std::string& expr)
 
 	case ExpressionType::EXPR_CALCULATION:
 		//1. remove blanks
-		//2. check that all characters are numbers and parenthesis
-		//3. the expression is ok and ParseExpressionNumbers can be called
+		//2. check that all characters are numbers || parenthesis || operators
+		//3. sanity checks
+		//4. the expression is ok and ParseExpressionNumbers can be called
 
 		expr = RemoveBlank(expr);
-
+		char last_character{'\0'};
+		int32_t operands_in_a_row{0};
 		for (const auto& i : expr) {
-			if (!std::isalnum(i) && i != '(' && i != ')' && i != '+' && i != '-' && i != '/' && i != '*') {
+
+
+
+			if (!std::isalnum(i) && BadCalculationOp(i)) {
 				CompilerError("Illegal character '", i, "' used in expression");
 				return false;
 			}
+
+
+			if (IsCalculationOp(i)) {
+				if (operands_in_a_row > 2) {
+					CompilerError("Illegal amount of expression operands");
+					return false;
+				}
+				if (!NextOperandIsLegal(last_character, i)) {
+					CompilerError("Illegal operand sequence '", last_character, i, "'");
+					return false;
+				}
+
+				last_character = i;
+				operands_in_a_row++;
+				continue;
+			}
+			operands_in_a_row = false;
+
+			//+(+ == ++
+			if(i != '(' && i != ')')
+				last_character = '\0';
 		}
 		//int a = 1 + "aaa";
 		break;
@@ -95,7 +144,8 @@ bool Expression::ParseExpression(std::string& expr)
 
 
 	//called AFTER parsing the expression
-	ParseExpressionNumbers(expr);
+	float result = ParseExpressionNumbers(expr);
+	std::cout << "end: " << result << '\n';
 
 	return true;
 }
@@ -103,7 +153,7 @@ bool Expression::ParseExpression(std::string& expr)
 //variables and functions are not allowed here
 //only expects operands, parenthesis and numbers
 //an expression like: 101 * (100 + ((2 + 3) * 3 + 4)) * (2 / 4 * (2 + 3 / (30 - 2 * 3)) / 2) can be used here
-bool Expression::ParseExpressionNumbers(std::string& expr)
+float Expression::ParseExpressionNumbers(std::string& expr)
 {
 	
 	//1. find parenthesis																			-> 2 * (2 + 3)
@@ -119,27 +169,41 @@ bool Expression::ParseExpressionNumbers(std::string& expr)
 	}
 
 	if (!par.result_string.empty()) {
+		
+
 		const float result = EvaluateExpression(par.result_string);
-		//std::cout << std::format("str: {} = {}\n", par.result_string, result);
+		
 		
 		//replace the old expression with the new result
 		expr.erase(par.opening, par.strlength+2);
 		expr.insert(par.opening, std::to_string(result));
 
-		//recursively calculate all parenthesis
-		ParseExpressionNumbers(expr);
-		return true;
+		bool valid_number = false; //a way to check if ParseExpressionNumbers needs to be called again
+
+		try {
+			std::stof(expr);
+			valid_number = true;
+			return result;
+		}
+		catch (std::exception& ex) {
+
+			//recursively calculate all parenthesis
+			ParseExpressionNumbers(expr);
+			
+		}
+		return 1;
 	}
-	
-	 std::cout << "end: " << EvaluateExpression(expr) << '\n';
-	 return true;
+
+	//int a = (1 + (1 - 3 * 7)) + ------;
+
+	//std::cout << "last expression: " << expr << '\n';
+	return EvaluateExpression(expr);
 }
 
 // ONLY PASS NUMBERS
 // ALLOWED CHARACTERS: + - / *
 float Expression::EvaluateExpression(const std::string_view& expression)
 {
-
 
 	std::vector<std::string> tokens;
 	std::vector<expression_stack> expressionstack;
@@ -165,14 +229,13 @@ float Expression::EvaluateExpression(const std::string_view& expression)
 float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 {
 
-
 	std::vector<float> values;
 	const size_t size = es.size();
 	for (int i = 0; i < size; i++) {
 		try {
 			values.push_back(std::stof(es[i].content));
 
-			std::cout << std::format("value[{}]: {}\n", i, values[i]);
+			//std::cout << std::format("value[{}]: {}\n", i, values[i]);
 		}
 		catch (const std::exception& ex) {
 			CompilerError(std::format("EvaluateExpressionStack(): {}\nexpression: {}", ex.what(), es[i].content));

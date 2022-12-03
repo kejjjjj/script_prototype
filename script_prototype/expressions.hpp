@@ -25,6 +25,18 @@ struct expression_stack
 	std::string Operator;
 };
 
+#define BadCalculationOp(x) (x != '(' && x != ')' && x != '+' && x != '-' && x != '/' && x != '*')
+#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*')
+
+const const char* AllowedOperators[]{
+	"+",
+	"-",
+	"*",
+	"/",
+	">",
+	"<"
+};
+
 class Expression
 {
 public:
@@ -32,10 +44,12 @@ public:
 
 	void TokenizeExpression(const std::string_view& expr_str, expression_s* expr);  
 	ExpressionType EvaluateExpressionType(const std::string_view& operand);
+	bool NextOperandIsLegal(char previous_op, char op);
+
 
 	float EvaluateExpression(const std::string_view& expr);
 	bool ParseExpression(std::string &expr);
-	bool ParseExpressionNumbers(std::string& expr);
+	float ParseExpressionNumbers(std::string& expr);
 
 	float EvaluateExpressionStack(std::vector<expression_stack>& es);
 

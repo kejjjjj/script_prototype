@@ -78,12 +78,12 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
     std::string a = RemoveBlank(expr);
     int32_t idx = -1;
     char previous_character{'\0'};
-
+    size_t ret{ 0 };
     for (const auto& i : a) {
         idx++;
         if (i == '+' || i == '-' || i == '*' || i == '/') {
 
-            if (i == '-' && previous_character != '\0') {
+            if (idx == 0 || i == '-' && previous_character != '\0') {
                 token.push_back(i);
                 previous_character = '\0';
                 std::cout << "negative value detected after an operand.. skipping!\n";
@@ -95,6 +95,7 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
             tokens.push_back(token);
             token.clear();
             previous_character = i;
+            ret++;
             continue;
         }
 
