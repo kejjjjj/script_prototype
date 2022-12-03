@@ -61,6 +61,7 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
 Parenthesis_s GetStringWithinParenthesis(const std::string_view& expr);
 float Eval(const float& a, const float& b, char op);
 OperatorPriority GetOperandPriority(char op);
+bool ValidNumber(const std::string_view& expr);
 
 std::string RemoveBlank(const std::string_view& expr);
 

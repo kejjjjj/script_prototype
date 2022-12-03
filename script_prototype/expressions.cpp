@@ -73,13 +73,13 @@ bool Expression::NextOperandIsLegal(char previous_op, char op)
 
 	switch (previous_op) {
 	case '+':
-		return op == '=' || op == '+' || op == '-'; //+= || ++ || +- (1 + -1)
+		return op == '=' || (op == '+' || op == '-');	//	+= || ++ || +-
 	case '-':
-		return op == '=' || op == '-'; //-= || --
+		return op == '=' || (op == '-');				//	-= || --
 	case '*':
-		return op == '=' || op == '-'; //	*= || *- (1 * -1)
+		return op == '=' || (op == '-');				//	*= || *- 
 	case '/':
-		return op == '=' || op == '-'; //	/= || /- (1 / -1)
+		return op == '=' || (op == '-');				//	/= || /- 
 	}
 
 	return false;
@@ -104,12 +104,23 @@ bool Expression::ParseExpression(std::string& expr)
 		//3. sanity checks
 		//4. the expression is ok and ParseExpressionNumbers can be called
 
-		expr = RemoveBlank(expr);
+		
+		//expr = RemoveBlank(expr);
 		char last_character{'\0'};
-		int32_t operands_in_a_row{0};
+		int32_t operands_in_a_row{0}, idx{-1};
+
+
 		for (const auto& i : expr) {
+			idx++;
+			
+			//pre-, and post-increments here probably...
+			// because ++ != + +
+			
+			//idk I will probably do this when I actually have variable support
 
 
+			if (std::isblank(i))
+				continue;
 
 			if (!std::isalnum(i) && BadCalculationOp(i)) {
 				CompilerError("Illegal character '", i, "' used in expression");
@@ -134,18 +145,19 @@ bool Expression::ParseExpression(std::string& expr)
 			operands_in_a_row = false;
 
 			//+(+ == ++
-			if(i != '(' && i != ')')
+			//if(i != '(' && i != ')')
 				last_character = '\0';
 		}
-		//int a = 1 + "aaa";
+		constexpr float a = (1 + -(3 + 1) / -3 * -(2 * 5 - (2 * -3)) / (-3 / 1) + -(3 + 1) / -3 * -(2 * 5 - (2 * -3)) / -3);
 		break;
 
 	}
 
+	expr = RemoveBlank(expr);
 
 	//called AFTER parsing the expression
 	float result = ParseExpressionNumbers(expr);
-	std::cout << "end: " << result << '\n';
+	//std::cout << "end: " << result << '\n';
 
 	return true;
 }
@@ -178,32 +190,28 @@ float Expression::ParseExpressionNumbers(std::string& expr)
 		expr.erase(par.opening, par.strlength+2);
 		expr.insert(par.opening, std::to_string(result));
 
-		bool valid_number = false; //a way to check if ParseExpressionNumbers needs to be called again
-
-		try {
-			std::stof(expr);
-			valid_number = true;
-			return result;
-		}
-		catch (std::exception& ex) {
-
-			//recursively calculate all parenthesis
-			ParseExpressionNumbers(expr);
+		ParseExpressionNumbers(expr);
 			
-		}
+		
 		return 1;
 	}
 
 	//int a = (1 + (1 - 3 * 7)) + ------;
 
 	//std::cout << "last expression: " << expr << '\n';
-	return EvaluateExpression(expr);
+	const float result = EvaluateExpression(expr);
+	std::cout << "result: " << result << '\n';
+	return result;
 }
 
 // ONLY PASS NUMBERS
 // ALLOWED CHARACTERS: + - / *
 float Expression::EvaluateExpression(const std::string_view& expression)
 {
+
+	if (ValidNumber(expression)) {
+		return std::stof(std::string(expression));
+	}
 
 	std::vector<std::string> tokens;
 	std::vector<expression_stack> expressionstack;
@@ -253,6 +261,7 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 	int i;
 	size_t vals = values.size();
 
+	//order of operations (PEMDAS)
 	while(vals > 1){
 
 		i = 0;

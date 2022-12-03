@@ -70,37 +70,50 @@ SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& t
 }
 SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::string>& tokens)
 {
-    //TODO: FIX SITUATIONS WHERE THE RIGHT SIDE OF THE OPERAND IS A NEGATIVE NUMBER
-    //1 + -20 CAUSES AN ERROR!
     
     std::string token;
 
     std::string a = RemoveBlank(expr);
     int32_t idx = -1;
     char previous_character{'\0'};
-    size_t ret{ 0 };
+    size_t subtr_in_a_row{0};
     for (const auto& i : a) {
         idx++;
         if (i == '+' || i == '-' || i == '*' || i == '/') {
+            subtr_in_a_row++;
+
+            if (subtr_in_a_row > 2) { //works for cases like / -(-1) A.K.A 3 consecutive operators
+
+                if (subtr_in_a_row % 1 == 0) {//odd number 
+                    token.pop_back();
+                  //  std::cout << "making it positive\n";
+                }
+                else {
+                    token.push_back(i);
+                  //  std::cout << "making it negative\n";
+                }
+                continue;
+            }
 
             if (idx == 0 || i == '-' && previous_character != '\0') {
                 token.push_back(i);
-                previous_character = '\0';
-                std::cout << "negative value detected after an operand.. skipping!\n";
+                previous_character = i;
+               // std::cout << "negative value detected after an operand.. skipping!\n";
                 continue;
             }
+            
             tokens.push_back(token);
             token.clear();
             token.push_back(i);
             tokens.push_back(token);
             token.clear();
             previous_character = i;
-            ret++;
             continue;
         }
 
         token.push_back(i);
         previous_character = '\0';
+        subtr_in_a_row = 0;
     }
     tokens.push_back(token);
 
@@ -229,4 +242,47 @@ OperatorPriority GetOperandPriority(char op)
 
     return LOW;
 
+}
+bool ValidNumber(const std::string_view& expr)
+{
+    size_t dot_count{0}, dot_idx, index{ 0 }, sub_count{0}, sub_idx;
+
+    for (const auto& i : expr) {
+        switch (i) {
+
+        case '.': //has a decimal
+            dot_count++;
+
+            if (dot_count > 1)
+                return false;
+            dot_idx = index;
+            break;
+        case '-': //is a negative number
+
+            if (index != 0)  //only the first character can be this
+                return false;
+
+            break;
+
+        default: 
+
+            if (!std::isdigit(i))
+                return false;
+            break;
+        }
+        index++;
+
+    }
+
+    if (dot_count) {
+
+        if (dot_idx == expr.size() - 1) //last character cannot be a dot
+            return false;
+
+        if (!std::isdigit(expr[dot_idx + 1])) //next character is not a number
+            return false;
+    }
+
+
+    return true;
 }
