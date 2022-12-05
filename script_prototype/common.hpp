@@ -37,12 +37,23 @@ inline void CompilerError(const T& t, const Param& ... param)
 
 //void CompilerError(std::string str, ...);
 
+//the higher the value the higher the priority
 enum OperatorPriority
 {
-	LOW,		//	addition/subtraction
-	MEDIUM,		//	multiplication/division
-	HIGH,		//  exponents
-	HIGHEST,	//  parenthesis
+	ASSIGNMENT,		//	= += -= *= /= %= >>= <<= &= ^= |=
+	CONDITIONAL,	//	?:
+	LOGICAL_OR,		//	||
+	LOGICAL_AND,	//	&&
+	BITWISE_OR,		//  | 
+	BITWISE_XOR,	//	^
+	BITWISE_AND,	//  & 
+	EQUALITY,		//	< <= > >=
+	RELATIONAL,		//	== !=
+	SHIFT,			//  <<>>
+	ADDITIVE,		//	+-
+	MULTIPLICATIVE,	//	* / %
+	UNARY,			//  + - ! ~ ++ - - (type)* & sizeof	
+	POSTFIX,		//  () [] -> . ++ - -	
 
 };
 struct Parenthesis_s
@@ -55,12 +66,10 @@ struct Parenthesis_s
 };
 std::string RemoveFromString(std::string& str, char a);
 SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& tokens);
-SIZE_T GetStringTokens(std::string& expr, char delim);
-SIZE_T GetStringOperandTokens(std::string_view& expr);
 SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::string>& tokens);
 Parenthesis_s GetStringWithinParenthesis(const std::string_view& expr);
-float Eval(const float& a, const float& b, char op);
-OperatorPriority GetOperandPriority(char op);
+float Eval(const float& a, const float& b, const std::string_view& ops);
+OperatorPriority GetOperandPriority(const std::string_view& ops);
 bool ValidNumber(const std::string_view& expr);
 
 std::string RemoveBlank(const std::string_view& expr);

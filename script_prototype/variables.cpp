@@ -1,7 +1,9 @@
 #include "pch.h"
 
+
 Variable::Variable(const std::string_view& _name, VarType _type, VariableValue init, int32_t _stacklevel) : name(_name), type(_type), stacklevel(_stacklevel)
 {
+
 
 	switch (_type) {
 	case VarType::V_INT:

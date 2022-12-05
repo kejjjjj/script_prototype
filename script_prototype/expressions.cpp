@@ -19,7 +19,7 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 
 				p = expr_str[idx < 1 ? 0 : idx - 1]; //p = previous character
 
-				if(p == '+' || p == '-' || p == '=' || p == '/' || p == '*')
+				if(p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!')
 					expr->Operand.push_back(p);
 
 				expr->Operand.push_back(i);
@@ -27,14 +27,15 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 
 				p = expr_str[idx + 1 < expr_str.size() ?  idx + 1 : expr_str.size()  - 1]; //next character
 
-				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*')
+				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!')
 					expr->Operand.push_back(p);
 
+				if (expr_str[idx - 1] == '!')// operand is !=
+					token.pop_back(); // remove the ! character from the back
+
 				expr->preOP = token; //store left side
-
+				
 				token.clear();
-
-
 
 				Operand_processed = true;
 				
@@ -51,13 +52,30 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 		expr->postOP = token;
 
 }
-//I think this should work... for now
+//evaluates based on the op combo
+//NOT called within expressions after the operand <----- FIX ME
+
 ExpressionType Expression::EvaluateExpressionType(const std::string_view& operand)
 {
-	if (operand.find('=') != std::string_view::npos) //has =
-		return ExpressionType::EXPR_ASSIGNMENT;
+	size_t pos = operand.find('=');
+	if (pos != std::string_view::npos) {//has =
 
+		if (operand.size() == 1) { // = is the only op
+			return ExpressionType::EXPR_ASSIGNMENT;
+		}
+		if( operand[pos - 1] == '+' ||		//	+=
+			operand[pos - 1] == '-' ||		//	-=
+			operand[pos - 1] == '*' ||		//	*=
+			operand[pos - 1] == '/' ||		//	/=
+			operand[pos - 1] == '&' ||		//	&=
+			operand[pos - 1] == '|' ||		//	|=
+			operand[pos - 1] == '^')		//	^=
 
+			return ExpressionType::EXPR_ASSIGNMENT;
+
+	}
+
+	std::cout << "expression type: EXPR_CALCULATION\n";
 	return ExpressionType::EXPR_CALCULATION;
 
 
@@ -80,22 +98,38 @@ bool Expression::NextOperandIsLegal(char previous_op, char op)
 		return op == '=' || (op == '-');				//	*= || *- 
 	case '/':
 		return op == '=' || (op == '-');				//	/= || /- 
+	case '<':
+		return op == '=' || (op == '-');				//	<= || <-
+	case '>':
+		return op == '=' || (op == '-');				//	>= || >-
+	case '&':
+		return op == '&' || (op == '-');				//	&& || &-
+	case '|':
+		return op == '|' || (op == '-');				//	|| || |-
+	case '~':
+		return false;									//	~
+	case '^':
+		return (op == '-');								//	^ || ^-
+	case '!':
+		return op == '=' || (op == '-');				//	!= || !-
+
 	}
+
+	//int a = 2^-6;
 
 	return false;
 }
 
 bool Expression::ParseExpression(std::string& expr)
 {
-	expression_s expression;
+	TokenizeExpression(expr, &e.expression);
 
-	TokenizeExpression(expr, &expression);
+	e.expression.type = EvaluateExpressionType(e.expression.Operand);
+	e.operands = e.expression.Operand.size();
 
-	expression.type = EvaluateExpressionType(expression.Operand);
-
-	switch (expression.type) {
+	switch (e.expression.type) {
 	case ExpressionType::EXPR_ASSIGNMENT:
-		CompilerError("Assignment expressions are not supported yet");
+		CompilerError("Assignment expressions are not supported yet\nType: ", (int)e.expression.type);
 		break;
 
 	case ExpressionType::EXPR_CALCULATION:
@@ -148,7 +182,8 @@ bool Expression::ParseExpression(std::string& expr)
 			//if(i != '(' && i != ')')
 				last_character = '\0';
 		}
-		constexpr float a = (1 + -(3 + 1) / -3 * -(2 * 5 - (2 * -3)) / (-3 / 1) + -(3 + 1) / -3 * -(2 * 5 - (2 * -3)) / -3);
+		constexpr int a = (2 != 1 * 3) * 2 ^ 3 < (4 + 500 | 2) ^ 3 == 4 & 123 + (1 < 4 * 7);
+
 		break;
 
 	}
@@ -164,7 +199,7 @@ bool Expression::ParseExpression(std::string& expr)
 
 //variables and functions are not allowed here
 //only expects operands, parenthesis and numbers
-//an expression like: 101 * (100 + ((2 + 3) * 3 + 4)) * (2 / 4 * (2 + 3 / (30 - 2 * 3)) / 2) can be used here
+//an expression like: 101 * (100 + ((2 + 3) & 3 ^ 4)) * (2 | 4 * -(-2 + 3 / (30 - 2 | 3)) ^ 2) can be used here
 float Expression::ParseExpressionNumbers(std::string& expr)
 {
 	
@@ -196,7 +231,6 @@ float Expression::ParseExpressionNumbers(std::string& expr)
 		return 1;
 	}
 
-	//int a = (1 + (1 - 3 * 7)) + ------;
 
 	//std::cout << "last expression: " << expr << '\n';
 	const float result = EvaluateExpression(expr);
@@ -239,7 +273,7 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 
 	std::vector<float> values;
 	const size_t size = es.size();
-	for (int i = 0; i < size; i++) {
+	for (size_t i = 0; i < size; i++) {
 		try {
 			values.push_back(std::stof(es[i].content));
 
@@ -266,21 +300,26 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 
 		i = 0;
 
-		op = GetOperandPriority(es[i].Operator[0]);
-		next_op = GetOperandPriority(es[i+1].Operator[0]);
+		op = GetOperandPriority(es[i].Operator);
+		next_op = GetOperandPriority(es[i+1].Operator);
 
-
+		//move to the right if the operand priority is higher
 		while (next_op > op) {
-			op = GetOperandPriority(es[i].Operator[0]);
-			next_op = GetOperandPriority(es[i + 1].Operator[0]);
+			op = GetOperandPriority(es[i].Operator);
+			next_op = GetOperandPriority(es[i + 1].Operator); //i+1 is always in range unless this function was called with bad arguments
 			if (next_op <= op)
 				break;
 			i++;
 		}
 
-		result = Eval(values[i], values[i + 1], es[i].Operator[0]);
+		//if (es[i].Operator.size() != 1) {
+		//	CompilerError("hi I haven't added support for two consecutive operators yet!");
+		//	return false;
+		//}
 
-		std::cout << std::format("{} {} {}\n", values[i], es[i].Operator[0], values[i + 1]);
+		result = Eval(values[i], values[i + 1], es[i].Operator);
+
+		std::cout << std::format("{} {} {} = {}\n", values[i], es[i].Operator, values[i + 1], result);
 
 		values.erase(values.begin() + i, values.begin()+i+1);
 		es.erase(es.begin() + i, es.begin() + i + 1);
