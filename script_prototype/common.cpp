@@ -28,6 +28,18 @@ float Eval(const float& a, const float& b, const std::string_view& ops)
             return (int)a | (int)b;
         case '^':
             return (int)a ^ (int)b;
+        case '%':
+
+            if ((int)a != a || (int)b != b) {
+                CompilerError("Modulo % operator can only be used on integer types");
+                return false;
+            }
+            else if (b == 0) {
+                CompilerError("Division by zero");
+                return false;
+            }
+            return (int)a % (int)b;
+            
 
         }
     }
@@ -44,6 +56,19 @@ float Eval(const float& a, const float& b, const std::string_view& ops)
 
     else if (ops == "<=")
         return a <= b;
+
+    else if (ops == "||")
+        return a || b;
+
+    else if (ops == "&&")
+        return a && b;
+    
+    else if (ops == "<<")
+        return (int)a << (int)b;
+
+    else if (ops == ">>")
+        return (int)a >> (int)b;
+
 
     return 0;
 }
@@ -84,11 +109,15 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
     int32_t idx = -1;
     char previous_character{'\0'};
     size_t subtr_in_a_row{0}, equals_in_a_row{0};
-    for (const auto& i : a) {
+    for (auto it = a.begin(); it != a.end();  ++it) {
+
+        auto& i = *it;
         idx++;
 
-        if (i == '=') {
+        //this block is for ==
+        if (i == '=' && *(it - 1) != '!') { //!= is false
 
+            //std::cout << "yep: " << i << *(it -1) << '\n';
             if (!equals_in_a_row) {
                 //save token before the operator (if it's not empty)
                 if (!token.empty()) {
@@ -106,6 +135,7 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
                 token.push_back('=');
                 tokens.push_back(token);
                 token.clear();
+
             }
             //invalid syntax
             else if (equals_in_a_row > 2) {
@@ -114,6 +144,8 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
             }
             continue;
         }
+        else
+            equals_in_a_row = 0;
 
         if (IsCalculationOp(i)) {
             subtr_in_a_row++;
@@ -137,36 +169,64 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
             if (idx == 0 || i == '-' && previous_character != '\0') {
                 token.push_back(i);
                 previous_character = i;
-               // std::cout << "negative value detected after an operand.. skipping!\n";
+               // std::cout << "negative value detected after an operator.. skipping!\n";
                 continue;
             }
             
-            tokens.push_back(token);
-            token.clear();
-            token.push_back(i);
 
             if (idx == a.size() - 1) { //op cannot be the last character
                 CompilerError("Expected an expression");
                 return 0;
             }
 
+            //save the string before the operator
+            tokens.push_back(token);
+            token.clear();
+
+            //push first operator
+            token.push_back(i);
+
+            if (i == '&' || i == '|' || i == '<' || i == '>') {
+                ++it;
+
+                i = *it;
+
+                if (i == '&' || i == '|' || i == '<' || i == '>') {
+                    token.push_back(i);
+                   // std::cout << "duplicate " << i << '\n';
+                }
+                else
+                    --it;
+
+                equals_in_a_row = 0;
+            }
+
+            
             //make sure buffer overflow won't happen
             if (idx < a.size() - 2) {
                 //is the character after the = an another =
-                if (a[idx + 1] == '=') { // ==
+                if (*(it + 1) == '=') { // ==
                     token.push_back('=');
                     
                 }
+                if (i == '!' && *(it + 1) == '=') {
+                   // token.push_back('='); //!=
+                    it++;
+                }
+
             }
 
+            //save the operator
             tokens.push_back(token);
             token.clear();
+
             previous_character = i;
             continue;
         }
             
         //assignments are forbidden
-        if (equals_in_a_row == 1 && a[idx-2] != '!') { //one = and ! doesn't exist (!=)
+        //returns false if previous character is not !, < or > (!=, <=, >=)
+        if (equals_in_a_row == 1 && a[idx-2] != '!' && a[idx - 2] != '<' && a[idx - 2] != '>') { //one = and ! doesn't exist (!=)
             CompilerError("Assignments are not supported yet!: ", a[idx - 2], '=');
             return false;
         }
@@ -180,7 +240,8 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
 
     return tokens.size();
 }
-Parenthesis_s GetStringWithinParenthesis(const std::string_view& expr)
+//does not include the parantheses
+Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
 {
     int32_t idx = -1;
     int32_t opening{0}, closing{0}, count_opening{0}, count_closing{0};
@@ -212,6 +273,7 @@ Parenthesis_s GetStringWithinParenthesis(const std::string_view& expr)
 
   //  std::cout << std::format("( count = {}\n) count = {}\n( = {}\n) = {}\n", count_opening, count_closing, opening, closing);
     const int len = closing - opening - count_opening;
+    //note: cuts out the parantheses
     return { count_opening, count_closing, opening, len, expr.substr(opening + 1, len) };
 }
 std::string RemoveBlank(const std::string_view& expr)
@@ -314,8 +376,9 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
         else if (op == '+' || op == '-')
             return ADDITIVE;
 
-        else if (op == '*' || op == '/')
+        else if (op == '*' || op == '/' || op == '%')
             return MULTIPLICATIVE;
+
 
         CompilerError("Unknown operator");
         return ASSIGNMENT;

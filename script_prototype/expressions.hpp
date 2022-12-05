@@ -14,7 +14,7 @@ enum class ExpressionType
 struct expression_s
 {
 	std::string preOP;
-	std::string Operand;
+	std::string Operator;
 	std::string postOP;
 	ExpressionType type;
 };
@@ -25,7 +25,7 @@ struct expression_stack
 	std::string Operator;
 };
 
-#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '~' || x == '|' || x == '^' || x == '!')
+#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '~' || x == '|' || x == '^' || x == '!' || x == '%')
 
 #define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=')
 
@@ -37,7 +37,7 @@ public:
 
 	void TokenizeExpression(const std::string_view& expr_str, expression_s* expr);  
 	ExpressionType EvaluateExpressionType(const std::string_view& operand);
-	bool NextOperandIsLegal(char previous_op, char op);
+	bool NextOperatorIsLegal(char previous_op, char op);
 
 
 	float EvaluateExpression(const std::string_view& expr);

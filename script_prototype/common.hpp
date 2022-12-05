@@ -67,7 +67,7 @@ struct Parenthesis_s
 std::string RemoveFromString(std::string& str, char a);
 SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& tokens);
 SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::string>& tokens);
-Parenthesis_s GetStringWithinParenthesis(const std::string_view& expr);
+Parenthesis_s GetStringWithinParentheses(const std::string_view& expr);
 float Eval(const float& a, const float& b, const std::string_view& ops);
 OperatorPriority GetOperandPriority(const std::string_view& ops);
 bool ValidNumber(const std::string_view& expr);

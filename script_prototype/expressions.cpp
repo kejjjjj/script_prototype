@@ -11,24 +11,24 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 		idx++;
 		if (!Operand_processed) {
 
-			const bool isOperandCharacter = (i == '=');
+			const bool isOperatorCharacter = (i == '=');
 
-			//first operand
-			if (isOperandCharacter) {
+			//first operator
+			if (isOperatorCharacter) {
 				
 
 				p = expr_str[idx < 1 ? 0 : idx - 1]; //p = previous character
 
-				if(p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!')
-					expr->Operand.push_back(p);
+				if(p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!' || p == '&')
+					expr->Operator.push_back(p);
 
-				expr->Operand.push_back(i);
+				expr->Operator.push_back(i);
 
 
 				p = expr_str[idx + 1 < expr_str.size() ?  idx + 1 : expr_str.size()  - 1]; //next character
 
-				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!')
-					expr->Operand.push_back(p);
+				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!' || p == '&')
+					expr->Operator.push_back(p);
 
 				if (expr_str[idx - 1] == '!')// operand is !=
 					token.pop_back(); // remove the ! character from the back
@@ -55,36 +55,34 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 //evaluates based on the op combo
 //NOT called within expressions after the operand <----- FIX ME
 
-ExpressionType Expression::EvaluateExpressionType(const std::string_view& operand)
+ExpressionType Expression::EvaluateExpressionType(const std::string_view& Operator)
 {
-	size_t pos = operand.find('=');
+	size_t pos = Operator.find('=');
 	if (pos != std::string_view::npos) {//has =
 
-		if (operand.size() == 1) { // = is the only op
+		if (Operator.size() == 1) { // = is the only op
 			return ExpressionType::EXPR_ASSIGNMENT;
 		}
-		if( operand[pos - 1] == '+' ||		//	+=
-			operand[pos - 1] == '-' ||		//	-=
-			operand[pos - 1] == '*' ||		//	*=
-			operand[pos - 1] == '/' ||		//	/=
-			operand[pos - 1] == '&' ||		//	&=
-			operand[pos - 1] == '|' ||		//	|=
-			operand[pos - 1] == '^')		//	^=
+		if(Operator[pos - 1] == '+' ||		//	+=
+			Operator[pos - 1] == '-' ||		//	-=
+			Operator[pos - 1] == '*' ||		//	*=
+			Operator[pos - 1] == '/' ||		//	/=
+			Operator[pos - 1] == '&' ||		//	&=
+			Operator[pos - 1] == '|' ||		//	|=
+			Operator[pos - 1] == '%' ||		//	%=
+			Operator[pos - 1] == '^')		//	^=
 
 			return ExpressionType::EXPR_ASSIGNMENT;
 
 	}
 
-	std::cout << "expression type: EXPR_CALCULATION\n";
+	//std::cout << "expression type: EXPR_CALCULATION\n";
 	return ExpressionType::EXPR_CALCULATION;
 
 
 }
 //checks if an op combo is allowed
-// -= is allowed
-// +- is not allowed
-
-bool Expression::NextOperandIsLegal(char previous_op, char op)
+bool Expression::NextOperatorIsLegal(char previous_op, char op)
 {
 	if (previous_op == '\0') //no previous character 
 		return true;
@@ -99,9 +97,9 @@ bool Expression::NextOperandIsLegal(char previous_op, char op)
 	case '/':
 		return op == '=' || (op == '-');				//	/= || /- 
 	case '<':
-		return op == '=' || (op == '-');				//	<= || <-
+		return op == '=' || op == '<' || (op == '-');	//	<= || << || <-
 	case '>':
-		return op == '=' || (op == '-');				//	>= || >-
+		return op == '=' || op == '>' ||(op == '-');	//	>= || >> || >-
 	case '&':
 		return op == '&' || (op == '-');				//	&& || &-
 	case '|':
@@ -109,9 +107,11 @@ bool Expression::NextOperandIsLegal(char previous_op, char op)
 	case '~':
 		return false;									//	~
 	case '^':
-		return (op == '-');								//	^ || ^-
+		return (op == '-');								//	^  || ^-
 	case '!':
 		return op == '=' || (op == '-');				//	!= || !-
+	case '%':
+		return op == '=' || (op == '-');				//	%  || %-
 
 	}
 
@@ -124,8 +124,8 @@ bool Expression::ParseExpression(std::string& expr)
 {
 	TokenizeExpression(expr, &e.expression);
 
-	e.expression.type = EvaluateExpressionType(e.expression.Operand);
-	e.operands = e.expression.Operand.size();
+	e.expression.type = EvaluateExpressionType(e.expression.Operator);
+	e.operands = e.expression.Operator.size();
 
 	switch (e.expression.type) {
 	case ExpressionType::EXPR_ASSIGNMENT:
@@ -164,11 +164,11 @@ bool Expression::ParseExpression(std::string& expr)
 
 			if (IsCalculationOp(i)) {
 				if (operands_in_a_row > 2) {
-					CompilerError("Illegal amount of expression operands");
+					CompilerError("Illegal amount of expression operators");
 					return false;
 				}
-				if (!NextOperandIsLegal(last_character, i)) {
-					CompilerError("Illegal operand sequence '", last_character, i, "'");
+				if (!NextOperatorIsLegal(last_character, i)) {
+					CompilerError("Illegal operator sequence '", last_character, i, "'");
 					return false;
 				}
 
@@ -182,7 +182,7 @@ bool Expression::ParseExpression(std::string& expr)
 			//if(i != '(' && i != ')')
 				last_character = '\0';
 		}
-		constexpr int a = (2 != 1 * 3) * 2 ^ 3 < (4 + 500 | 2) ^ 3 == 4 & 123 + (1 < 4 * 7);
+		constexpr int a = 3 << 2 || 3 && 2 * -(5 < (3 % 1 * 7 - 2) % (3 << 2 != 4 * 2 <= 3 - 4) * 2 <= 3) >> 3 % 2 & 3 & 2 * (5 < (3 & 1 * 7 - 2) + (3 << 2 != 4 * 2 <= 3 % 4) * 2 <= 3);
 
 		break;
 
@@ -192,7 +192,7 @@ bool Expression::ParseExpression(std::string& expr)
 
 	//called AFTER parsing the expression
 	float result = ParseExpressionNumbers(expr);
-	//std::cout << "end: " << result << '\n';
+	std::cout << "end: " << result << '\n';
 
 	return true;
 }
@@ -203,12 +203,12 @@ bool Expression::ParseExpression(std::string& expr)
 float Expression::ParseExpressionNumbers(std::string& expr)
 {
 	
-	//1. find parenthesis																			-> 2 * (2 + 3)
-	//2. call EvaluateExpression with the expression within the parenthesis							-> 2 + 3
+	//1. find parentheses																			-> 2 * (2 + 3)
+	//2. call EvaluateExpression with the expression within the parentheses							-> 2 + 3
 	//3. convert the original parenthesis expression to the return value from EvaluateExpression	-> (2 + 3) converts to 5
 	//4. resulting string would be:																	-> 2 * 5
 
-	const Parenthesis_s par = GetStringWithinParenthesis(expr);
+	Parenthesis_s par = GetStringWithinParentheses(expr);
 
 	if (par.count_opening != par.count_closing) {
 		CompilerError("mismatching parenthesis");
@@ -220,26 +220,34 @@ float Expression::ParseExpressionNumbers(std::string& expr)
 
 		const float result = EvaluateExpression(par.result_string);
 		
-		
+		//std::cout << "erasing:		[" << expr.substr(par.opening, par.strlength + 2) << "]\n";
+		//std::cout << "size:			(" << expr.size() << ")\n";
+		//std::cout << std::format("inserting to:		({}) string of size: ({})\n", par.opening, std::to_string(result).size());
+
+
+
 		//replace the old expression with the new result
 		expr.erase(par.opening, par.strlength+2);
 		expr.insert(par.opening, std::to_string(result));
 
+		//std::cout << std::format("remaining:		[{}]\n", expr);
+
 		ParseExpressionNumbers(expr);
 			
 		
+
 		return 1;
 	}
 
 
 	//std::cout << "last expression: " << expr << '\n';
 	const float result = EvaluateExpression(expr);
-	std::cout << "result: " << result << '\n';
+	//std::cout << "result: " << result << '\n';
 	return result;
 }
 
-// ONLY PASS NUMBERS
-// ALLOWED CHARACTERS: + - / *
+// expects an expression that does not include parantheses
+// example: 1 ^ 3 & 1 / 5
 float Expression::EvaluateExpression(const std::string_view& expression)
 {
 
@@ -266,7 +274,8 @@ float Expression::EvaluateExpression(const std::string_view& expression)
 	}
 	expressionstack.push_back({ tokens[size], "" });
 
-	return EvaluateExpressionStack(expressionstack);
+	float ret = EvaluateExpressionStack(expressionstack);
+	return ret;
 }
 float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 {
@@ -286,7 +295,7 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 
 	//ok now we have:
 	//sequence of floating point numbers
-	//sequence of operands
+	//sequence of operators
 
 	OperatorPriority op, next_op;
 
@@ -319,11 +328,12 @@ float Expression::EvaluateExpressionStack(std::vector<expression_stack>& es)
 
 		result = Eval(values[i], values[i + 1], es[i].Operator);
 
-		std::cout << std::format("{} {} {} = {}\n", values[i], es[i].Operator, values[i + 1], result);
+		//std::cout << std::format("{} {} {} = {}\n", values[i], es[i].Operator, values[i + 1], result);
 
 		values.erase(values.begin() + i, values.begin()+i+1);
 		es.erase(es.begin() + i, es.begin() + i + 1);
 
+		//std::cout << std::format("		values.size(): {}, i = {}\n", values.size(), i);
 		values[i] = result;
 		vals--;
 
