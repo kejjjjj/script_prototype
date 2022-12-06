@@ -1,9 +1,9 @@
 #include "pch.h"
 
 
-Compiler::Compiler(std::string path)
+Script::Script(const std::string& _path)
 {
-	
+	std::string path = _path;
 	path = fs::GetRootDirectory() + "\\" + path;
 	if (!fs::F_OpenFile(f, path, fs::fileopen::FILE_IN)) {
 		return;
@@ -12,44 +12,45 @@ Compiler::Compiler(std::string path)
 	//fs::F_CloseFile(f);
 
 }
-Compiler::~Compiler() 
+Script::~Script()
 {
 	fs::F_CloseFile(f);
 }
-bool Compiler::Compile()
+bool Script::Compile()
 {
+	std::cout << "compiling project!\n";
 	std::string expression_str;
 
 	fs::F_Reset();
 
+	size_t expressions_parsed = 0;
 	while (f.good() && !f.eof()) {
 
 		char ch = fs::F_Get(f);
 
-		if (ch == ';')
-			break;
+		if (ch == ';') {
+
+			CompilerExpression expr(expression_str);
+
+			expr.ParseExpression(expression_str);
+			expressions_parsed++;
+			continue;
+		}
 
 		expression_str.push_back(ch);
 	}
 	
-	//std::cout << std::format("[{}]", RemoveBlanksFromBeginningAndEnd(expr->preOP))
 
-	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
+	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
 
-	Expression expr(expression_str);
+	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-	expr.ParseExpression(expression_str);
+	//std::chrono::duration<float> difference = now - old;
 
-	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	//printf("time taken: %.6f\n", difference.count());
 
-	std::chrono::duration<float> difference = now - old;
-
-	printf("time taken: %.6f\n", difference.count());
-
-	//std::cout << "expression: " << expr.RemoveWhiteSpaces(expression_str) << '\n';
-
-//	expr.RemoveWhiteSpaces(expression_str);
+	std::cout << "expressions parsed: " << expressions_parsed << '\n';
 
 	return true;
 }

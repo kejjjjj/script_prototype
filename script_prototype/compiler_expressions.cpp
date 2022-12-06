@@ -1,6 +1,6 @@
 #include "pch.h"
 
-void Expression::TokenizeExpression(const std::string_view& expr_str, expression_s* expr)
+void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, expression_s* expr)
 {
 
 	bool Operand_processed = FALSE; //true after parsing the expression operators 
@@ -15,17 +15,17 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 
 			//first operator
 			if (isOperatorCharacter) {
-				
+
 
 				p = expr_str[idx < 1 ? 0 : idx - 1]; //p = previous character
 
-				if(p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!' || p == '&')
+				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!' || p == '&')
 					expr->Operator.push_back(p);
 
 				expr->Operator.push_back(i);
 
 
-				p = expr_str[idx + 1 < expr_str.size() ?  idx + 1 : expr_str.size()  - 1]; //next character
+				p = expr_str[idx + 1 < expr_str.size() ? idx + 1 : expr_str.size() - 1]; //next character
 
 				if (p == '+' || p == '-' || p == '=' || p == '/' || p == '*' || p == '>' || p == '<' || p == '!' || p == '&')
 					expr->Operator.push_back(p);
@@ -34,11 +34,11 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 					token.pop_back(); // remove the ! character from the back
 
 				expr->preOP = token; //store left side
-				
+
 				token.clear();
 
 				Operand_processed = true;
-				
+
 				continue;
 			}
 		}
@@ -55,7 +55,7 @@ void Expression::TokenizeExpression(const std::string_view& expr_str, expression
 //evaluates based on the op combo
 //NOT called within expressions after the operand <----- FIX ME
 
-ExpressionType Expression::EvaluateExpressionType(const std::string_view& Operator)
+ExpressionType CompilerExpression::EvaluateExpressionType(const std::string_view& Operator)
 {
 	size_t pos = Operator.find('=');
 	if (pos != std::string_view::npos) {//has =
@@ -63,7 +63,7 @@ ExpressionType Expression::EvaluateExpressionType(const std::string_view& Operat
 		if (Operator.size() == 1) { // = is the only op
 			return ExpressionType::EXPR_ASSIGNMENT;
 		}
-		if(Operator[pos - 1] == '+' ||		//	+=
+		if (Operator[pos - 1] == '+' ||		//	+=
 			Operator[pos - 1] == '-' ||		//	-=
 			Operator[pos - 1] == '*' ||		//	*=
 			Operator[pos - 1] == '/' ||		//	/=
@@ -82,7 +82,7 @@ ExpressionType Expression::EvaluateExpressionType(const std::string_view& Operat
 
 }
 //checks if an op combo is allowed
-bool Expression::NextOperatorIsLegal(char previous_op, char op)
+bool CompilerExpression::NextOperatorIsLegal(char previous_op, char op)
 {
 	if (previous_op == '\0') //no previous character 
 		return true;
@@ -99,7 +99,7 @@ bool Expression::NextOperatorIsLegal(char previous_op, char op)
 	case '<':
 		return op == '=' || op == '<' || (op == '-');	//	<= || << || <-
 	case '>':
-		return op == '=' || op == '>' ||(op == '-');	//	>= || >> || >-
+		return op == '=' || op == '>' || (op == '-');	//	>= || >> || >-
 	case '&':
 		return op == '&' || (op == '-');				//	&& || &-
 	case '|':
@@ -115,23 +115,17 @@ bool Expression::NextOperatorIsLegal(char previous_op, char op)
 
 	}
 
+	CompilerError("NextOperatorIsLegal: unknown operator [", previous_op, op, "]");
 	//int a = 2^-6;
 
 	return false;
 }
 
-bool Expression::ParseExpression(std::string& expr)
+bool CompilerExpression::ParseExpression(std::string& expr)
 {
-//	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
 	TokenizeExpression(expr, &e.expression);
-	
-	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-	//std::chrono::duration<double> difference = now - old;
 
-
-	//printf("tokenize expression took: %.12f\n", difference.count());
-	//CompilerError("1");
 
 	e.expression.type = EvaluateExpressionType(e.expression.Operator);
 	e.operands = e.expression.Operator.size();
@@ -147,25 +141,24 @@ bool Expression::ParseExpression(std::string& expr)
 		//3. sanity checks
 		//4. the expression is ok and ParseExpressionNumbers can be called
 
-		
-		//expr = RemoveBlank(expr);
-		char last_character{'\0'};
-		int32_t operands_in_a_row{0}, idx{-1};
+
+		char last_character{ '\0' };
+		int32_t operands_in_a_row{ 0 }, idx{ -1 };
 
 
 		for (const auto& i : expr) {
 			idx++;
-			
+
 			//pre-, and post-increments here probably...
 			// because ++ != + +
-			
+
 			//idk I will probably do this when I actually have variable support
 
 
 			if (std::isblank(i))
 				continue;
 
-			if (!std::isalnum(i) && BadCalculationOp(i)) {
+			if (!std::isalnum(i) && BadCalculationOp(i) && i != '\n' && i != '"') {
 				CompilerError("Illegal character '", i, "' used in expression");
 				return false;
 			}
@@ -189,9 +182,8 @@ bool Expression::ParseExpression(std::string& expr)
 
 			//+(+ == ++
 			//if(i != '(' && i != ')')
-				last_character = '\0';
+			last_character = '\0';
 		}
-		constexpr int a = (3 << 2) * 3 <= (2 ^ -5 < 3 % 1 * 7 - 2 % 3 | (2 / 3) && (1 || 3)) * 4 < 2 > 3 == 20 != 12 * 3 >> 3 & 5;
 		break;
 
 	}
@@ -200,7 +192,6 @@ bool Expression::ParseExpression(std::string& expr)
 
 	//called AFTER parsing the expression
 	float result = ParseExpressionNumbers(expr);
-	//std::cout << "end: " << result << '\n';
 
 	return true;
 }
@@ -208,9 +199,9 @@ bool Expression::ParseExpression(std::string& expr)
 //variables and functions are not allowed here
 //only expects operands, parenthesis and numbers
 //an expression like: 101 * (100 + ((2 + 3) & 3 ^ 4)) * (2 | 4 * -(-2 + 3 / (30 - 2 | 3)) ^ 2) can be used here
-float Expression::ParseExpressionNumbers(std::string& expr)
+bool CompilerExpression::ParseExpressionNumbers(std::string& expr)
 {
-	
+
 	//1. find parentheses																			-> 2 * (2 + 3)
 	//2. call EvaluateExpression with the expression within the parentheses							-> 2 + 3
 	//3. convert the original parenthesis expression to the return value from EvaluateExpression	-> (2 + 3) converts to 5
@@ -224,166 +215,136 @@ float Expression::ParseExpressionNumbers(std::string& expr)
 	}
 
 	if (!par.result_string.empty()) {
-		
+
 
 		const float result = EvaluateExpression(par.result_string);
-		
+
 
 		//replace the old expression with the new result
-		expr.erase(par.opening, par.strlength+2);
+		expr.erase(par.opening, par.strlength + 2);
 		expr.insert(par.opening, std::to_string(result));
 
 		ParseExpressionNumbers(expr);
-			
-		
 
-		return 1;
+
+
+		return true;
 	}
 
 
-	//std::cout << "last expression: " << expr << '\n';
-	const float result = EvaluateExpression(expr);
-	//std::cout << "result: " << result << '\n';
-	return result;
+	
+	return EvaluateExpression(expr);;
 }
 
 // expects an expression that does not include parantheses
 // example: 1 ^ 3 & 1 / 5
-float Expression::EvaluateExpression(const std::string_view& expression)
+bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 {
 
 	if (ValidNumber(expression)) {
-		return std::stof(std::string(expression));
+		return true;
 	}
 
 	std::list<std::string> tokens;
 	std::list<expression_stack> expressionstack;
 
-	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
-
 
 	size_t const opTokens = TokenizeStringOperands(expression, tokens);
 
-	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-
-	std::chrono::duration<float> difference = now - old;
-
-	printf("time taken: %.6f\n", difference.count());
 
 	if (opTokens % 2 == 0) {
-		CompilerError("Expected an expression");
+		CompilerError("EvaluateExpression: Expected an expression");
 		return false;
 	}
 
 	int i = 0;
 	const size_t size = tokens.size() - 1;
 
-	std::list<std::string>::iterator 
-		it = tokens.begin(), 
+	std::list<std::string>::iterator
+		it = tokens.begin(),
 		it_next = tokens.begin();
 
 	std::advance(it_next, 1); //next token
 
 	for (i = 0; i < size; i += 2) {
 
-		expressionstack.push_back({ *it, *it_next}); 
+		expressionstack.push_back({ *it, *it_next });
 
 		std::advance(it, 2);
 		std::advance(it_next, 2);
 	}
-	//it = tokens.end();
+
 	expressionstack.push_back({ *it, "" });
 
-	float ret = EvaluateExpressionStack(expressionstack);
-	//std::cout << "sizeof expressionstack: " << expressionstack.size() << '\n';
-	return ret;
+	return EvaluateExpressionStack(expressionstack);
 }
-float Expression::EvaluateExpressionStack(std::list<expression_stack>& es)
+bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es)
 {
+	const auto begin = es.begin();
 
-	std::list<float> values;
-	const size_t size = es.size();
+	std::list<expression_stack>::iterator end;
+	end = es.end();
 
-	for (const auto& i : es) {
-		try {
-			values.push_back(std::stof(i.content));
+	std::advance(end, -1); //ignore last because the operator is ""
+	VarType leftop{}, rightop{};
 
-			//std::cout << std::format("value[{}]: {}\n", i, values[i]);
+	for (auto i = begin; i != end; ++i) {
+
+		leftop = GetOperandType(i->content);
+
+		//iterate forward to get the right side
+		std::advance(i, 1);
+		rightop = GetOperandType(i->content);
+
+		//go back to the left side
+		std::advance(i, -1);
+
+		OperatorPriority opriority = GetOperandPriority(i->Operator);
+
+		//a string and a non-string
+		//is not || or &&
+
+		if ((leftop == VarType::VT_STRING && rightop != VarType::VT_STRING || rightop == VarType::VT_STRING && leftop != VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR)) {
+			CompilerError(VarTypec_str3[(int)leftop], " ", i->Operator, " ", VarTypec_str3[(int)rightop], " is illegal");
+			return false;
 		}
-		catch (const std::exception& ex) {
-			CompilerError(std::format("EvaluateExpressionStack(): {}\nexpression: {}", ex.what(), i.content));
+
+		//both are strings
+		//equality operator not used
+
+		else if ((leftop == VarType::VT_STRING && rightop == VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR && opriority != EQUALITY)) {
+			CompilerError(VarTypec_str3[(int)leftop], " ", i->Operator, " ", VarTypec_str3[(int)rightop], " is illegal");
+			return false;
 		}
+
+		OperatorPriority a = GetOperandPriority(i->Operator); //errors if there are bad operators
+
+		if (a == FAILURE)
+			return false;
+	}
+	if (end->Operator != "") {
+		CompilerError("EvaluateExpressionStack: Expected an expression\n");
+		return false;
+	}
+	return true;
+}
+VarType CompilerExpression::GetOperandType(const std::string_view& operand)
+{
+	std::cout << "GetOperandType: " << operand << '\n';
+	if (ValidNumber(operand)) {
+		//either an int or a float
+
+		if (IsInteger(operand))
+			return VarType::VT_INT;
+
+		return VarType::VT_FLOAT;
+
 	}
 
-
-	//ok now we have:
-	//sequence of floating point numbers
-	//sequence of operators
-
-	OperatorPriority op, next_op;
-
-
-	float result(0);
-	int i=0;
-	size_t vals = size;
-	std::list<float>::iterator val_itr1, val_itr2;
-	std::list<expression_stack>::iterator es_itr1, es_itr2, es_begin1;
-
-	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
-
-	//order of operations (PEMDAS)
-	while(vals > 1){
-
-		val_itr1 = values.begin();
-		val_itr2 = val_itr1;
-		std::advance(val_itr2, 1); //next operator
-
-		es_itr1 = es.begin();
-		es_itr2 = es_itr1;
-		std::advance(es_itr2, 1); //next operator
-
-
-		i = 0;
-
-		op = GetOperandPriority(es_itr1->Operator);
-		next_op = GetOperandPriority(es_itr2->Operator);
-
-
-		//move to the right if the operand priority is higher
-		while (next_op > op) {
-
-			op = GetOperandPriority(es_itr1->Operator);
-			next_op = GetOperandPriority(es_itr2->Operator); //i+1 is always in range unless this function was called with bad arguments
-			if (next_op <= op)
-				break;
-
-			i++;
-			std::advance(es_itr1, 1);
-			std::advance(es_itr2, 1); //always one iteration ahead
-			
-		}
-
-		std::advance(val_itr1, i);
-		std::advance(val_itr2, i);
-
-		result = Eval(*val_itr1, *val_itr2, es_itr1->Operator);
-
-		//std::cout << std::format("{} {} {} = {}\n", *val_itr1, es_itr1->Operator, *val_itr2, result);
-
-		values.erase(val_itr1, val_itr2);
-
-		es.erase(es_itr1, es_itr2);
-
-
-		*(++val_itr1) = result;
-		vals--;
-
+	if (GetCharacterCount(operand, '"') == 2) {
+		return VarType::VT_STRING;
 	}
-	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-	//std::chrono::duration<float> difference = now - old;
-
-	//printf("time taken: %.6f\n", difference.count());
-	return result;
-
+	CompilerError("Unable to decipher operand type");
+	return VarType::VT_INVALID;
 }

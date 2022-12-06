@@ -47,7 +47,7 @@ bool fs::F_WriteToFile(std::fstream& fp, std::string& text)
 
 	return true;
 }
-bool fs::F_OpenFile(std::fstream& fp, std::string& path, fileopen type)
+bool fs::F_OpenFile(std::fstream& fp, const std::string& path, fileopen type)
 {
 	if (fp.is_open())
 		return true;

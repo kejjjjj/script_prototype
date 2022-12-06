@@ -1,5 +1,44 @@
 #include "pch.h"
 
+uint32_t HashString(const char* s)
+{
+    uint32_t hash = 0;
+
+    for (; *s; ++s)
+    {
+        hash += *s;
+        hash += (hash << 10);
+        hash ^= (hash >> 7);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash % 513;
+}
+uint32_t HashString(const std::string_view& s_)
+{
+    const std::string _s = std::string(s_.begin(), s_.end());
+    const char* s = _s.c_str();
+
+    //std::cout << "s: " << s << '\n';
+
+    uint32_t hash = 0;
+
+    for (; *s; ++s)
+    {
+        hash += *s;
+        hash += (hash << 10);
+        hash ^= (hash >> 7);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash % 513;
+}
 float Eval(const float& a, const float& b, const std::string_view& ops)
 {
     if (ops.size() < 2) {
@@ -63,12 +102,22 @@ float Eval(const float& a, const float& b, const std::string_view& ops)
     else if (ops == "&&")
         return a && b;
     
-    else if (ops == "<<")
+    else if (ops == "<<") {
+        if (b < 0) {
+            CompilerError("Shift count is negative: ", a, " << ", b);
+            return false;
+        }
         return (int)a << (int)b;
-
-    else if (ops == ">>")
+    }
+    else if (ops == ">>") {
+        if (b < 0) {
+            CompilerError("Shift count is negative: ", a, " >> ", b);
+            return false;
+        }
         return (int)a >> (int)b;
+    }
 
+    CompilerError("Unknown operator: ", ops);
 
     return 0;
 }
@@ -100,16 +149,17 @@ SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& t
 
     return tokens.size();
 }
-SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::string>& tokens)
+SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::string>& tokens)
 {
-    
     std::string token;
 
     std::string a = RemoveBlank(expr);
     int32_t idx = -1;
     char previous_character{'\0'};
-    size_t subtr_in_a_row{0}, equals_in_a_row{0};
-    for (auto it = a.begin(); it != a.end();  ++it) {
+    size_t subtr_in_a_row{0}, equals_in_a_row{0}, size = a.size();
+    auto begin = a.begin();
+    auto end = a.end();
+    for (auto it = begin; it != end; ++it) {
 
         auto& i = *it;
         idx++;
@@ -148,7 +198,8 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
             equals_in_a_row = 0;
 
         if (IsCalculationOp(i)) {
-            subtr_in_a_row++;
+            if(i == '-')
+                subtr_in_a_row++;
 
             if (subtr_in_a_row > 2) { //works for cases like / -(-1) A.K.A 3 consecutive operators
 
@@ -172,14 +223,14 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
                // std::cout << "negative value detected after an operator.. skipping!\n";
                 continue;
             }
-            
-
-            if (idx == a.size() - 1) { //op cannot be the last character
-                CompilerError("Expected an expression");
-                return 0;
-            }
+        
 
             //save the string before the operator
+            if (token.empty()) {
+                CompilerError("Expected an expression");
+                return false;
+            }
+
             tokens.push_back(token);
             token.clear();
 
@@ -203,7 +254,7 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
 
             
             //make sure buffer overflow won't happen
-            if (idx < a.size() - 2) {
+            if (idx < size - 2) {
                 //is the character after the = an another =
                 if (*(it + 1) == '=') { // ==
                     token.push_back('=');
@@ -226,7 +277,8 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
             
         //assignments are forbidden
         //returns false if previous character is not !, < or > (!=, <=, >=)
-        if (equals_in_a_row == 1 && a[idx-2] != '!' && a[idx - 2] != '<' && a[idx - 2] != '>') { //one = and ! doesn't exist (!=)
+        char previous = a[idx - 2];
+        if (equals_in_a_row == 1 && previous != '!' && previous != '<' && previous != '>') { //one = and ! doesn't exist (!=)
             CompilerError("Assignments are not supported yet!: ", a[idx - 2], '=');
             return false;
         }
@@ -236,9 +288,22 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::str
         subtr_in_a_row = 0;
         equals_in_a_row = 0;
     }
+    if (token.empty()) {
+        CompilerError("Expected an expression");
+        return false;
+    }
     tokens.push_back(token);
 
     return tokens.size();
+}
+SIZE_T GetCharacterCount(const std::string_view& str, char c)
+{
+    SIZE_T count=0;
+    for (auto& i : str) {
+        if (i == c)
+            count++;
+    }
+    return count;
 }
 //does not include the parantheses
 Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
@@ -248,7 +313,6 @@ Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
     for (const auto& i : expr) {
         idx++;
 
-      //  std::cout << "i[" << idx << "] = " << i << '\n';
         switch (i) {
 
             case '(':
@@ -271,7 +335,6 @@ Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
         
     }
 
-  //  std::cout << std::format("( count = {}\n) count = {}\n( = {}\n) = {}\n", count_opening, count_closing, opening, closing);
     const int len = closing - opening - count_opening;
     //note: cuts out the parantheses
     return { count_opening, count_closing, opening, len, expr.substr(opening + 1, len) };
@@ -354,7 +417,8 @@ std::string RemoveBlanksFromBeginningAndEnd(std::string& in)
 OperatorPriority GetOperandPriority(const std::string_view& ops)
 {
 
-    //return ((op == '+' || op == '-') == true) ? LOW : MEDIUM;
+   // return operatorHash[HashString(ops)];
+
     if (ops.size() == 1) {
         char op = ops[0];
 
@@ -371,8 +435,6 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
         else if (op == '>' || op == '<') //Relational
             return RELATIONAL;
 
-
-
         else if (op == '+' || op == '-')
             return ADDITIVE;
 
@@ -380,8 +442,8 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
             return MULTIPLICATIVE;
 
 
-        CompilerError("Unknown operator");
-        return ASSIGNMENT;
+        CompilerError("Unknown operator '", ops, "'");
+        return FAILURE;
     }
     
     //two operators
@@ -402,8 +464,8 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
         return LOGICAL_OR;
 
 
-
-    return ASSIGNMENT;
+    CompilerError("Unknown operator [", ops, "]");
+    return FAILURE;
 
 }
 bool ValidNumber(const std::string_view& expr)
@@ -448,4 +510,9 @@ bool ValidNumber(const std::string_view& expr)
 
 
     return true;
+}
+//CALL AFTER ISVALIDNUMBER
+bool IsInteger(const std::string_view& expr)
+{
+    return expr.find('.') == std::string_view::npos; //no decimal
 }

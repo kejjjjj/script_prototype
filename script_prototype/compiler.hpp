@@ -5,16 +5,20 @@
 
 #include "pch.h"
 
-class Compiler
+class Script : protected Runtime
 {
 public:
-	Compiler(std::string path);
-	
-	~Compiler();
+	Script(const std::string& path);
+	~Script();
+
 	bool Compile();
+
+
 
 private:
 	std::fstream f;
+	bool compiled;
+	std::string compiled_file;
 };
 
 #endif

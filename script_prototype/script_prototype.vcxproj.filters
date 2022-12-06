@@ -16,6 +16,9 @@
     <Filter Include="Source Files\scripting">
       <UniqueIdentifier>{182ed15d-255e-4188-9f5a-aaa2654e439b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\scripting\code">
+      <UniqueIdentifier>{3c6e522e-3fd7-4760-8ab5-f4f34cbe0f4d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="script_prototype.cpp">
@@ -26,9 +29,6 @@
     </ClCompile>
     <ClCompile Include="filetools.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="compiler.cpp">
-      <Filter>Source Files\scripting</Filter>
     </ClCompile>
     <ClCompile Include="expressions.cpp">
       <Filter>Source Files\scripting</Filter>
@@ -42,6 +42,18 @@
     <ClCompile Include="variables.cpp">
       <Filter>Source Files\scripting</Filter>
     </ClCompile>
+    <ClCompile Include="runtime.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler_expressions.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
+    <ClCompile Include="runtime_expressions.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -49,9 +61,6 @@
     </ClInclude>
     <ClInclude Include="filetools.hpp">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler.hpp">
-      <Filter>Source Files\scripting</Filter>
     </ClInclude>
     <ClInclude Include="expressions.hpp">
       <Filter>Source Files\scripting</Filter>
@@ -64,6 +73,18 @@
     </ClInclude>
     <ClInclude Include="variables.hpp">
       <Filter>Source Files\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="runtime.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler_expressions.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="runtime_expressions.hpp">
+      <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

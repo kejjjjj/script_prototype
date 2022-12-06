@@ -25,8 +25,8 @@ struct expression_stack
 	std::string Operator;
 };
 
-#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '~' || x == '|' || x == '^' || x == '!' || x == '%')
 
+#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '~' || x == '|' || x == '^' || x == '!' || x == '%')
 #define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=')
 
 
@@ -44,7 +44,7 @@ public:
 	bool ParseExpression(std::string &expr);
 	float ParseExpressionNumbers(std::string& expr);
 
-	float EvaluateExpressionStack(std::vector<expression_stack>& es);
+	float EvaluateExpressionStack(std::list<expression_stack>& es);
 
 	struct e_s
 	{

@@ -12,13 +12,18 @@
 #include <filesystem>
 #include <direct.h>
 #include <array>
+#include <list>
 
 
 #include "filetools.hpp"
-#include "expressions.hpp"
 #include "common.hpp"
-#include "compiler.hpp"
 #include "variables.hpp"
+#include "expressions.hpp"
+#include "compiler_expressions.hpp"
+#include "runtime_expressions.hpp"
+#include "runtime.hpp"
+#include "compiler.hpp"
 #include "allocations.hpp"
+
 
 #endif

@@ -6,13 +6,13 @@ Variable::Variable(const std::string_view& _name, VarType _type, VariableValue i
 
 
 	switch (_type) {
-	case VarType::V_INT:
+	case VarType::VT_INT:
 		value.integer = init.integer;
 		break;
-	case VarType::V_FLOAT:
+	case VarType::VT_FLOAT:
 		value.value = init.value;
 		break;
-	case VarType::V_STRING:
+	case VarType::VT_STRING:
 		value.string = init.string;
 		break;
 	}
@@ -27,13 +27,13 @@ void Variable::Initialize(const std::string_view & _name, VarType _type, Variabl
 	type = _type;
 
 	switch (_type) {
-	case VarType::V_INT:
+	case VarType::VT_INT:
 		value.integer = init.integer;
 		break;
-	case VarType::V_FLOAT:
+	case VarType::VT_FLOAT:
 		value.value = init.value;
 		break;
-	case VarType::V_STRING:
+	case VarType::VT_STRING:
 		value.string = init.string;
 		break;
 	}

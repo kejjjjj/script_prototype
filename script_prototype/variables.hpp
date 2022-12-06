@@ -5,11 +5,19 @@
 
 #include "pch.h"
 
+static const char* VarTypec_str3[3]
+{
+	"integer",
+	"float",
+	"string"
+};
+
 enum class VarType
 {
-	V_INT,
-	V_FLOAT,
-	V_STRING
+	VT_INT,
+	VT_FLOAT,
+	VT_STRING,
+	VT_INVALID
 };
 
 struct VariableValue

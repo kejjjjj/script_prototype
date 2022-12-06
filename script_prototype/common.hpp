@@ -8,6 +8,7 @@
 inline std::vector<std::string> compilerlog;
 inline void CompilerError()
 {
+
 	std::string beg = std::format("Line: {}\nColumn: {}\n\nDescription:\n", fs::file.lines_read, fs::file.current_column);
 	
 	compilerlog.insert(compilerlog.begin(), beg);
@@ -40,6 +41,7 @@ inline void CompilerError(const T& t, const Param& ... param)
 //the higher the value the higher the priority
 enum OperatorPriority
 {
+	FAILURE,
 	ASSIGNMENT,		//	= += -= *= /= %= >>= <<= &= ^= |=
 	CONDITIONAL,	//	?:
 	LOGICAL_OR,		//	||
@@ -56,6 +58,8 @@ enum OperatorPriority
 	POSTFIX,		//  () [] -> . ++ - -	
 
 };
+inline OperatorPriority operatorHash[513];
+
 struct Parenthesis_s
 {
 	int32_t count_opening;
@@ -64,13 +68,19 @@ struct Parenthesis_s
 	int32_t strlength; //number of characters after opening until )
 	std::string_view result_string;
 };
+
+uint32_t HashString(const char* s);
+uint32_t HashString(const std::string_view& s);
+
 std::string RemoveFromString(std::string& str, char a);
 SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& tokens);
-SIZE_T TokenizeStringOperands(const std::string_view& expr, std::vector<std::string>& tokens);
+SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::string>& tokens);
+SIZE_T GetCharacterCount(const std::string_view& str, char c);
 Parenthesis_s GetStringWithinParentheses(const std::string_view& expr);
 float Eval(const float& a, const float& b, const std::string_view& ops);
 OperatorPriority GetOperandPriority(const std::string_view& ops);
 bool ValidNumber(const std::string_view& expr);
+bool IsInteger(const std::string_view& expr);
 
 std::string RemoveBlank(const std::string_view& expr);
 
