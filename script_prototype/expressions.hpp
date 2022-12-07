@@ -27,6 +27,8 @@ struct expression_stack
 
 
 #define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '~' || x == '|' || x == '^' || x == '!' || x == '%')
+#define IsOperator(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%' || x == '=')
+
 #define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=')
 
 

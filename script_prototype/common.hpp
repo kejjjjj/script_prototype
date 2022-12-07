@@ -85,5 +85,5 @@ bool IsInteger(const std::string_view& expr);
 std::string RemoveBlank(const std::string_view& expr);
 
 size_t RemoveBlank(std::string_view& expr, std::string& out);
-std::string RemoveBlanksFromBeginningAndEnd(std::string& in);
+std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in);
 #endif

@@ -356,7 +356,7 @@ size_t RemoveBlank(std::string_view& expr, std::string& out)
 
     return out.size();
 }
-std::string RemoveBlanksFromBeginningAndEnd(std::string& in)
+std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in)
 {
     std::string out;
 

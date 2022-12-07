@@ -5,11 +5,12 @@
 
 #include "pch.h"
 
-static const char* VarTypec_str3[3]
+static const char* VarTypec_str[4]
 {
 	"integer",
 	"float",
-	"string"
+	"string",
+	"unknown"
 };
 
 enum class VarType
@@ -36,7 +37,7 @@ public:
 
 	void Initialize(const std::string_view& _name, VarType _type, VariableValue init, int32_t _stacklevel);
 
-private:
+//private:
 
 	std::string_view name;
 	VarType type;
