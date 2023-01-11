@@ -7,7 +7,7 @@ bool CompilerExpression::VariableNameIsLegal(const std::string_view& var)
 		return false;
 	}
 
-	for (auto& i : var) {
+	for (const auto& i : var) {
 
 		if (!std::isalnum(i) && i != '\n' && i != '_' && i != '-') {
 			CompilerError("unexpected character '", i, "' in expression");
@@ -41,10 +41,17 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 			continue;
 
 		if (!std::isalnum(i) && BadCalculationOp(i) && i != '\n' && i != '"') {
+
+			if (i != expr.front()) { //is . used because of a decimal point?
+				if (i == '.' && std::isdigit(expr[idx - 1])) { //if so, then skip
+					goto isfine;
+				}
+			}
+
 			CompilerError("Illegal character '", i, "' used in expression");
 			return "";
 		}
-
+		isfine:
 
 		if (IsCalculationOp(i)) {
 			if (operands_in_a_row > 2) {
@@ -206,8 +213,10 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 		
 		std::cout << "variableName: [" << variableName << "]\n";
 
-		if (!VariableNameIsLegal(variableName))
+		if (!VariableNameIsLegal(variableName)) {
+			CompilerError("Expected an identifier");
 			return false;
+		}
 
 
 		expr = CleanupExpression(e.expression.postOP);
@@ -326,7 +335,6 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 	
 		const VarType leftop = GetOperandType(it->content);
 		const OperatorPriority opriority = GetOperandPriority(it->Operator);
-		
 		
 
 		//is a string without ==, !=, ||, &&

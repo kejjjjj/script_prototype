@@ -39,7 +39,7 @@ public:
 
 //private:
 
-	std::string_view name;
+	std::string name;
 	VarType type;
 	VariableValue value;
 	int32_t stacklevel;

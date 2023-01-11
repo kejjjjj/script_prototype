@@ -160,7 +160,7 @@ std::string fs::removeFileExtension(std::string& file, size_t chars)
 {
 	return file.substr(0, file.size() - chars);
 }
-std::string fs::F_GetFileName(std::string const fullpath)
+std::string fs::F_GetFileName(std::string& const fullpath)
 {
 	size_t pos = fullpath.find_last_of('\\');
 
