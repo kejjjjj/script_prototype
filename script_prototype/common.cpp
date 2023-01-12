@@ -393,6 +393,28 @@ std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in)
     }
     return out;
 }
+std::string RemoveDuplicateBlanks(const std::string_view& in)
+{
+    size_t in_a_row = 0;
+    std::string fixed;
+
+    for (const auto& i : in) {
+
+        if (std::isblank(i)) {
+            in_a_row++;
+        }
+        else
+            in_a_row = NULL;
+
+        if (in_a_row >= 2) {
+            continue;
+        }
+
+        fixed.push_back(i);
+
+    }
+    return fixed;
+}
 //void CompilerError(std::string str, ...)
 //{
 //    str += std::format("\n\nLine: {}\nColumn: {}", fs::file.lines_read, fs::file.current_column);

@@ -1,23 +1,5 @@
 #include "pch.h"
 
-bool CompilerExpression::VariableNameIsLegal(const std::string_view& var)
-{
-	if (!std::isalpha(var[0])) {
-		CompilerError("expected an identifier");
-		return false;
-	}
-
-	for (const auto& i : var) {
-
-		if (!std::isalnum(i) && i != '\n' && i != '_' && i != '-') {
-			CompilerError("unexpected character '", i, "' in expression");
-			return false;
-		}
-
-	}
-	return true;
-}
-
 //1. remove blanks
 //2. check that all characters are numbers || parentheses || operators
 //returns "" if it fails
@@ -73,6 +55,10 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 
 	return RemoveBlank(expr);
 }
+//converts the expression to three parts
+//1. the expression before the assignment operator
+//2. the operator (if exists)
+//3. the expression after the assignment operator (if exists)
 void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, expression_s* expr)
 {
 
@@ -195,6 +181,7 @@ bool CompilerExpression::NextOperatorIsLegal(char previous_op, char op)
 	return false;
 }
 
+//takes the raw expression as input
 bool CompilerExpression::ParseExpression(std::string& expr)
 {
 
@@ -203,26 +190,44 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 	e.expression.type = EvaluateExpressionType(e.expression.Operator);
 	e.operands = e.expression.Operator.size();
 
-	static Variable var;
-
 	switch (e.expression.type) {
 	case ExpressionType::EXPR_ASSIGNMENT:
 	{
-		const std::string variableName = RemoveBlanksFromBeginningAndEnd(e.expression.preOP);
 
-		
-		std::cout << "variableName: [" << variableName << "]\n";
+		std::string variableName = RemoveBlanksFromBeginningAndEnd(e.expression.preOP);
 
-		if (!VariableNameIsLegal(variableName)) {
+		//TODO: check if already initialized
+		const std::string varType = GetVariableTypeString(variableName);
+
+		if (varType.empty()) {
+			CompilerError("Explicit type is missing from variable '", variableName, "'");
+			return false;
+		}
+
+
+
+		const size_t type = GetDataType(varType);
+
+		if (!type) {
+			CompilerError("Identifier '", varType, "' is unidentified");
+			return false;
+		}
+
+		variableName = RemoveDuplicateBlanks(variableName);
+
+		var.type = (VarType)type;
+		var.name = variableName.substr(varType.length()+1); //the string after the type
+
+	
+		std::cout << "variableName: [" << var.name << "]\n";
+
+		if (!VariableNameIsLegal(var.name)) {
 			CompilerError("Expected an identifier");
 			return false;
 		}
 
 
 		expr = CleanupExpression(e.expression.postOP);
-
-		var.name = variableName;
-
 		//CompilerError("Assignment expressions are not supported yet\nType: ", (int)e.expression.type);
 		break;
 	}
@@ -236,11 +241,10 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 
 
 	//called AFTER parsing the expression
-	ExprData result;
-	ParseExpressionNumbers(expr, result);
+	ParseExpressionNumbers(expr);
 
 	if (!var.name.empty()) {
-		std::cout << std::format("[{}] with type: [{}]\n", var.name, VarTypec_str[(int)result.vType]);
+		std::cout << std::format("[{}] with type: [{}]\n", var.name, VarTypes[(int)var.type]);
 	}
 
 	return true;
@@ -249,7 +253,7 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 //variables and functions are not allowed here
 //only expects operands, parenthesis and numbers
 //an expression like: 101 * (100 + ((2 + 3) & 3 ^ 4)) * (2 | 4 * -(-2 + 3 / (30 - 2 | 3)) ^ 2) can be used here
-bool CompilerExpression::ParseExpressionNumbers(std::string& expr, ExprData& data)
+bool CompilerExpression::ParseExpressionNumbers(std::string& expr)
 {
 
 	//1. find parentheses																			-> 2 * (2 + 3)
@@ -266,30 +270,28 @@ bool CompilerExpression::ParseExpressionNumbers(std::string& expr, ExprData& dat
 	if (!par.result_string.empty()) {
 
 
-		const float result = EvaluateExpression(par.result_string, data);
+		const float result = EvaluateExpression(par.result_string);
 
 
 		//replace the old expression with the new result
 		expr.erase(par.opening, par.strlength + 2);
 		expr.insert(par.opening, std::to_string(result));
 
-		ParseExpressionNumbers(expr, data);
+		ParseExpressionNumbers(expr);
 
 
 
 		return 1;
 	}
 
-	
-	
-	EvaluateExpression(expr, data);
+	EvaluateExpression(expr);
 
 	return true;
 }
 
 // expects an expression that does not include parantheses
 // example: 1 ^ 3 & 1 / 5
-bool CompilerExpression::EvaluateExpression(const std::string_view& expression, ExprData& data)
+bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 {
 
 	if (ValidNumber(expression)) {
@@ -327,43 +329,19 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression, 
 
 	expressionstack.push_back({ *it, "" });
 
-	return EvaluateExpressionStack(expressionstack, data);
+	return EvaluateExpressionStack(expressionstack);
 }
-bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es, ExprData& data)
+bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es)
 {
-	const auto GetTypeFromFirstOperand = [this](const std::list<expression_stack>::iterator& it) -> VarType{
-	
-		const VarType leftop = GetOperandType(it->content);
-		const OperatorPriority opriority = GetOperandPriority(it->Operator);
-		
 
-		//is a string without ==, !=, ||, &&
-		//string
-		if (leftop == VarType::VT_STRING && (opriority != EQUALITY && opriority != LOGICAL_AND && opriority != LOGICAL_OR)) {
-			return VarType::VT_STRING;
-		}
-
-		//is a string with  ==, !=, ||, &&
-		//integer
-		else if (leftop == VarType::VT_STRING && (opriority == EQUALITY || opriority == LOGICAL_AND || opriority == LOGICAL_OR)) {
-			return VarType::VT_INT;
-		}
-
-		return leftop;
-
-	};
 
 	const auto begin = es.begin();
 
-	std::list<expression_stack>::iterator end;
-	end = es.end();
+	std::list<expression_stack>::iterator end = es.end();
 
 	std::advance(end, -1); //ignore last because the operator is ""
 	VarType leftop{}, rightop{};
 	OperatorPriority opriority;
-
-	//I have decided that the first expression operand assigns the type!
-	data.vType = GetTypeFromFirstOperand(begin);
 
 	for (auto i = begin; i != end; ++i) {
 
@@ -382,7 +360,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		//is not || or &&
 
 		if ((leftop == VarType::VT_STRING && rightop != VarType::VT_STRING || rightop == VarType::VT_STRING && leftop != VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR)) {
-			CompilerError(VarTypec_str[(int)leftop], " ", i->Operator, " ", VarTypec_str[(int)rightop], " is illegal");
+			CompilerError(VarTypes[(int)leftop], " ", i->Operator, " ", VarTypes[(int)rightop], " is illegal");
 			return false;
 		}
 
@@ -390,7 +368,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		//equality operator not used
 
 		else if ((leftop == VarType::VT_STRING && rightop == VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR && opriority != EQUALITY)) {
-			CompilerError(VarTypec_str[(int)leftop], " ", i->Operator, " ", VarTypec_str[(int)rightop], " is illegal");
+			CompilerError(VarTypes[(int)leftop], " ", i->Operator, " ", VarTypes[(int)rightop], " is illegal");
 			return false;
 		}
 
@@ -408,7 +386,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 }
 VarType CompilerExpression::GetOperandType(const std::string_view& operand)
 {
-	std::cout << "GetOperandType: " << operand << '\n';
+	//std::cout << "GetOperandType: " << operand << '\n';
 	if (ValidNumber(operand)) {
 		//either an int or a float
 

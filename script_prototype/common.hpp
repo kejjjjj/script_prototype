@@ -86,4 +86,5 @@ std::string RemoveBlank(const std::string_view& expr);
 
 size_t RemoveBlank(std::string_view& expr, std::string& out);
 std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in);
+std::string RemoveDuplicateBlanks(const std::string_view& in);
 #endif

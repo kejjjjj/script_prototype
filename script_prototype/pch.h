@@ -13,6 +13,7 @@
 #include <direct.h>
 #include <array>
 #include <list>
+#include <ranges>
 
 
 #include "filetools.hpp"

@@ -39,3 +39,50 @@ void Variable::Initialize(const std::string_view & _name, VarType _type, Variabl
 	}
 
 }
+//uses the same rules as C language
+bool VariableNameIsLegal(const std::string_view& var)
+{
+	if (!std::isalpha(var[0])) {
+		CompilerError("expected an identifier");
+		return false;
+	}
+
+	for (const auto& i : var) {
+
+		if (!std::isalnum(i) && i != '\n' && i != '_' && i != '-') {
+			CompilerError("unexpected character '", i, "' in expression");
+			return false;
+		}
+
+	}
+	return true;
+}
+
+//assumes the string before the operator is passed
+std::string GetVariableTypeString(const std::string expr)
+{
+	const size_t pos = expr.find_first_of(' ');
+
+	if (pos == std::string::npos)
+		return "";
+
+	return expr.substr(0, pos);
+
+}
+bool IsDataType(const std::string_view& str)
+{
+	for (const auto& i : VarTypes)
+		if (!str.compare(i))
+			return true;
+
+	return false;
+}
+size_t GetDataType(const std::string_view& str)
+{
+	for (size_t i = 0; i < VarTypes.size(); i++){
+		if (!str.compare(VarTypes[i]))
+			return i;
+	}
+
+	return 0u;
+}

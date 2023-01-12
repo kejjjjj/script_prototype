@@ -26,13 +26,12 @@ public:
 	bool NextOperatorIsLegal(char previous_op, char op);
 
 
-	bool EvaluateExpression(const std::string_view& expr, ExprData& data);
+	bool EvaluateExpression(const std::string_view& expr);
 	bool ParseExpression(std::string& expr);
-	bool ParseExpressionNumbers(std::string& expr, ExprData& data);
-	bool VariableNameIsLegal(const std::string_view& var);
+	bool ParseExpressionNumbers(std::string& expr);
 	std::string CleanupExpression(const std::string_view& str);
 
-	bool EvaluateExpressionStack(std::list<expression_stack>& es, ExprData& data);
+	bool EvaluateExpressionStack(std::list<expression_stack>& es);
 	VarType GetOperandType(const std::string_view& operand);
 	struct e_s
 	{
@@ -45,6 +44,7 @@ public:
 
 protected:
 	bool error_exists;
+	Variable var;
 };
 
 
