@@ -30,16 +30,23 @@ bool Script::Compile()
 
 		if (ch == ';') {
 
-			CompilerExpression expr(expression_str);
+			CompilerExpression expr(expression_str, this->rtScript);
 
 			expr.ParseExpression(expression_str);
 			expressions_parsed++;
+			expression_str.clear();
+			rtScript += ";\n";
 			continue;
 		}
 
 		expression_str.push_back(ch);
 	}
 	
+	std::cout << "---------------------\n";
+
+	std::cout << rtScript << '\n';
+
+	std::cout << "---------------------\n";
 
 	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 

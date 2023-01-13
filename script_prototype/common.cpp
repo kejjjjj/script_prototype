@@ -343,7 +343,7 @@ std::string RemoveBlank(const std::string_view& expr)
 {
     std::string fixed;
     for (const auto& i : expr)
-        if (!std::isblank(i))
+        if (!std::isspace(i))
             fixed.push_back(i);
 
     return fixed;
@@ -351,10 +351,37 @@ std::string RemoveBlank(const std::string_view& expr)
 size_t RemoveBlank(std::string_view& expr, std::string& out)
 {
     for (const auto& i : expr)
-        if (!std::isblank(i))
+        if (!std::isspace(i))
             out.push_back(i);
 
     return out.size();
+}
+std::string RemoveIrrelevantCode(const std::string_view& expr)
+{
+    bool within_quotes = false;
+    std::string fixed;
+    for (const auto& i : expr)
+    {
+        if (i == '"') {
+            within_quotes = !within_quotes;
+        }if (within_quotes) {
+            fixed.push_back(i);
+            continue;
+        }
+
+        if (std::isspace(i))
+            continue;
+
+
+        fixed.push_back(i);
+
+    }
+
+    if (within_quotes) {
+        CompilerError("missing closing quote");
+        return "";
+    }
+    return fixed;
 }
 std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in)
 {
@@ -365,7 +392,7 @@ std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in)
     int32_t index(-1);
     for (auto& i : in) {
         index++;
-        if (parseBeginning && std::isblank(i)) {
+        if (parseBeginning && std::isspace(i)) {
             
             continue;
         }
@@ -374,13 +401,13 @@ std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in)
 
         
 
-        if (std::isblank(i)) {
+        if (std::isspace(i)) {
 
             //test if the rest of the characters are also blank
             int chars_left = in.size() - index;
             int blanks_found(0);
             for (int j = index; j < in.size(); j++) {
-                if (std::isblank(in[j]))
+                if (std::isspace(in[j]))
                     ++blanks_found;
             }
             if (chars_left == blanks_found)
@@ -400,7 +427,7 @@ std::string RemoveDuplicateBlanks(const std::string_view& in)
 
     for (const auto& i : in) {
 
-        if (std::isblank(i)) {
+        if (std::isspace(i)) {
             in_a_row++;
         }
         else
@@ -537,4 +564,8 @@ bool ValidNumber(const std::string_view& expr)
 bool IsInteger(const std::string_view& expr)
 {
     return expr.find('.') == std::string_view::npos; //no decimal
+}
+void PushString(std::string* strptr, const std::string_view& str)
+{
+    *strptr += str;
 }

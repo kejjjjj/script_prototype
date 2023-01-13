@@ -13,7 +13,7 @@ public:
 
 	bool Compile();
 
-
+	std::string rtScript;
 
 private:
 	std::fstream f;

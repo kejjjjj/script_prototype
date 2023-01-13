@@ -53,7 +53,12 @@ public:
 std::string GetVariableTypeString(const std::string expr);
 bool IsDataType(const std::string_view& str);
 size_t GetDataType(const std::string_view& str);
+bool VariableInStack(const std::string_view& var);
 
+Variable* FindVariableFromStack(const std::string_view& var);
+
+//assumes the whole string before the operator
+bool IsVariableInitialization(const std::string_view& expr);
 bool VariableNameIsLegal(const std::string_view& var);
 
 #endif

@@ -83,8 +83,10 @@ bool ValidNumber(const std::string_view& expr);
 bool IsInteger(const std::string_view& expr);
 
 std::string RemoveBlank(const std::string_view& expr);
+std::string RemoveIrrelevantCode(const std::string_view& expr);
 
 size_t RemoveBlank(std::string_view& expr, std::string& out);
 std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in);
 std::string RemoveDuplicateBlanks(const std::string_view& in);
+void PushString(std::string* strptr, const std::string_view& str);
 #endif

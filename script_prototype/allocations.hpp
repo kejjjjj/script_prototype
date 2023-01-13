@@ -13,10 +13,11 @@ public:
 	void PopFromStack(const size_t idx);
 
 	std::vector<Variable> stack; //current variables on the stack
-	int32_t stacklevel; 
+	int32_t stacklevel = 0; 
 
 private:
 };
 
+inline Memory_c scriptStack;
 
 #endif

@@ -9,7 +9,6 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 	char last_character{ '\0' };
 	int32_t operands_in_a_row{ 0 }, idx{ -1 };
 
-
 	for (const auto& i : expr) {
 		idx++;
 
@@ -18,8 +17,7 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 
 		//idk I will probably do this when I actually have variable support
 
-
-		if (std::isblank(i))
+		if (std::isspace(i))
 			continue;
 
 		if (!std::isalnum(i) && BadCalculationOp(i) && i != '\n' && i != '"') {
@@ -53,7 +51,7 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 		last_character = '\0';
 	}
 
-	return RemoveBlank(expr);
+	return RemoveIrrelevantCode(expr);
 }
 //converts the expression to three parts
 //1. the expression before the assignment operator
@@ -193,42 +191,72 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 	switch (e.expression.type) {
 	case ExpressionType::EXPR_ASSIGNMENT:
 	{
+		//fix the contents before the assignment operator
+		const std::string variableName = RemoveDuplicateBlanks(RemoveBlanksFromBeginningAndEnd(e.expression.preOP));
 
-		std::string variableName = RemoveBlanksFromBeginningAndEnd(e.expression.preOP);
+		fscript += variableName;
+		fscript += e.expression.Operator;
+		if (IsVariableInitialization(variableName)) {
 
-		//TODO: check if already initialized
-		const std::string varType = GetVariableTypeString(variableName);
 
-		if (varType.empty()) {
-			CompilerError("Explicit type is missing from variable '", variableName, "'");
-			return false;
+			//check the initialization type
+			const std::string varType = GetVariableTypeString(variableName);
+
+			if (varType.empty()) {
+
+				CompilerError("Explicit type is missing from variable \"", variableName, "\"");
+				return false;
+
+			}
+
+			const size_t type = GetDataType(varType);
+
+			if (!type) {
+				CompilerError("Identifier '", varType, "' is unidentified");
+				return false;
+			}
+
+
+			
+
+			var.type = (VarType)type;
+			var.name = variableName.substr(varType.length() + 1); //the string after the type
+
+			if (!VariableNameIsLegal(var.name)) {
+				CompilerError("Expected an identifier");
+				return false;
+			}
+
+			if (VariableInStack(var.name)) {
+				CompilerError("'", var.name, "' is already defined");
+				return false;
+			}
 		}
 
+		else { //no type specifier
+			
+			if (ValidNumber(variableName)) { //trying to assign a value to a number
+				CompilerError("oh yes, the expression: \"", e.expression.preOP, e.expression.Operator, e.expression.postOP, "\" makes perfect sense!");
+				return false;
+			}
 
+			//undefined variable
+			if (!VariableInStack(variableName)) {
+				CompilerError("'", variableName, "' is undefined");
+				return false;
+			}
 
-		const size_t type = GetDataType(varType);
-
-		if (!type) {
-			CompilerError("Identifier '", varType, "' is unidentified");
-			return false;
+			var = *FindVariableFromStack(variableName);
 		}
 
-		variableName = RemoveDuplicateBlanks(variableName);
-
-		var.type = (VarType)type;
-		var.name = variableName.substr(varType.length()+1); //the string after the type
-
+		
 	
+
 		std::cout << "variableName: [" << var.name << "]\n";
 
-		if (!VariableNameIsLegal(var.name)) {
-			CompilerError("Expected an identifier");
-			return false;
-		}
 
 
 		expr = CleanupExpression(e.expression.postOP);
-		//CompilerError("Assignment expressions are not supported yet\nType: ", (int)e.expression.type);
 		break;
 	}
 	case ExpressionType::EXPR_CALCULATION:
@@ -239,12 +267,18 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 	}
 	
 
-
+	fscript += expr;
 	//called AFTER parsing the expression
 	ParseExpressionNumbers(expr);
 
+
+
 	if (!var.name.empty()) {
+
+		scriptStack.PushToStack(var);
 		std::cout << std::format("[{}] with type: [{}]\n", var.name, VarTypes[(int)var.type]);
+		var.name = "";
+
 	}
 
 	return true;
@@ -401,6 +435,12 @@ VarType CompilerExpression::GetOperandType(const std::string_view& operand)
 		return VarType::VT_STRING;
 	}
 
-	CompilerError("Unable to decipher operand type");
-	return VarType::VT_INVALID;
+	Variable* v = FindVariableFromStack(operand);
+
+	if (!v) {
+		CompilerError("undefined variable '", operand, "'");
+		return VarType::VT_INVALID;
+	}
+
+	return (VarType)v->type;
 }

@@ -86,3 +86,32 @@ size_t GetDataType(const std::string_view& str)
 
 	return 0u;
 }
+
+//assumes the whole string before the operator
+bool IsVariableInitialization(const std::string_view& expr)
+{
+
+	const std::string variableName = RemoveBlanksFromBeginningAndEnd(expr);
+
+	return GetVariableTypeString(variableName).empty() == false;
+
+}
+bool VariableInStack(const std::string_view& var)
+{
+	for (auto& i : scriptStack.stack) {
+		if (!i.name.compare(var)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+Variable* FindVariableFromStack(const std::string_view& var)
+{
+	for (auto& i : scriptStack.stack) {
+		if (!i.name.compare(var)) {
+			return &i;
+		}
+	}
+	return 0;
+}

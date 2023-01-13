@@ -19,7 +19,7 @@ public:
 
 	};
 
-	CompilerExpression(const std::string expr) : expression_str(expr), error_exists(false), e{} {};
+	CompilerExpression(const std::string expr, std::string& rtScript) : expression_str(expr), fscript(rtScript), e{} {};
 
 	void TokenizeExpression(const std::string_view& expr_str, expression_s* expr);
 	ExpressionType EvaluateExpressionType(const std::string_view& operand);
@@ -41,9 +41,10 @@ public:
 	}e;
 
 	std::string expression_str;
+	std::string& fscript; //full script compressed
 
 protected:
-	bool error_exists;
+	bool error_exists = 0;
 	Variable var;
 };
 
