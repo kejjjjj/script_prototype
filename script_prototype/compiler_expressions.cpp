@@ -223,7 +223,7 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 			var.name = variableName.substr(varType.length() + 1); //the string after the type
 
 			if (!VariableNameIsLegal(var.name)) {
-				CompilerError("Expected an identifier");
+				//CompilerError("Expected an identifier");
 				return false;
 			}
 
@@ -269,6 +269,7 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 
 	fscript += expr;
 	//called AFTER parsing the expression
+	ConvertVariablesToValues(expr);
 	ParseExpressionNumbers(expr);
 
 
@@ -283,12 +284,20 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 
 	return true;
 }
+bool CompilerExpression::ConvertVariablesToValues(const std::string_view& expr)
+{
 
+}
 //variables and functions are not allowed here
 //only expects operands, parenthesis and numbers
 //an expression like: 101 * (100 + ((2 + 3) & 3 ^ 4)) * (2 | 4 * -(-2 + 3 / (30 - 2 | 3)) ^ 2) can be used here
 bool CompilerExpression::ParseExpressionNumbers(std::string& expr)
 {
+
+	if (expr.empty()) {
+		CompilerError("expected an expression");
+		return false;
+	}
 
 	//1. find parentheses																			-> 2 * (2 + 3)
 	//2. call EvaluateExpression with the expression within the parentheses							-> 2 + 3
@@ -344,7 +353,8 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 		return false;
 	}
 
-	int i = 0;
+
+
 	const size_t size = tokens.size() - 1;
 
 	std::list<std::string>::iterator
@@ -353,7 +363,7 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 
 	std::advance(it_next, 1); //next token
 
-	for (i = 0; i < size; i += 2) {
+	for (int i = 0; i < size; i += 2) {
 
 		expressionstack.push_back({ *it, *it_next });
 
@@ -363,27 +373,57 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 
 	expressionstack.push_back({ *it, "" });
 
+
+
 	return EvaluateExpressionStack(expressionstack);
 }
+//variable names can be passed
 bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es)
 {
 
+	const auto L_TestVariableForType = [](std::string& content) -> VarType {
+	
+		char prefix = content[0];
+
+		if (prefix == '-' || prefix == '+') //variable has a - or + prefix
+			content.erase(0, 1);
+
+		Variable* v = FindVariableFromStack(content);
+
+		content.insert(content.begin(), prefix);
+
+		if (!v) {
+			CompilerError("'", content, "' is undefined");
+			return VarType::VT_INVALID;
+		}
+
+		return v->type;
+	
+	};
 
 	const auto begin = es.begin();
-
 	std::list<expression_stack>::iterator end = es.end();
 
 	std::advance(end, -1); //ignore last because the operator is ""
 	VarType leftop{}, rightop{};
 	OperatorPriority opriority;
+	int32_t iterated = 0;
+	bool negative = false;
 
-	for (auto i = begin; i != end; ++i) {
+	for (auto i = begin; i != end; i++) {
 
 		leftop = GetOperandType(i->content);
+
+		if (leftop == VarType::VT_INVALID)  //either a variable or bad syntax
+			leftop = L_TestVariableForType(i->content);
+		
 
 		//iterate forward to get the right side
 		std::advance(i, 1);
 		rightop = GetOperandType(i->content);
+
+		if (rightop == VarType::VT_INVALID)  //either a variable or bad syntax
+			rightop = L_TestVariableForType(i->content);
 
 		//go back to the left side
 		std::advance(i, -1);
@@ -411,8 +451,20 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		if (a == FAILURE)
 			return false;
 
+		++iterated;
+
+
 	}
-	if (end->Operator != "") {
+	if (end->Operator != "" || !iterated) {
+
+		if (!iterated) {
+			if (GetOperandType(es.front().content) == VarType::VT_INVALID) {
+				CompilerError("EvaluateExpressionStack: Expected an expression\n");
+				return false;
+			}
+		}
+
+
 		CompilerError("EvaluateExpressionStack: Expected an expression\n");
 		return false;
 	}
@@ -435,12 +487,14 @@ VarType CompilerExpression::GetOperandType(const std::string_view& operand)
 		return VarType::VT_STRING;
 	}
 
-	Variable* v = FindVariableFromStack(operand);
+	return VarType::VT_INVALID; //could still be a variable
 
-	if (!v) {
-		CompilerError("undefined variable '", operand, "'");
-		return VarType::VT_INVALID;
-	}
+	//Variable* v = FindVariableFromStack(operand);
 
-	return (VarType)v->type;
+	//if (!v) {
+	//	CompilerError("'", operand, "' is undefined");
+	//	return VarType::VT_INVALID;
+	//}
+
+	//return (VarType)v->type;
 }

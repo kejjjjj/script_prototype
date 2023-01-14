@@ -28,11 +28,13 @@ public:
 
 	bool EvaluateExpression(const std::string_view& expr);
 	bool ParseExpression(std::string& expr);
+	bool ConvertVariablesToValues(const std::string_view& expr);
 	bool ParseExpressionNumbers(std::string& expr);
 	std::string CleanupExpression(const std::string_view& str);
 
 	bool EvaluateExpressionStack(std::list<expression_stack>& es);
 	VarType GetOperandType(const std::string_view& operand);
+
 	struct e_s
 	{
 		expression_s expression;

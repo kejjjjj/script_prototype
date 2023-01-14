@@ -521,6 +521,11 @@ bool ValidNumber(const std::string_view& expr)
 {
     size_t dot_count{0}, dot_idx, index{ 0 }, sub_count{0}, sub_idx;
 
+    if (expr.size() == 1) {
+        if (!std::isalnum(expr[0]) && expr[0] != '_')
+            return false;
+    }
+
     for (const auto& i : expr) {
         switch (i) {
 
@@ -547,6 +552,8 @@ bool ValidNumber(const std::string_view& expr)
         index++;
 
     }
+
+
 
     if (dot_count) {
 
