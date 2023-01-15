@@ -1,14 +1,95 @@
 #include "pch.h"
 
+//1. check for space-dependent syntax errors before cleaning the expression
+void CompilerExpression::TestExpression(const std::string_view& expr)
+{
+	char last_character{ '\0' };
+	int32_t operands_in_a_row{ 0 }, idx{ -1 };
+	bool within_quotes = false,
+		blank_will_fail = false, //if the next character is blank, syntax error. | example: int a = 2 3;
+		bAlnum = false;
+
+	int32_t it_since_quote = 0;
+
+	auto begin = expr.begin();
+	auto end = expr.end();
+
+
+
+	for (auto it = expr.begin(); it != end; it++) {
+		idx++;
+		char i = *it;
+
+		bAlnum = std::isalnum(i);
+
+		if (!bAlnum && BadCalculationOp(i) && i != '\n' && i != '"' && i != '_' && !std::isspace(i) && !within_quotes) {
+
+			if (i != expr.front()) { //is . used because of a decimal point?
+				if (i == '.' && std::isdigit(expr[idx - 1])) { //if so, then skip
+					goto isfine;
+				}
+			}
+
+			CompilerError("Illegal character '", i, "' used in expression");
+			return;
+		}
+	isfine:
+
+		if (IsCalculationOp(i)) {
+			if (operands_in_a_row > 2) {
+				CompilerError("Illegal amount of expression operators");
+				return;
+			}
+			if (!NextOperatorIsLegal(last_character, i)) {
+				CompilerError("Illegal operator sequence '", last_character, i, "'");
+				return;
+			}
+
+			last_character = i;
+			operands_in_a_row++;
+			//continue;
+		}
+		else {
+			operands_in_a_row = false;
+			last_character = '\0';
+		}
+		//int a = 2 3;
+
+		if (!within_quotes && blank_will_fail){
+			
+			if (std::isspace(i)
+				|| *(it - 1) == ')' //no operator after a closing parenthesis
+				|| *(it - 1) == '"' //no operator after closing quote
+				|| *it == '"' && std::isalnum(*(it - 1)) && *(it - 1) != '_') { //no operator after number/variable and the next character is a quote
+
+				while (std::isspace(*it)) { 
+					it++; }
+
+				if (!IsCalculationOp(*it) && i != ';' && *it != ')') {
+					CompilerError("expected a ';'");
+					return;
+				}
+			}
+
+		}
+
+		if (i == '"')
+			within_quotes = !within_quotes;
+
+		blank_will_fail = (bAlnum || i == '"' || i == '_' || i ==')');
+
+	}
+}
+
 //1. remove blanks
-//2. check that all characters are numbers || parentheses || operators
 //returns "" if it fails
 std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 {
 
 	char last_character{ '\0' };
 	int32_t operands_in_a_row{ 0 }, idx{ -1 };
-	bool within_quotes = false;
+	bool within_quotes = false,
+		bAlnum = false;
 
 	for (const auto& i : expr) {
 		idx++;
@@ -18,14 +99,16 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 
 		//idk I will probably do this when I actually have variable support
 
-		if (i == '"') {
+		if (i == '"') 
 			within_quotes = !within_quotes;
-		}
+		
 
 		if (std::isspace(i))
 			continue;
 
-		if (!std::isalnum(i) && BadCalculationOp(i) && i != '\n' && i != '"' && i != '_' && !within_quotes) {
+		bAlnum = std::isalnum(i);
+
+		if (!bAlnum && BadCalculationOp(i) && i != '\n' && i != '"' && i != '_' && !within_quotes) {
 
 			if (i != expr.front()) { //is . used because of a decimal point?
 				if (i == '.' && std::isdigit(expr[idx - 1])) { //if so, then skip
@@ -54,6 +137,8 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 		}
 		operands_in_a_row = false;
 		last_character = '\0';
+
+
 	}
 
 	return RemoveIrrelevantCode(expr);
@@ -278,14 +363,17 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 
 		std::cout << "variableName: [" << var.name << "]\n";
 
-
+		TestExpression(e.expression.postOP);
 		expr = CleanupExpression(e.expression.postOP);
 		break;
 	}
 	case ExpressionType::EXPR_CALCULATION:
-
+		TestExpression(e.expression.postOP);
 		expr = CleanupExpression(expr);
 		break;
+	default:
+		CompilerError("impossible");
+		return false;
 
 	}
 	
@@ -523,5 +611,6 @@ VarType CompilerExpression::GetOperandType(const std::string_view& operand)
 		//CompilerError("'", operand, "' is undefined");
 		return VarType::VT_INVALID;
 	}
+
 	return (VarType)v->type;
 }
