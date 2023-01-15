@@ -22,13 +22,12 @@ public:
 	CompilerExpression(const std::string expr, std::string& rtScript) : expression_str(expr), fscript(rtScript), e{} {};
 
 	void TokenizeExpression(const std::string_view& expr_str, expression_s* expr);
-	ExpressionType EvaluateExpressionType(const std::string_view& operand);
+	ExpressionType EvaluateExpressionType(expression_s* expr);
 	bool NextOperatorIsLegal(char previous_op, char op);
 
 
 	bool EvaluateExpression(const std::string_view& expr);
 	bool ParseExpression(std::string& expr);
-	bool ConvertVariablesToValues(const std::string_view& expr);
 	bool ParseExpressionNumbers(std::string& expr);
 	std::string CleanupExpression(const std::string_view& str);
 
@@ -48,6 +47,7 @@ public:
 protected:
 	bool error_exists = 0;
 	Variable var;
+
 };
 
 

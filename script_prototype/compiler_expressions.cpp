@@ -8,6 +8,7 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 
 	char last_character{ '\0' };
 	int32_t operands_in_a_row{ 0 }, idx{ -1 };
+	bool within_quotes = false;
 
 	for (const auto& i : expr) {
 		idx++;
@@ -17,10 +18,14 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 
 		//idk I will probably do this when I actually have variable support
 
+		if (i == '"') {
+			within_quotes = !within_quotes;
+		}
+
 		if (std::isspace(i))
 			continue;
 
-		if (!std::isalnum(i) && BadCalculationOp(i) && i != '\n' && i != '"') {
+		if (!std::isalnum(i) && BadCalculationOp(i) && i != '\n' && i != '"' && i != '_' && !within_quotes) {
 
 			if (i != expr.front()) { //is . used because of a decimal point?
 				if (i == '.' && std::isdigit(expr[idx - 1])) { //if so, then skip
@@ -113,22 +118,28 @@ void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, ex
 //evaluates based on the op combo
 //NOT called within expressions after the operand <----- FIX ME
 
-ExpressionType CompilerExpression::EvaluateExpressionType(const std::string_view& Operator)
+ExpressionType CompilerExpression::EvaluateExpressionType(expression_s* expr)
 {
-	size_t pos = Operator.find('=');
-	if (pos != std::string_view::npos) {//has =
-
-		if (Operator.size() == 1) { // = is the only op
+	for (const auto& i : VarTypes) {
+		if (expr->preOP.find(std::string(i) + " ")) {
 			return ExpressionType::EXPR_ASSIGNMENT;
 		}
-		if (Operator[pos - 1] == '+' ||		//	+=
-			Operator[pos - 1] == '-' ||		//	-=
-			Operator[pos - 1] == '*' ||		//	*=
-			Operator[pos - 1] == '/' ||		//	/=
-			Operator[pos - 1] == '&' ||		//	&=
-			Operator[pos - 1] == '|' ||		//	|=
-			Operator[pos - 1] == '%' ||		//	%=
-			Operator[pos - 1] == '^')		//	^=
+	}
+
+	size_t pos = expr->Operator.find('=');
+	if (pos != std::string_view::npos) {//has =
+
+		if (expr->Operator.size() == 1) { // = is the only op
+			return ExpressionType::EXPR_ASSIGNMENT;
+		}
+		if (expr->Operator[pos - 1] == '+' ||		//	+=
+			expr->Operator[pos - 1] == '-' ||		//	-=
+			expr->Operator[pos - 1] == '*' ||		//	*=
+			expr->Operator[pos - 1] == '/' ||		//	/=
+			expr->Operator[pos - 1] == '&' ||		//	&=
+			expr->Operator[pos - 1] == '|' ||		//	|=
+			expr->Operator[pos - 1] == '%' ||		//	%=
+			expr->Operator[pos - 1] == '^')		//	^=
 
 			return ExpressionType::EXPR_ASSIGNMENT;
 
@@ -185,19 +196,23 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 
 	TokenizeExpression(expr, &e.expression);
 
-	e.expression.type = EvaluateExpressionType(e.expression.Operator);
+	e.expression.type = EvaluateExpressionType(&e.expression);
 	e.operands = e.expression.Operator.size();
 
 	switch (e.expression.type) {
 	case ExpressionType::EXPR_ASSIGNMENT:
 	{
 		//fix the contents before the assignment operator
-		const std::string variableName = RemoveDuplicateBlanks(RemoveBlanksFromBeginningAndEnd(e.expression.preOP));
+		std::string variableName = RemoveDuplicateBlanks(RemoveBlanksFromBeginningAndEnd(e.expression.preOP));
 
 		fscript += variableName;
 		fscript += e.expression.Operator;
 		if (IsVariableInitialization(variableName)) {
 
+			if (e.expression.Operator.empty()) {
+				CompilerError("Uninitialized variable: \"", variableName, "\"");
+				return false;
+			}
 
 			//check the initialization type
 			const std::string varType = GetVariableTypeString(variableName);
@@ -208,17 +223,13 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 				return false;
 
 			}
-
+		
 			const size_t type = GetDataType(varType);
 
 			if (!type) {
 				CompilerError("Identifier '", varType, "' is unidentified");
 				return false;
 			}
-
-
-			
-
 			var.type = (VarType)type;
 			var.name = variableName.substr(varType.length() + 1); //the string after the type
 
@@ -231,6 +242,15 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 				CompilerError("'", var.name, "' is already defined");
 				return false;
 			}
+
+			if (!var.name.empty()) {
+
+				scriptStack.PushToStack(var);
+				std::cout << std::format("pushing [{}] to stack with type: [{}]\n", var.name, VarTypes[(int)var.type]);
+				/*var.name = "";*/
+
+			}
+			variableName = var.name;
 		}
 
 		else { //no type specifier
@@ -240,20 +260,23 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 				return false;
 			}
 
-			//undefined variable
+			if (IsDataType(variableName)) {
+				CompilerError("type name is not allowed");
+				return false;
+			}
+
 			if (!VariableInStack(variableName)) {
 				CompilerError("'", variableName, "' is undefined");
 				return false;
 			}
 
-			var = *FindVariableFromStack(variableName);
+			
 		}
 
-		
+		var = *FindVariableFromStack(variableName);
 	
 
 		std::cout << "variableName: [" << var.name << "]\n";
-
 
 
 		expr = CleanupExpression(e.expression.postOP);
@@ -268,25 +291,14 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 	
 
 	fscript += expr;
+
 	//called AFTER parsing the expression
-	ConvertVariablesToValues(expr);
 	ParseExpressionNumbers(expr);
 
 
 
-	if (!var.name.empty()) {
-
-		scriptStack.PushToStack(var);
-		std::cout << std::format("[{}] with type: [{}]\n", var.name, VarTypes[(int)var.type]);
-		var.name = "";
-
-	}
 
 	return true;
-}
-bool CompilerExpression::ConvertVariablesToValues(const std::string_view& expr)
-{
-
 }
 //variables and functions are not allowed here
 //only expects operands, parenthesis and numbers
@@ -384,18 +396,29 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 	const auto L_TestVariableForType = [](std::string& content) -> VarType {
 	
 		char prefix = content[0];
+		bool fix = prefix == '-' || prefix == '+';
 
-		if (prefix == '-' || prefix == '+') //variable has a - or + prefix
+		if (fix) //variable has a - or + prefix
 			content.erase(0, 1);
 
-		Variable* v = FindVariableFromStack(content);
+		const Variable* v = FindVariableFromStack(content);
 
-		content.insert(content.begin(), prefix);
 
 		if (!v) {
+
+			if (IsDataType(content)) {
+				CompilerError("type name is not allowed");
+			}
 			CompilerError("'", content, "' is undefined");
+
+			if (fix)
+				content.insert(content.begin(), prefix);
+
 			return VarType::VT_INVALID;
 		}
+
+		if (fix)
+			content.insert(content.begin(), prefix);
 
 		return v->type;
 	
@@ -459,14 +482,19 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 
 		if (!iterated) {
 			if (GetOperandType(es.front().content) == VarType::VT_INVALID) {
-				CompilerError("EvaluateExpressionStack: Expected an expression\n");
-				return false;
+
+				if (L_TestVariableForType(es.front().content) == VarType::VT_INVALID) {
+
+					CompilerError("unrecognized token: '", es.front().content, "'");
+					return false;
+				}
 			}
 		}
 
-
-		CompilerError("EvaluateExpressionStack: Expected an expression\n");
-		return false;
+		else {
+			CompilerError("EvaluateExpressionStack: Expected an expression\n");
+			return false;
+		}
 	}
 	return true;
 }
@@ -487,14 +515,13 @@ VarType CompilerExpression::GetOperandType(const std::string_view& operand)
 		return VarType::VT_STRING;
 	}
 
-	return VarType::VT_INVALID; //could still be a variable
+	//return VarType::VT_INVALID; //could still be a variable
 
-	//Variable* v = FindVariableFromStack(operand);
+	Variable* v = FindVariableFromStack(operand);
 
-	//if (!v) {
-	//	CompilerError("'", operand, "' is undefined");
-	//	return VarType::VT_INVALID;
-	//}
-
-	//return (VarType)v->type;
+	if (!v) {
+		//CompilerError("'", operand, "' is undefined");
+		return VarType::VT_INVALID;
+	}
+	return (VarType)v->type;
 }

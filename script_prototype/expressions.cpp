@@ -191,7 +191,7 @@ bool Expression::ParseExpression(std::string& expr)
 			//if(i != '(' && i != ')')
 				last_character = '\0';
 		}
-		constexpr int a = (3 << 2) * 3 <= (2 ^ -5 < 3 % 1 * 7 - 2 % 3 | (2 / 3) && (1 || 3)) * 4 < 2 > 3 == 20 != 12 * 3 >> 3 & 5;
+		//constexpr int a = (3 << 2) * 3 <= (2 ^ -5 < 3 % 1 * 7 - 2 % 3 | (2 / 3) && (1 || 3)) * 4 < 2 > 3 == 20 != 12 * 3 >> 3 & 5;
 		break;
 
 	}

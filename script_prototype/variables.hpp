@@ -15,7 +15,7 @@
 
 inline std::vector<const char*> VarTypes = {"NO_TYPE", "int","float","string"};
 
-enum class VarType
+enum class VarType : char
 {
 	VT_INVALID,
 	VT_INT,

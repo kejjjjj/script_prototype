@@ -44,7 +44,7 @@ namespace fs
 
 	void F_FilesInThisDirectory(std::string& directory, std::vector<std::string>* out);
 	std::string removeFileExtension(std::string& file, size_t chars);
-	std::string F_GetFileName(std::string& const fullpath);
+	std::string F_GetFileName(const std::string& fullpath);
 	std::string F_GoToPreviousDirectory(std::string& directory);
 	//std::string F_GoToPreviousDirectory(const std::string directory);
 

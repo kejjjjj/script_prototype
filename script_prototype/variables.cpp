@@ -42,7 +42,6 @@ void Variable::Initialize(const std::string_view & _name, VarType _type, Variabl
 //uses the same rules as C language
 bool VariableNameIsLegal(const std::string_view& var)
 {
-
 	if (!std::isalpha(var[0])) {
 		CompilerError("expected an identifier");
 		return false;
@@ -56,6 +55,12 @@ bool VariableNameIsLegal(const std::string_view& var)
 		}
 
 	}
+	for (auto& i : VarTypes)
+		if (!var.compare(i)) {
+			CompilerError("invalid combination of type specifiers");
+			return false;
+		}
+
 	return true;
 }
 

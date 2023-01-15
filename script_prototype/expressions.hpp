@@ -16,7 +16,7 @@ struct expression_s
 	std::string preOP;
 	std::string Operator;
 	std::string postOP;
-	ExpressionType type;
+	ExpressionType type = ExpressionType::EXPR_ASSIGNMENT;
 };
 
 struct expression_stack
@@ -51,9 +51,9 @@ public:
 	struct e_s
 	{
 		expression_s expression;
-		size_t operands;
+		size_t operands = 0;
 
-	}e;
+	}e{};
 
 	std::string expression_str;
 };
