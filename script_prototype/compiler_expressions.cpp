@@ -4,10 +4,11 @@
 void CompilerExpression::TestExpression(const std::string_view& expr)
 {
 	char last_character{ '\0' };
-	int32_t operands_in_a_row{ 0 }, idx{ -1 };
+	int32_t operands_in_a_row{ 0 };
 	bool within_quotes = false,
 		blank_will_fail = false, //if the next character is blank, syntax error. | example: int a = 2 3;
-		bAlnum = false;
+		bAlnum = false,
+		space_will_fail = false;
 
 	int32_t it_since_quote = 0;
 
@@ -17,7 +18,6 @@ void CompilerExpression::TestExpression(const std::string_view& expr)
 
 
 	for (auto it = expr.begin(); it != end; it++) {
-		idx++;
 		char i = *it;
 
 		bAlnum = std::isalnum(i);
@@ -25,7 +25,7 @@ void CompilerExpression::TestExpression(const std::string_view& expr)
 		if (!bAlnum && BadCalculationOp(i) && i != '\n' && i != '"' && i != '_' && !std::isspace(i) && !within_quotes) {
 
 			if (i != expr.front()) { //is . used because of a decimal point?
-				if (i == '.' && std::isdigit(expr[idx - 1])) { //if so, then skip
+				if (i == '.' && std::isdigit(*(it - 1))) { //if so, then skip
 					goto isfine;
 				}
 			}
@@ -55,6 +55,12 @@ void CompilerExpression::TestExpression(const std::string_view& expr)
 		}
 		//int a = 2 3;
 
+		if (space_will_fail && std::isspace(i)) {
+			CompilerError("expected a ';'");
+			return;
+		}
+
+
 		if (!within_quotes && blank_will_fail){
 			
 			if (std::isspace(i)
@@ -77,7 +83,7 @@ void CompilerExpression::TestExpression(const std::string_view& expr)
 			within_quotes = !within_quotes;
 
 		blank_will_fail = (bAlnum || i == '"' || i == '_' || i ==')');
-
+		space_will_fail = i == '.';
 	}
 }
 
