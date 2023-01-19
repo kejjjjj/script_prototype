@@ -160,7 +160,7 @@ void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, ex
 	std::string token;
 	int32_t idx = -1;
 	char p;
-	for (auto& i : expr_str) {
+	for (const auto& i : expr_str) {
 		idx++;
 		if (!Operand_processed) {
 
@@ -212,7 +212,7 @@ void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, ex
 ExpressionType CompilerExpression::EvaluateExpressionType(expression_s* expr)
 {
 	for (const auto& i : VarTypes) {
-		if (expr->preOP.find(std::string(i) + " ")) {
+		if (expr->preOP.find(std::string(i) + " ") != std::string::npos) {
 			return ExpressionType::EXPR_ASSIGNMENT;
 		}
 	}

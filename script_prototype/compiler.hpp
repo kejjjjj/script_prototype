@@ -17,7 +17,7 @@ public:
 
 private:
 	std::fstream f;
-	bool compiled;
+	bool compiled = false;
 	std::string compiled_file;
 };
 

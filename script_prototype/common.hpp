@@ -35,7 +35,35 @@ inline void CompilerError(const T& t, const Param& ... param)
 	CompilerError(param...);
 
 }
+inline void RuntimeError()
+{
 
+	std::string beg = std::format("Line: {}\nColumn: {}\n\nDescription:\n", fs::file.lines_read, fs::file.current_column);
+
+	compilerlog.insert(compilerlog.begin(), beg);
+
+	beg.clear();
+	for (const auto& i : compilerlog) {
+		beg += i;
+	}
+
+	MessageBoxA(NULL, beg.c_str(), "Runtime Error!", MB_ICONERROR);
+	compilerlog.clear();
+	exit(-1);
+	return;
+}
+
+template <typename T, typename ... Param>
+inline void RuntimeError(const T& t, const Param& ... param)
+{
+	std::stringstream ss;
+	ss << t;
+	compilerlog.push_back(ss.str());
+
+	//std::cout << t << '\n';
+	RuntimeError(param...);
+
+}
 //void CompilerError(std::string str, ...);
 
 //the higher the value the higher the priority
