@@ -576,3 +576,20 @@ void PushString(std::string* strptr, const std::string_view& str)
 {
     *strptr += str;
 }
+VarType StringType(const std::string_view& expr)
+{
+    if (!ValidNumber(expr))
+        return VarType::VT_STRING;
+
+    if (IsInteger(expr))
+        return VarType::VT_INT;
+
+    return VarType::VT_FLOAT;
+}
+std::string to_string(const float val, const bool integer)
+{
+    if (integer)
+        return std::to_string((int64_t)val);
+
+    return std::to_string(val);
+}

@@ -100,6 +100,7 @@ bool RuntimeExpression::ParseExpression(std::string& expr)
 
 	case ExpressionType::EXPR_ASSIGNMENT:
 		ParseAssignment();
+		expr = e.expression.postOP;
 		break;
 	case ExpressionType::EXPR_CALCULATION:
 		break;
@@ -111,7 +112,7 @@ bool RuntimeExpression::ParseExpression(std::string& expr)
 
 	ParseExpressionNumbers(expr);
 
-
+	return 1;
 }
 bool RuntimeExpression::ParseAssignment()
 {
@@ -130,15 +131,18 @@ bool RuntimeExpression::ParseAssignment()
 
 		scriptStack.PushToStack(_var);
 		var = &scriptStack.stack.back();
+
+
 	}
+	else {
 
-	var = FindVariableFromStack(variableName);
+		var = FindVariableFromStack(variableName);
 
-	if (!var) {
-		RuntimeError("undefined variable '", variableName, "' referenced!");
-		return 0;
+		if (!var) {
+			RuntimeError("undefined variable '", variableName, "' referenced!");
+			return 0;
+		}
 	}
-
 
 	return true;
 }
@@ -172,7 +176,9 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 
 	}
 
+	EvaluateExpression(expr);
 
+	return 1;
 }
 // expects an expression that does not include parantheses
 // example: 1 ^ 3 & 1 / 5
@@ -206,7 +212,7 @@ std::string RuntimeExpression::EvaluateExpression(const std::string_view& expres
 
 	expressionstack.push_back({ *it, "" });
 
-
+	return EvaluateExpressionStack(expressionstack);
 }
 //variable names can be passed
 std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stack>& es)
@@ -220,6 +226,11 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 
 	size_t vals = es.size();
 
+	//ok now we have:
+	//sequence of numbers (and variables)
+	//sequence of operators
+
+
 	while (vals > 1) {
 
 
@@ -227,10 +238,185 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		vals--;
 	}
 
+
+	return "";
 }
-//this function ONLY expects numbers or strings
-//variables are not expected
-std::string Eval(const std::string_view& a, const std::string_view& b, const std::string_view& ops)
+//this function ONLY expects numbers
+//variables and strings are not supported
+std::string RuntimeExpression::Eval(const std::string& a, const std::string& b, const std::string_view& ops)
 {
+
+	const auto EvalStrings = [&a, &b, &ops]() -> std::string
+	{
+		if (ops.size() < 2) {
+			
+			switch (ops[0]) {
+			case '+':
+				return a + b;
+			default:
+				RuntimeError("Illegal operator used on a string expression");
+				return "";
+			}
+		}
+
+		if (ops == "==")
+			return (a == b) == true ? "1" : "0";
+
+		if (ops == "!=")
+			return (a != b) == true ? "1" : "0";
+
+		if (ops == "||")
+			return (!a.empty() || !b.empty()) == true ? "1" : "0";
+
+		if (ops == "&&")
+			return (!a.empty() && !b.empty()) == true ? "1" : "0";
+
+
+		RuntimeError("Illegal operator used on a string expression");
+		return "";
+
+	};
+
+	auto at = StringType(a);
+	auto bt = StringType(a);
+
+	if (at == VarType::VT_STRING && bt == at) //both are strings
+		return EvalStrings();
+
+	else if (at == VarType::VT_STRING && bt != at || bt == VarType::VT_STRING && at != bt) { //a string and a non-string
+		RuntimeError("Cannot cast from '", VarTypes[(int)at], "' to '", VarTypes[(int)bt], "'");
+		return "";
+	}
+
+	float va, vb;
+
+	
+	const auto resa = std::from_chars(a.data(), a.data() + a.size(), va);
+	const auto resb = std::from_chars(b.data(), b.data() + b.size(), vb);
+
+	const bool a_int = IsInteger(a);
+	const bool b_int = IsInteger(b);
+
+	if (ops.size() < 2) {
+		char op = ops[0];
+		switch (op) {
+
+		case '+':
+
+			return to_string(
+				(a_int == true ? (int64_t)va : va) + (b_int == true ? (int64_t)vb : vb), a_int);
+		case '-':
+			return to_string(
+				(a_int == true ? (int64_t)va : va) - (b_int == true ? (int64_t)vb : vb), a_int);
+		case '*':
+			return to_string(
+				(a_int == true ? (int64_t)va : va) * (b_int == true ? (int64_t)vb : vb), a_int);
+		case '/':
+
+			if (vb == 0) {
+				RuntimeError("Division by zero");
+				return "0";
+
+			}
+
+			return to_string(
+				(a_int == true ? (int64_t)va : va) / (b_int == true ? (int64_t)vb : vb), a_int);
+
+		case '>':
+			return to_string(
+				(a_int == true ? (int64_t)va : va) > (b_int == true ? (int64_t)vb : vb), a_int);
+		case '<':
+			return to_string(
+				(a_int == true ? (int64_t)va : va) < (b_int == true ? (int64_t)vb : vb), a_int);
+		case '&':
+			if (!a_int || !b_int) {
+				RuntimeError("'", op, "' operator used with non-integral operands");
+				return "";
+			}
+
+			return to_string(
+				 (int64_t)va & (int64_t)vb, a_int);
+		case '|':
+			if (!a_int || !b_int) {
+				RuntimeError("'", op, "' operator used with non-integral operands");
+				return "";
+			}
+
+			return to_string(
+				(int64_t)va | (int64_t)vb, a_int);
+		case '^':
+			if (!a_int || !b_int) {
+				RuntimeError("'", op, "' operator used with non-integral operands");
+				return "";
+			}
+
+			return to_string(
+				(int64_t)va ^ (int64_t)vb, a_int);
+
+		case '%':
+			if (!a_int || !b_int) {
+				RuntimeError("'", op, "' operator used with non-integral operands");
+				return "";
+			}
+			else if (vb == 0) {
+				RuntimeError("Division by zero");
+				return "";
+			}
+			return to_string(
+				(int64_t)va % (int64_t)vb, a_int);
+		}
+	}
+
+	if (ops == "==") {
+		return  ((a_int == true ? (int64_t)va : va) == (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
+	}
+	else if (ops == "!=") {
+		return  ((a_int == true ? (int64_t)va : va) != (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
+	}
+	else if (ops == ">=") {
+		return  ((a_int == true ? (int64_t)va : va) >= (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
+	}
+	else if (ops == "<=") {
+		return  ((a_int == true ? (int64_t)va : va) <= (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
+	}
+	else if (ops == "||") {
+		return  ((a_int == true ? (int64_t)va : va) || (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
+	}
+	else if (ops == "&&") {
+		return  ((a_int == true ? (int64_t)va : va) && (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
+	}
+	else if (ops == "<<") {
+
+		if (!a_int || !b_int) {
+			RuntimeError("'", ops, "' operator used with non-integral operands");
+			return "";
+		}
+
+		else if (vb < 0) {
+			RuntimeError("shift count is negative");
+			return "";
+		}
+
+		return  to_string((int64_t)va << (int64_t)vb, a_int);
+	}
+	else if (ops == ">>") {
+
+		if (!a_int || !b_int) {
+			RuntimeError("'", ops, "' operator used with non-integral operands");
+			return "";
+		}
+
+		else if (vb < 0) {
+			RuntimeError("shift count is negative");
+			return "";
+		}
+
+		return  to_string((int64_t)va >> (int64_t)vb, a_int);
+	}
+
+
+	RuntimeError("Unknown operator: ", ops);
+
+	return "";
 
 }

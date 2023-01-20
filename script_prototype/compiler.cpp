@@ -48,6 +48,28 @@ bool Script::Compile()
 
 	std::cout << "---------------------\n";
 
+
+	//runtime script starts here
+	expression_str.clear();
+	scriptStack.stack.clear();
+	for (const auto& i : rtScript) {
+
+		if (i == ';') {
+
+			RuntimeExpression expr(expression_str);
+
+			expr.ParseExpression(expression_str);
+			expression_str.clear();
+			continue;
+
+		}
+		expression_str.push_back(i);
+
+	}
+
+
+	//runtime script ends here
+
 	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
 
