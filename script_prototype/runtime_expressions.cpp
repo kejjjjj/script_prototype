@@ -164,9 +164,15 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 		//evaluate the expression within the parentheses
 
 		
-		////replace the old expression with the new result
+		//replace the old expression with the new result
 		//expr.erase(par.opening, par.strlength + 2);
 		//expr.insert(par.opening, std::to_string(result));
+
+		const std::string result = EvaluateExpression(par.result_string);
+
+		expr.erase(par.opening, par.strlength + 2);
+		expr.insert(par.opening, result);
+
 
 		ParseExpressionNumbers(expr);
 
@@ -176,7 +182,9 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 
 	}
 
-	EvaluateExpression(expr);
+	var->value = EvaluateExpression(expr);
+
+	std::cout << "value of '" << var->name << "' = " << var->value << '\n';
 
 	return 1;
 }
@@ -217,29 +225,88 @@ std::string RuntimeExpression::EvaluateExpression(const std::string_view& expres
 //variable names can be passed
 std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stack>& es)
 {
-	const auto begin = es.begin();
-	auto end = es.end();
+	auto HasPrefix = [](const std::string_view& str) -> CHAR {
+		const auto begin = *str.begin();
+		return (begin == '+' || begin == '-') == true ? begin : 0;
+	};
+	auto ContentToValue = [&HasPrefix](const std::string& str)->std::string {
+		
+		if (ValidNumber(str) || GetCharacterCount(str, '"') == 2)
+			return str;
 
-	std::advance(end, -1); //ignore last because the operator is ""
-	VarType leftop{}, rightop{};
-	OperatorPriority opriority;
+		std::string s = str;
+		auto variable_prefix = HasPrefix(s);
 
+		if (variable_prefix)
+			s.erase(0, 1);
+
+		const Variable* v = FindVariableFromStack(s);
+
+		if (!v) {
+			RuntimeError("Undefined variable '", s, "'");
+			return "";
+		}
+		
+		s = v->value;
+
+		if (variable_prefix)
+			s.insert(s.begin(), variable_prefix);
+
+		return s; 
+
+	};
+	std::list<expression_stack>::iterator es_itr1, es_itr2;
 	size_t vals = es.size();
+	char variable_prefix = 0;
+	VarType leftop{}, rightop{};
+	OperatorPriority op, next_op;
+	std::string lval, rval;
+	int i = 0;
+
+	//std::advance(end, -1); //ignore last because the operator is ""
 
 	//ok now we have:
-	//sequence of numbers (and variables)
-	//sequence of operators
+	//a list of tokenized operands and operators for easy parsing
+	//every odd index is an operand
+	//every even number is an operator
 
 
 	while (vals > 1) {
 
+		es_itr1 = es.begin();
+		es_itr2 = es_itr1; ++es_itr2;
 
 
+		i = 0;
+
+		op = GetOperandPriority(es_itr1->Operator);
+		next_op = GetOperandPriority(es_itr2->Operator);
+
+		while (next_op > op) {
+
+			op = GetOperandPriority(es_itr1->Operator);
+			next_op = GetOperandPriority(es_itr2->Operator); //i+1 is always in range unless this function was called with bad arguments
+			if (next_op <= op)
+				break;
+
+			i++;
+			++es_itr1;
+			++es_itr2;
+		}
+
+		lval = ContentToValue(es_itr1->content);
+		rval = ContentToValue(es_itr2->content);
+
+		const std::string result = Eval(lval, rval, es_itr1->Operator);
+		std::cout << std::format("{} {} {} = {}\n", lval, es_itr1->Operator, rval, result);
+
+		es.erase(es_itr1, es_itr2);
+		es_itr2->content = result;
 		vals--;
 	}
 
 
-	return "";
+	return es_itr2->content;
 }
 //this function ONLY expects numbers
 //variables and strings are not supported
@@ -262,13 +329,13 @@ std::string RuntimeExpression::Eval(const std::string& a, const std::string& b, 
 		if (ops == "==")
 			return (a == b) == true ? "1" : "0";
 
-		if (ops == "!=")
+		else if (ops == "!=")
 			return (a != b) == true ? "1" : "0";
 
-		if (ops == "||")
+		else if (ops == "||")
 			return (!a.empty() || !b.empty()) == true ? "1" : "0";
 
-		if (ops == "&&")
+		else if (ops == "&&")
 			return (!a.empty() && !b.empty()) == true ? "1" : "0";
 
 
@@ -277,8 +344,7 @@ std::string RuntimeExpression::Eval(const std::string& a, const std::string& b, 
 
 	};
 
-	auto at = StringType(a);
-	auto bt = StringType(a);
+	const VarType at = StringType(a), bt = StringType(a);
 
 	if (at == VarType::VT_STRING && bt == at) //both are strings
 		return EvalStrings();
@@ -419,4 +485,32 @@ std::string RuntimeExpression::Eval(const std::string& a, const std::string& b, 
 
 	return "";
 
+}
+VarType RuntimeExpression::GetOperandType(const std::string_view& operand)
+{
+	//std::cout << "GetOperandType: " << operand << '\n';
+	if (ValidNumber(operand)) {
+		//either an int or a float
+
+		if (IsInteger(operand))
+			return VarType::VT_INT;
+
+		return VarType::VT_FLOAT;
+
+	}
+
+	if (GetCharacterCount(operand, '"') == 2) {
+		return VarType::VT_STRING;
+	}
+
+	//return VarType::VT_INVALID; //could still be a variable
+
+	Variable* v = FindVariableFromStack(operand);
+
+	if (!v) {
+		RuntimeError("'", operand, "' is undefined");
+		return VarType::VT_INVALID;
+	}
+
+	return (VarType)v->type;
 }

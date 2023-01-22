@@ -551,7 +551,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		//is not || or &&
 
 		if ((leftop == VarType::VT_STRING && rightop != VarType::VT_STRING || rightop == VarType::VT_STRING && leftop != VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR)) {
-			CompilerError(VarTypes[(int)leftop], " ", i->Operator, " ", VarTypes[(int)rightop], " is illegal");
+			CompilerError("cannot cast from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "'");
 			return false;
 		}
 
@@ -559,7 +559,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		//equality operator not used
 
 		else if ((leftop == VarType::VT_STRING && rightop == VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR && opriority != EQUALITY)) {
-			CompilerError(VarTypes[(int)leftop], " ", i->Operator, " ", VarTypes[(int)rightop], " is illegal");
+			CompilerError("cannot cast from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "'");
 			return false;
 		}
 

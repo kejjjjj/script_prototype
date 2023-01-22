@@ -513,7 +513,7 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
         return LOGICAL_OR;
 
 
-    CompilerError("Unknown operator [", ops, "]");
+   // CompilerError("Unknown operator [", ops, "]");
     return FAILURE;
 
 }

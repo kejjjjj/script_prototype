@@ -21,7 +21,7 @@ public:
 	std::string EvaluateExpression(const std::string_view& expr);
 	std::string EvaluateExpressionStack(std::list<expression_stack>& es);
 	std::string Eval(const std::string& a, const std::string& b, const std::string_view& ops);
-
+	VarType GetOperandType(const std::string_view& operand);
 	
 	struct e_s
 	{

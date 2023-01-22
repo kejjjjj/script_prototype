@@ -44,7 +44,7 @@ public:
 
 	std::string name;
 	VarType type = VarType::VT_INVALID;
-	VariableValue value;
+	std::string value;
 	int32_t stacklevel = 0;
 
 
