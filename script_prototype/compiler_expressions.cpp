@@ -558,7 +558,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		//both are strings
 		//equality operator not used
 
-		else if ((leftop == VarType::VT_STRING && rightop == VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR && opriority != EQUALITY)) {
+		else if ((leftop == VarType::VT_STRING && rightop == VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR && opriority != EQUALITY && i->Operator != "+")) {
 			CompilerError("cannot cast from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "'");
 			return false;
 		}

@@ -153,12 +153,12 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::strin
 {
     std::string token;
 
-    std::string a = RemoveBlank(expr);
+    //std::string a = RemoveBlank(expr);
     int32_t idx = -1;
     char previous_character{'\0'};
-    size_t subtr_in_a_row{0}, equals_in_a_row{0}, size = a.size();
-    auto begin = a.begin();
-    auto end = a.end();
+    size_t subtr_in_a_row{0}, equals_in_a_row{0}, size = expr.size();
+    auto begin = expr.begin();
+    auto end = expr.end();
     for (auto it = begin; it != end; ++it) {
 
         auto& i = *it;
@@ -240,10 +240,10 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::strin
             if (i == '&' || i == '|' || i == '<' || i == '>') {
                 ++it;
 
-                i = *it;
+                auto _c = *it;
 
-                if (i == '&' || i == '|' || i == '<' || i == '>') {
-                    token.push_back(i);
+                if (_c == '&' || _c == '|' || _c == '<' || _c == '>') {
+                    token.push_back(_c);
                    // std::cout << "duplicate " << i << '\n';
                 }
                 else
@@ -277,9 +277,9 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::strin
             
         //assignments are forbidden
         //returns false if previous character is not !, < or > (!=, <=, >=)
-        char previous = a[idx - 2];
+        char previous = expr[idx - 2];
         if (equals_in_a_row == 1 && previous != '!' && previous != '<' && previous != '>') { //one = and ! doesn't exist (!=)
-            CompilerError("Assignments are not supported yet!: ", a[idx - 2], '=');
+            CompilerError("Assignments are not supported yet!: ", expr[idx - 2], '=');
             return false;
         }
 

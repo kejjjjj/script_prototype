@@ -35,7 +35,7 @@ bool Script::Compile()
 			expr.ParseExpression(expression_str);
 			expressions_parsed++;
 			expression_str.clear();
-			rtScript += ";\n";
+			rtScript += ";";
 			continue;
 		}
 
@@ -48,10 +48,12 @@ bool Script::Compile()
 
 	std::cout << "---------------------\n";
 
-
 	//runtime script starts here
 	expression_str.clear();
 	scriptStack.stack.clear();
+
+	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
+
 	for (const auto& i : rtScript) {
 
 		if (i == ';') {
@@ -67,6 +69,11 @@ bool Script::Compile()
 
 	}
 
+	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	std::chrono::duration<double> difference = now - old;
+
+
+	printf("runtime parsing: %.12f\n", difference.count());
 
 	//runtime script ends here
 

@@ -91,6 +91,7 @@ ExpressionType RuntimeExpression::EvaluateExpressionType(expression_s* expr)
 }
 bool RuntimeExpression::ParseExpression(std::string& expr)
 {
+	std::cout << "parsing: " << expr << '\n';
 	TokenizeExpression(expr, &e.expression);
 
 	e.expression.type = EvaluateExpressionType(&e.expression);
@@ -192,7 +193,7 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 // example: 1 ^ 3 & 1 / 5
 std::string RuntimeExpression::EvaluateExpression(const std::string_view& expression)
 {
-	if (ValidNumber(expression)) {
+	if (ValidNumber(expression) || expression.front() == '"' && expression.front() == expression.back()) {
 		return std::string(expression);
 	}
 
@@ -231,8 +232,12 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 	};
 	auto ContentToValue = [&HasPrefix](const std::string& str)->std::string {
 		
-		if (ValidNumber(str) || GetCharacterCount(str, '"') == 2)
+		if (ValidNumber(str))
 			return str;
+
+		else if (GetCharacterCount(str, '"') == 2) {
+			return str.substr(1, str.size() - 2);
+		}
 
 		std::string s = str;
 		auto variable_prefix = HasPrefix(s);
@@ -248,6 +253,10 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		}
 		
 		s = v->value;
+
+		if (GetCharacterCount(s, '"') == 2) {
+			return s.substr(1, s.size() - 2);
+		}
 
 		if (variable_prefix)
 			s.insert(s.begin(), variable_prefix);
@@ -305,21 +314,23 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		vals--;
 	}
 
-
 	return es_itr2->content;
 }
 //this function ONLY expects numbers
 //variables and strings are not supported
-std::string RuntimeExpression::Eval(const std::string& a, const std::string& b, const std::string_view& ops)
+std::string RuntimeExpression::Eval(std::string& a, std::string& b, const std::string_view& ops)
 {
 
 	const auto EvalStrings = [&a, &b, &ops]() -> std::string
 	{
+		
+
 		if (ops.size() < 2) {
 			
 			switch (ops[0]) {
 			case '+':
-				return a + b;
+				
+				return "\"" + a + b + "\"";
 			default:
 				RuntimeError("Illegal operator used on a string expression");
 				return "";
