@@ -13,7 +13,7 @@
 //	"unknown"
 //};
 
-inline std::vector<const char*> VarTypes = {"NO_TYPE", "int","float","string"};
+inline std::vector<const char*> VarTypes = {"NO_TYPE", "i64","float","string"};
 
 enum class VarType : char
 {

@@ -8,6 +8,7 @@
 enum class ExpressionType
 {
 	EXPR_ASSIGNMENT, // a = 1; 
+	EXPR_ASSIGNMENT2, // the += like operators
 	EXPR_CALCULATION //100 + 100 / 3
 };
 
@@ -28,6 +29,9 @@ struct expression_stack
 
 #define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '~' || x == '|' || x == '^' || x == '!' || x == '%')
 #define IsOperator(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%' || x == '=')
+#define IsAssignment2Op(x) (x == '+' || x == '-' || x == '/' || x == '*' || x == '&' || x == '|' || x == '^' || x == '%')
+#define IsDualOp(x) (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%' || x == '=')
+
 
 #define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=')
 

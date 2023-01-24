@@ -160,30 +160,46 @@ void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, ex
 	std::string token;
 	int32_t idx = -1;
 	char p;
-	for (const auto& i : expr_str) {
+
+	auto begin = expr_str.begin();
+	auto end = expr_str.end();
+
+	const size_t size = expr_str.size();
+
+	for (auto it = begin; it != end; ++it) {
+		auto& i = *it;
 		idx++;
 		if (!Operand_processed) {
+
 
 			const bool isOperatorCharacter = (i == '=');
 
 			//first operator
 			if (isOperatorCharacter) {
 
+				if (it == end || it == begin) {
+					RuntimeError("unexpected end of expression\n");
+					return;
+				}
 
-				p = expr_str[idx < 1 ? 0 : idx - 1]; //p = previous character
+				p = *(it - 1); //p = previous character
 
-				if (IsOperator(p))
+
+				if (IsOperator(p)) {
 					expr->Operator.push_back(p);
-
+					//token.pop_back();
+				}
 				expr->Operator.push_back(i);
 
 
-				p = expr_str[idx + 1 < expr_str.size() ? idx + 1 : expr_str.size() - 1]; //next character
+				p = *(it + 1); //next character
 
 				if (IsOperator(p))
 					expr->Operator.push_back(p);
 
-				if (expr_str[idx - 1] == '!')// operand is !=
+				p = *(it - 1);
+
+				if (IsDualOp(p))// operand is !=
 					token.pop_back(); // remove the ! character from the back
 
 				expr->preOP = token; //store left side
@@ -194,11 +210,12 @@ void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, ex
 
 				continue;
 			}
-		}
 
+		}
 		token.push_back(i);
+
 	}
-	
+
 	if (expr->preOP.empty())
 		expr->preOP = token;
 
@@ -232,7 +249,7 @@ ExpressionType CompilerExpression::EvaluateExpressionType(expression_s* expr)
 			expr->Operator[pos - 1] == '%' ||		//	%=
 			expr->Operator[pos - 1] == '^')		//	^=
 
-			return ExpressionType::EXPR_ASSIGNMENT;
+			return ExpressionType::EXPR_ASSIGNMENT2;
 
 	}
 
@@ -284,6 +301,7 @@ bool CompilerExpression::NextOperatorIsLegal(char previous_op, char op)
 //takes the raw expression as input
 bool CompilerExpression::ParseExpression(std::string& expr)
 {
+	std::string variableName;
 
 	TokenizeExpression(expr, &e.expression);
 
@@ -294,7 +312,7 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 	case ExpressionType::EXPR_ASSIGNMENT:
 	{
 		//fix the contents before the assignment operator
-		std::string variableName = RemoveDuplicateBlanks(RemoveBlanksFromBeginningAndEnd(e.expression.preOP));
+		variableName = RemoveDuplicateBlanks(RemoveBlanksFromBeginningAndEnd(e.expression.preOP));
 
 		fscript += variableName;
 		fscript += e.expression.Operator;
@@ -373,6 +391,23 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 		expr = CleanupExpression(e.expression.postOP);
 		break;
 	}
+	case ExpressionType::EXPR_ASSIGNMENT2:
+
+		variableName = RemoveDuplicateBlanks(RemoveBlanksFromBeginningAndEnd(e.expression.preOP));
+
+		fscript += variableName;
+		fscript += e.expression.Operator;
+		TestExpression(expr);
+		expr = CleanupExpression(e.expression.postOP);
+
+		if (!FindVariableFromStack(variableName)) {
+			CompilerError("undefined variable '", variableName, "'");
+			return false;
+		}
+
+		//CompilerError("NIGGER");
+
+		break;
 	case ExpressionType::EXPR_CALCULATION:
 		TestExpression(e.expression.postOP);
 		expr = CleanupExpression(expr);

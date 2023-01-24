@@ -17,6 +17,7 @@ public:
 	ExpressionType EvaluateExpressionType(expression_s* expr);
 	bool ParseExpression(std::string& expr);
 	bool ParseAssignment();
+	bool ParseAssignment2();
 	bool ParseExpressionNumbers(std::string& expr);
 	std::string EvaluateExpression(const std::string_view& expr);
 	std::string EvaluateExpressionStack(std::list<expression_stack>& es);
@@ -33,6 +34,8 @@ private:
 	std::string script;
 	size_t codepos = 0;
 	Variable* var = 0;
+
+	bool add_to_value = false;
 };
 
 #endif

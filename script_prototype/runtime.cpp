@@ -17,5 +17,7 @@ bool Runtime::InitializeRuntime(const std::string& _path)
 	}
 	std::cout << std::format("\"{}\" successfully opened!\n", path);
 
+	int a = 1;
+
 	return true;
 }

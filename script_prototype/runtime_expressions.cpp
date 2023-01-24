@@ -12,7 +12,13 @@ void RuntimeExpression::TokenizeExpression(const std::string_view& expr_str, exp
 	int32_t idx = -1;
 	char p;
 
-	for (const auto& i : expr_str) {
+	auto begin = expr_str.begin();
+	auto end = expr_str.end();
+
+	const size_t size = expr_str.size();
+
+	for (auto it = begin; it != end; it++) {
+		auto& i = *it;
 		idx++;
 		if (!Operand_processed) {
 
@@ -21,20 +27,28 @@ void RuntimeExpression::TokenizeExpression(const std::string_view& expr_str, exp
 
 			//first operator
 			if (isOperatorCharacter) {
-				p = expr_str[idx < 1 ? 0 : idx - 1]; //p = previous character
 
-				if (IsOperator(p))
+				if (it == end || it == begin) {
+					RuntimeError("unexpected end of expression\n");
+					return;
+				}
+
+				p = *(it - 1); //p = previous character
+
+				if (IsOperator(p)) {
 					expr->Operator.push_back(p);
-
+				}
 				expr->Operator.push_back(i);
 
 
-				p = expr_str[idx + 1 < expr_str.size() ? idx + 1 : expr_str.size() - 1]; //next character
+				p = *(it + 1); //next character
 
 				if (IsOperator(p))
 					expr->Operator.push_back(p);
 
-				if (expr_str[idx - 1] == '!')// operand is !=
+				p = *(it - 1);
+
+				if (IsDualOp(p))// operand is !=
 					token.pop_back(); // remove the ! character from the back
 
 				expr->preOP = token; //store left side
@@ -65,7 +79,7 @@ ExpressionType RuntimeExpression::EvaluateExpressionType(expression_s* expr)
 		}
 	}
 
-	size_t pos = expr->Operator.find('=');
+	const size_t pos = expr->Operator.find('=');
 	if (pos != std::string_view::npos) {//has =
 
 		if (expr->Operator.size() == 1) { // = is the only op
@@ -80,7 +94,7 @@ ExpressionType RuntimeExpression::EvaluateExpressionType(expression_s* expr)
 			expr->Operator[pos - 1] == '%' ||		//	%=
 			expr->Operator[pos - 1] == '^')		//	^=
 
-			return ExpressionType::EXPR_ASSIGNMENT;
+			return ExpressionType::EXPR_ASSIGNMENT2;
 
 	}
 
@@ -91,7 +105,7 @@ ExpressionType RuntimeExpression::EvaluateExpressionType(expression_s* expr)
 }
 bool RuntimeExpression::ParseExpression(std::string& expr)
 {
-	std::cout << "parsing: " << expr << '\n';
+	//std::cout << "parsing: " << expr << '\n';
 	TokenizeExpression(expr, &e.expression);
 
 	e.expression.type = EvaluateExpressionType(&e.expression);
@@ -101,6 +115,10 @@ bool RuntimeExpression::ParseExpression(std::string& expr)
 
 	case ExpressionType::EXPR_ASSIGNMENT:
 		ParseAssignment();
+		expr = e.expression.postOP;
+		break;
+	case ExpressionType::EXPR_ASSIGNMENT2:
+		ParseAssignment2();
 		expr = e.expression.postOP;
 		break;
 	case ExpressionType::EXPR_CALCULATION:
@@ -147,6 +165,22 @@ bool RuntimeExpression::ParseAssignment()
 
 	return true;
 }
+//dual op assignment to a variable like +=
+bool RuntimeExpression::ParseAssignment2() 
+{
+	std::string variableName = e.expression.preOP;
+	
+	var = FindVariableFromStack(variableName);
+
+	if (!var) {
+		RuntimeError("undefined variable '", variableName, "' referenced!");
+		return 0;
+	}
+
+
+	return true;
+
+}
 //functions are not allowed here
 //only expects operators, parenthesis, numbers and variable names
 //an expression like: 101 * (100 + ((2 + 3) & 3 ^ 4)) * (2 | 4 * -(-2 + 3 / (30 - 2 | 3)) ^ 2) can be used here
@@ -183,7 +217,13 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 
 	}
 
-	var->value = EvaluateExpression(expr);
+	if(e.expression.type != ExpressionType::EXPR_ASSIGNMENT2)
+		var->value = EvaluateExpression(expr);
+	else {
+		std::string temp = EvaluateExpression(expr);
+		std::string op { (e.expression.Operator.front()) };
+		var->value = Eval(var->value, temp, op);
+	}
 
 	std::cout << "value of '" << var->name << "' = " << var->value << '\n';
 
@@ -266,27 +306,21 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 	};
 	std::list<expression_stack>::iterator es_itr1, es_itr2;
 	size_t vals = es.size();
-	char variable_prefix = 0;
-	VarType leftop{}, rightop{};
 	OperatorPriority op, next_op;
 	std::string lval, rval;
-	int i = 0;
 
 	//std::advance(end, -1); //ignore last because the operator is ""
 
 	//ok now we have:
 	//a list of tokenized operands and operators for easy parsing
 	//every odd index is an operand
-	//every even number is an operator
+	//every even index is an operator
 
 
 	while (vals > 1) {
 
 		es_itr1 = es.begin();
 		es_itr2 = es_itr1; ++es_itr2;
-
-
-		i = 0;
 
 		op = GetOperandPriority(es_itr1->Operator);
 		next_op = GetOperandPriority(es_itr2->Operator);
@@ -298,7 +332,6 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 			if (next_op <= op)
 				break;
 
-			i++;
 			++es_itr1;
 			++es_itr2;
 		}

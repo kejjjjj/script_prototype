@@ -52,7 +52,7 @@ bool Script::Compile()
 	expression_str.clear();
 	scriptStack.stack.clear();
 
-	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
+	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
 	for (const auto& i : rtScript) {
 
@@ -69,11 +69,11 @@ bool Script::Compile()
 
 	}
 
-	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-	std::chrono::duration<double> difference = now - old;
+	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	//std::chrono::duration<double> difference = now - old;
 
 
-	printf("runtime parsing: %.12f\n", difference.count());
+	//printf("runtime parsing: %.12f\n", difference.count());
 
 	//runtime script ends here
 

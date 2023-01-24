@@ -471,11 +471,13 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
     if (ops.size() == 1) {
         char op = ops[0];
 
+        if (op == '=') // Assignment	
+            return ASSIGNMENT;
 
         if (op == '|') // Bitwise OR	
             return BITWISE_OR;
 
-        if (op == '^') //Bitwise XOR	
+        else if (op == '^') //Bitwise XOR	
             return BITWISE_XOR;
 
         else if (op == '&') //Bitwise AND	
@@ -489,6 +491,7 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
 
         else if (op == '*' || op == '/' || op == '%')
             return MULTIPLICATIVE;
+
 
 
         CompilerError("Unknown operator '", ops, "'");
@@ -512,6 +515,8 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
     else if (ops == "||")
         return LOGICAL_OR;
 
+    else if (ops == "+=" || ops == "-=" || ops == "*=" || ops == "/=" || ops == "%=" || ops == ">>=" || ops == "<<=" || ops == "&=" || ops == "^=" || ops == "|=")
+        return ASSIGNMENT;
 
    // CompilerError("Unknown operator [", ops, "]");
     return FAILURE;
