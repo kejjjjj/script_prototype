@@ -54,6 +54,8 @@ bool Script::Compile()
 
 	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
+	std::cout << "RUNTIME\n";
+
 	for (const auto& i : rtScript) {
 
 		if (i == ';') {

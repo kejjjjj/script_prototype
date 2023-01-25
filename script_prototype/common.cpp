@@ -227,7 +227,7 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::strin
 
             //save the string before the operator
             if (token.empty()) {
-                CompilerError("Expected an expression");
+                CompilerError("token.empty(): Expected an expression");
                 return false;
             }
 
@@ -289,7 +289,7 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::strin
         equals_in_a_row = 0;
     }
     if (token.empty()) {
-        CompilerError("Expected an expression");
+        CompilerError("CompilerError: Expected an expression");
         return false;
     }
     tokens.push_back(token);
@@ -597,4 +597,25 @@ std::string to_string(const float val, const bool integer)
         return std::to_string((int64_t)val);
 
     return std::to_string(val);
+}
+std::string HasPrefix(const std::string_view& str)
+{
+    std::string prefix;
+    auto beg = str.begin();
+    const auto begin = *beg;
+
+    if (IsPrefixOp(begin)) {
+        prefix.push_back(begin);
+        beg++;
+        for (auto& i = beg; i != str.end(); i++) {
+            if (*i != begin)
+                break;
+
+            prefix.push_back(begin);
+
+        }
+
+    }
+
+    return prefix;
 }

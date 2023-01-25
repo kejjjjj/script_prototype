@@ -26,8 +26,6 @@ int main()
     //operatorHash[HashString("^")] = BITWISE_XOR;
     //operatorHash[HashString("~")] = UNARY;
 
-
-
     Script compiler("scripts\\main.kej");
 
    compiler.Compile();

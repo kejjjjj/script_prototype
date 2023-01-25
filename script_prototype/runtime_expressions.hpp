@@ -21,6 +21,8 @@ public:
 	bool ParseExpressionNumbers(std::string& expr);
 	std::string EvaluateExpression(const std::string_view& expr);
 	std::string EvaluateExpressionStack(std::list<expression_stack>& es);
+	std::string EvaluateSingular(const std::string& es);
+
 	std::string Eval(std::string& a, std::string& b, const std::string_view& ops);
 	VarType GetOperandType(const std::string_view& operand);
 	

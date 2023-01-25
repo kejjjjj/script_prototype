@@ -121,3 +121,34 @@ Variable* FindVariableFromStack(const std::string_view& var)
 	}
 	return 0;
 }
+std::string VariableContentToValue(const std::string& str)
+{
+	if (ValidNumber(str))
+		return str;
+
+	else if (GetCharacterCount(str, '"') == 2) {
+		return str.substr(1, str.size() - 2);
+	}
+
+	std::string s = str;
+	auto variable_prefix = HasPrefix(s);
+
+	if (!variable_prefix.empty())
+		s.erase(0, variable_prefix.size());
+
+	const Variable* v = FindVariableFromStack(s);
+
+	if (!v) {
+		RuntimeError("Undefined variable '", s, "'");
+		return "";
+	}
+
+	s = v->value;
+
+	if (!variable_prefix.empty()) { //add the prefixes back
+		for (auto& i : variable_prefix)
+			s.insert(s.begin(), i);
+	}
+
+	return s;
+}

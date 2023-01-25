@@ -166,53 +166,46 @@ void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, ex
 
 	const size_t size = expr_str.size();
 
-	for (auto it = begin; it != end; ++it) {
+	for (auto it = begin; it != end; it++) {
 		auto& i = *it;
 		idx++;
-		if (!Operand_processed) {
-
-
-			const bool isOperatorCharacter = (i == '=');
-
-			//first operator
-			if (isOperatorCharacter) {
-
-				if (it == end || it == begin) {
-					RuntimeError("unexpected end of expression\n");
-					return;
-				}
-
-				p = *(it - 1); //p = previous character
-
-
-				if (IsOperator(p)) {
-					expr->Operator.push_back(p);
-					//token.pop_back();
-				}
-				expr->Operator.push_back(i);
-
-
-				p = *(it + 1); //next character
-
-				if (IsOperator(p))
-					expr->Operator.push_back(p);
-
-				p = *(it - 1);
-
-				if (IsDualOp(p))// operand is !=
-					token.pop_back(); // remove the ! character from the back
-
-				expr->preOP = token; //store left side
-
-				token.clear();
-
-				Operand_processed = true;
-
-				continue;
-			}
-
+		const bool isOperatorCharacter = (i == '=');
+		if (Operand_processed || !isOperatorCharacter) {
+			token.push_back(i);
+			continue;
 		}
-		token.push_back(i);
+
+
+
+		if (it == end || it == begin) {
+			RuntimeError("unexpected end of expression\n");
+			return;
+		}
+
+		p = *(it - 1); //p = previous character
+
+		if (IsOperator(p)) {
+			expr->Operator.push_back(p); // ?= is true here
+			Operand_processed = true;
+			token.pop_back();
+		}expr->Operator.push_back(i);
+
+
+
+		if (!Operand_processed) {
+			p = *(it + 1); //next character
+
+			if (IsPostEqualOp(p)) {
+				expr->Operator.push_back(p);
+				it++; //skip the next operator
+			}
+		}
+
+		expr->preOP = token; //store left side
+
+		token.clear();
+
+		Operand_processed = true;
 
 	}
 
@@ -221,7 +214,6 @@ void CompilerExpression::TokenizeExpression(const std::string_view& expr_str, ex
 
 	else
 		expr->postOP = token;
-
 }
 //evaluates based on the op combo
 //NOT called within expressions after the operand <----- FIX ME
@@ -488,13 +480,15 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 
 	size_t const opTokens = TokenizeStringOperands(expression, tokens);
 
+	std::cout << "CompilerExpression: " << expression << '\n';
 
 	if (opTokens % 2 == 0) {
 		CompilerError("EvaluateExpression: Expected an expression");
 		return false;
 	}
 
-
+	if (tokens.size() == 1)
+		return EvaluateSingular(tokens.front());
 
 	const size_t size = tokens.size() - 1;
 
@@ -518,17 +512,59 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 
 	return EvaluateExpressionStack(expressionstack);
 }
+bool CompilerExpression::EvaluateSingular(std::string& content)
+{
+	auto variable_prefix = HasPrefix(content);
+	bool fix = !variable_prefix.empty();
+
+	if (fix) //variable has a - or + prefix
+		content.erase(0, variable_prefix.size());
+
+	const Variable* v = FindVariableFromStack(content);
+
+
+	if (!v) {
+
+		if (IsDataType(content)) {
+			CompilerError("type name is not allowed");
+			return false;
+		}
+		if (!ValidNumber(content)) {
+			CompilerError("variable '", content, "' is undefined");
+			return false;
+		}
+		//if (fix)
+		//	for (auto& i : variable_prefix)
+		//		content.insert(content.begin(), i);
+
+		return true; //is a valid number lol pog
+
+		//return false;
+	}
+
+	//if (fix)
+	//	for (auto& i : variable_prefix)
+	//		content.insert(content.begin(), i);
+
+
+
+	return true;
+
+
+
+
+}
 //variable names can be passed
 bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es)
 {
 
 	const auto L_TestVariableForType = [](std::string& content) -> VarType {
 	
-		char prefix = content[0];
-		bool fix = prefix == '-' || prefix == '+';
+		auto variable_prefix = HasPrefix(content);
+		bool fix = !variable_prefix.empty();
 
 		if (fix) //variable has a - or + prefix
-			content.erase(0, 1);
+			content.erase(0, variable_prefix.size());
 
 		const Variable* v = FindVariableFromStack(content);
 
@@ -541,13 +577,15 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 			CompilerError("'", content, "' is undefined");
 
 			if (fix)
-				content.insert(content.begin(), prefix);
+				for (auto& i : variable_prefix)
+					content.insert(content.begin(), i);
 
 			return VarType::VT_INVALID;
 		}
 
 		if (fix)
-			content.insert(content.begin(), prefix);
+			for (auto& i : variable_prefix)
+				content.insert(content.begin(), i);
 
 		return v->type;
 	

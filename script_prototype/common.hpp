@@ -121,5 +121,6 @@ std::string RemoveDuplicateBlanks(const std::string_view& in);
 void PushString(std::string* strptr, const std::string_view& str);
 
 std::string to_string(const float val, const bool integer);
+std::string HasPrefix(const std::string_view& str);
 
 #endif

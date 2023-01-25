@@ -20,48 +20,46 @@ void RuntimeExpression::TokenizeExpression(const std::string_view& expr_str, exp
 	for (auto it = begin; it != end; it++) {
 		auto& i = *it;
 		idx++;
-		if (!Operand_processed) {
-
-
-			const bool isOperatorCharacter = (i == '=');
-
-			//first operator
-			if (isOperatorCharacter) {
-
-				if (it == end || it == begin) {
-					RuntimeError("unexpected end of expression\n");
-					return;
-				}
-
-				p = *(it - 1); //p = previous character
-
-				if (IsOperator(p)) {
-					expr->Operator.push_back(p);
-				}
-				expr->Operator.push_back(i);
-
-
-				p = *(it + 1); //next character
-
-				if (IsOperator(p))
-					expr->Operator.push_back(p);
-
-				p = *(it - 1);
-
-				if (IsDualOp(p))// operand is !=
-					token.pop_back(); // remove the ! character from the back
-
-				expr->preOP = token; //store left side
-
-				token.clear();
-
-				Operand_processed = true;
-
-				continue;
-			}
-
+		const bool isOperatorCharacter = (i == '=');
+		if (Operand_processed || !isOperatorCharacter) {
+			token.push_back(i);
+			continue;
 		}
-		token.push_back(i);
+		
+
+
+		if (it == end || it == begin) {
+			RuntimeError("unexpected end of expression\n");
+			return;
+		}
+
+		p = *(it - 1); //p = previous character
+
+		if (IsOperator(p)) {
+			expr->Operator.push_back(p); // ?= is true here
+			Operand_processed = true;
+			token.pop_back();
+		}expr->Operator.push_back(i); 
+
+
+
+		if (!Operand_processed) {
+			p = *(it + 1); //next character
+
+			if (IsPostEqualOp(p)) {
+				expr->Operator.push_back(p);
+				it++; //skip the next operator
+			}
+		}
+
+		expr->preOP = token; //store left side
+
+		token.clear();
+
+		Operand_processed = true;
+
+		continue;
+		
 
 	}
 
@@ -122,6 +120,8 @@ bool RuntimeExpression::ParseExpression(std::string& expr)
 		expr = e.expression.postOP;
 		break;
 	case ExpressionType::EXPR_CALCULATION:
+		std::cout << "ExpressionType::EXPR_CALCULATION";
+
 		break;
 	default:
 		RuntimeError("Unable to validate expression");
@@ -233,6 +233,7 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 // example: 1 ^ 3 & 1 / 5
 std::string RuntimeExpression::EvaluateExpression(const std::string_view& expression)
 {
+
 	if (ValidNumber(expression) || expression.front() == '"' && expression.front() == expression.back()) {
 		return std::string(expression);
 	}
@@ -240,8 +241,13 @@ std::string RuntimeExpression::EvaluateExpression(const std::string_view& expres
 	std::list<std::string> tokens;
 	std::list<expression_stack> expressionstack;
 
+	std::cout << "RuntimeExpression: " << expression << '\n';
+
 
 	size_t const opTokens = TokenizeStringOperands(expression, tokens); //separates all operators
+
+	if (tokens.size() == 1)
+		return EvaluateSingular(tokens.front());
 
 	const size_t size = tokens.size() - 1;
 
@@ -266,12 +272,13 @@ std::string RuntimeExpression::EvaluateExpression(const std::string_view& expres
 //variable names can be passed
 std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stack>& es)
 {
-	auto HasPrefix = [](const std::string_view& str) -> CHAR {
-		const auto begin = *str.begin();
-		return (begin == '+' || begin == '-') == true ? begin : 0;
-	};
-	auto ContentToValue = [&HasPrefix](const std::string& str)->std::string {
-		
+	std::list<expression_stack>::iterator es_itr1, es_itr2;
+	size_t vals = es.size();
+	OperatorPriority op, next_op;
+	std::string lval, rval;
+
+	const auto ContentToValue = [](const std::string& str)->std::string
+	{
 		if (ValidNumber(str))
 			return str;
 
@@ -282,34 +289,32 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		std::string s = str;
 		auto variable_prefix = HasPrefix(s);
 
-		if (variable_prefix)
-			s.erase(0, 1);
+		if (!variable_prefix.empty())
+			s.erase(0, variable_prefix.size());
 
 		const Variable* v = FindVariableFromStack(s);
 
 		if (!v) {
-			RuntimeError("Undefined variable '", s, "'");
-			return "";
+
+			if (!ValidNumber(s)) {
+
+				RuntimeError("Undefined variable '", s, "'");
+				return "";
+			}
+
+			return s; //TODO: evaluate prefixes
+
 		}
-		
+
 		s = v->value;
 
-		if (GetCharacterCount(s, '"') == 2) {
-			return s.substr(1, s.size() - 2);
+		if (!variable_prefix.empty()) { //add the prefixes back
+			for (auto& i : variable_prefix)
+				s.insert(s.begin(), i);
 		}
 
-		if (variable_prefix)
-			s.insert(s.begin(), variable_prefix);
-
-		return s; 
-
+		return s;
 	};
-	std::list<expression_stack>::iterator es_itr1, es_itr2;
-	size_t vals = es.size();
-	OperatorPriority op, next_op;
-	std::string lval, rval;
-
-	//std::advance(end, -1); //ignore last because the operator is ""
 
 	//ok now we have:
 	//a list of tokenized operands and operators for easy parsing
@@ -349,6 +354,54 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 
 	return es_itr2->content;
 }
+
+//no operators
+//only one number/variable with possible prefixes
+std::string RuntimeExpression::EvaluateSingular(const std::string& es)
+{
+	
+	const auto ContentToValue = [](const std::string& str)->std::string
+	{
+		if (ValidNumber(str))
+			return str;
+
+		else if (GetCharacterCount(str, '"') == 2) {
+			return str.substr(1, str.size() - 2);
+		}
+
+		std::string s = str;
+		auto variable_prefix = HasPrefix(s);
+
+		if (!variable_prefix.empty())
+			s.erase(0, variable_prefix.size());
+
+		const Variable* v = FindVariableFromStack(s);
+
+		if (!v) {
+
+			if (!ValidNumber(s)) {
+
+				RuntimeError("Undefined variable '", s, "'");
+				return "";
+			}
+
+			return s; //TODO: evaluate prefixes
+		}
+
+		s = v->value;
+
+		if (!variable_prefix.empty()) { //add the prefixes back
+			for (auto& i : variable_prefix)
+				s.insert(s.begin(), i);
+		}
+
+		return s;
+	};
+
+	return ContentToValue(es);
+
+}
+
 //this function ONLY expects numbers
 //variables and strings are not supported
 std::string RuntimeExpression::Eval(std::string& a, std::string& b, const std::string_view& ops)

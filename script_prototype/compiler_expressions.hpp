@@ -33,6 +33,8 @@ public:
 	void TestExpression(const std::string_view& str);
 
 	bool EvaluateExpressionStack(std::list<expression_stack>& es);
+	bool EvaluateSingular(std::string& es);
+
 	VarType GetOperandType(const std::string_view& operand);
 
 	struct e_s
