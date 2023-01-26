@@ -122,5 +122,6 @@ void PushString(std::string* strptr, const std::string_view& str);
 
 std::string to_string(const float val, const bool integer);
 std::string HasPrefix(const std::string_view& str);
-
+std::string EvalPrefixes(const std::string& value, const std::string_view& prefix);
+std::string Eval(const std::string& a, const std::string& b, const std::string_view& ops);
 #endif

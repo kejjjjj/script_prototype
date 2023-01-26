@@ -302,18 +302,12 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 				return "";
 			}
 
-			return s; //TODO: evaluate prefixes
-
+			return EvalPrefixes(s, variable_prefix);
 		}
-
+		
 		s = v->value;
 
-		if (!variable_prefix.empty()) { //add the prefixes back
-			for (auto& i : variable_prefix)
-				s.insert(s.begin(), i);
-		}
-
-		return s;
+		return EvalPrefixes(s, variable_prefix);
 	};
 
 	//ok now we have:
@@ -360,20 +354,22 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 std::string RuntimeExpression::EvaluateSingular(const std::string& es)
 {
 	
+
+
 	const auto ContentToValue = [](const std::string& str)->std::string
 	{
 		if (ValidNumber(str))
 			return str;
 
 		else if (GetCharacterCount(str, '"') == 2) {
-			return str.substr(1, str.size() - 2);
+			return str.substr(1, str.size() - 2); //is a string literal so remove the quotes
 		}
 
 		std::string s = str;
 		auto variable_prefix = HasPrefix(s);
 
 		if (!variable_prefix.empty())
-			s.erase(0, variable_prefix.size());
+			s.erase(0, variable_prefix.size()); //separate the prefix
 
 		const Variable* v = FindVariableFromStack(s);
 
@@ -385,204 +381,20 @@ std::string RuntimeExpression::EvaluateSingular(const std::string& es)
 				return "";
 			}
 
-			return s; //TODO: evaluate prefixes
+			return EvalPrefixes(s, variable_prefix);
 		}
-
+		
 		s = v->value;
 
-		if (!variable_prefix.empty()) { //add the prefixes back
-			for (auto& i : variable_prefix)
-				s.insert(s.begin(), i);
-		}
+		return EvalPrefixes(s, variable_prefix);
 
-		return s;
 	};
 
 	return ContentToValue(es);
 
 }
 
-//this function ONLY expects numbers
-//variables and strings are not supported
-std::string RuntimeExpression::Eval(std::string& a, std::string& b, const std::string_view& ops)
-{
 
-	const auto EvalStrings = [&a, &b, &ops]() -> std::string
-	{
-		
-
-		if (ops.size() < 2) {
-			
-			switch (ops[0]) {
-			case '+':
-				
-				return "\"" + a + b + "\"";
-			default:
-				RuntimeError("Illegal operator used on a string expression");
-				return "";
-			}
-		}
-
-		if (ops == "==")
-			return (a == b) == true ? "1" : "0";
-
-		else if (ops == "!=")
-			return (a != b) == true ? "1" : "0";
-
-		else if (ops == "||")
-			return (!a.empty() || !b.empty()) == true ? "1" : "0";
-
-		else if (ops == "&&")
-			return (!a.empty() && !b.empty()) == true ? "1" : "0";
-
-
-		RuntimeError("Illegal operator used on a string expression");
-		return "";
-
-	};
-
-	const VarType at = StringType(a), bt = StringType(a);
-
-	if (at == VarType::VT_STRING && bt == at) //both are strings
-		return EvalStrings();
-
-	else if (at == VarType::VT_STRING && bt != at || bt == VarType::VT_STRING && at != bt) { //a string and a non-string
-		RuntimeError("Cannot cast from '", VarTypes[(int)at], "' to '", VarTypes[(int)bt], "'");
-		return "";
-	}
-
-	float va, vb;
-
-	
-	const auto resa = std::from_chars(a.data(), a.data() + a.size(), va);
-	const auto resb = std::from_chars(b.data(), b.data() + b.size(), vb);
-
-	const bool a_int = IsInteger(a);
-	const bool b_int = IsInteger(b);
-
-	if (ops.size() < 2) {
-		char op = ops[0];
-		switch (op) {
-
-		case '+':
-
-			return to_string(
-				(a_int == true ? (int64_t)va : va) + (b_int == true ? (int64_t)vb : vb), a_int);
-		case '-':
-			return to_string(
-				(a_int == true ? (int64_t)va : va) - (b_int == true ? (int64_t)vb : vb), a_int);
-		case '*':
-			return to_string(
-				(a_int == true ? (int64_t)va : va) * (b_int == true ? (int64_t)vb : vb), a_int);
-		case '/':
-
-			if (vb == 0) {
-				RuntimeError("Division by zero");
-				return "0";
-
-			}
-
-			return to_string(
-				(a_int == true ? (int64_t)va : va) / (b_int == true ? (int64_t)vb : vb), a_int);
-
-		case '>':
-			return to_string(
-				(a_int == true ? (int64_t)va : va) > (b_int == true ? (int64_t)vb : vb), a_int);
-		case '<':
-			return to_string(
-				(a_int == true ? (int64_t)va : va) < (b_int == true ? (int64_t)vb : vb), a_int);
-		case '&':
-			if (!a_int || !b_int) {
-				RuntimeError("'", op, "' operator used with non-integral operands");
-				return "";
-			}
-
-			return to_string(
-				 (int64_t)va & (int64_t)vb, a_int);
-		case '|':
-			if (!a_int || !b_int) {
-				RuntimeError("'", op, "' operator used with non-integral operands");
-				return "";
-			}
-
-			return to_string(
-				(int64_t)va | (int64_t)vb, a_int);
-		case '^':
-			if (!a_int || !b_int) {
-				RuntimeError("'", op, "' operator used with non-integral operands");
-				return "";
-			}
-
-			return to_string(
-				(int64_t)va ^ (int64_t)vb, a_int);
-
-		case '%':
-			if (!a_int || !b_int) {
-				RuntimeError("'", op, "' operator used with non-integral operands");
-				return "";
-			}
-			else if (vb == 0) {
-				RuntimeError("Division by zero");
-				return "";
-			}
-			return to_string(
-				(int64_t)va % (int64_t)vb, a_int);
-		}
-	}
-
-	if (ops == "==") {
-		return  ((a_int == true ? (int64_t)va : va) == (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
-	}
-	else if (ops == "!=") {
-		return  ((a_int == true ? (int64_t)va : va) != (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
-	}
-	else if (ops == ">=") {
-		return  ((a_int == true ? (int64_t)va : va) >= (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
-	}
-	else if (ops == "<=") {
-		return  ((a_int == true ? (int64_t)va : va) <= (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
-	}
-	else if (ops == "||") {
-		return  ((a_int == true ? (int64_t)va : va) || (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
-	}
-	else if (ops == "&&") {
-		return  ((a_int == true ? (int64_t)va : va) && (b_int == true ? (int64_t)vb : vb)) == true ? "1" : "0";
-	}
-	else if (ops == "<<") {
-
-		if (!a_int || !b_int) {
-			RuntimeError("'", ops, "' operator used with non-integral operands");
-			return "";
-		}
-
-		else if (vb < 0) {
-			RuntimeError("shift count is negative");
-			return "";
-		}
-
-		return  to_string((int64_t)va << (int64_t)vb, a_int);
-	}
-	else if (ops == ">>") {
-
-		if (!a_int || !b_int) {
-			RuntimeError("'", ops, "' operator used with non-integral operands");
-			return "";
-		}
-
-		else if (vb < 0) {
-			RuntimeError("shift count is negative");
-			return "";
-		}
-
-		return  to_string((int64_t)va >> (int64_t)vb, a_int);
-	}
-
-
-	RuntimeError("Unknown operator: ", ops);
-
-	return "";
-
-}
 VarType RuntimeExpression::GetOperandType(const std::string_view& operand)
 {
 	//std::cout << "GetOperandType: " << operand << '\n';

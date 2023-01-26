@@ -23,7 +23,7 @@ public:
 	std::string EvaluateExpressionStack(std::list<expression_stack>& es);
 	std::string EvaluateSingular(const std::string& es);
 
-	std::string Eval(std::string& a, std::string& b, const std::string_view& ops);
+	
 	VarType GetOperandType(const std::string_view& operand);
 	
 	struct e_s

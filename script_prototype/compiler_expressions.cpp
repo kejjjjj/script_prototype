@@ -132,7 +132,12 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 				CompilerError("Illegal amount of expression operators");
 				return "";
 			}
-			if (!NextOperatorIsLegal(last_character, i)) {
+			if (!NextOperatorIsLegal(last_character, i)) { 
+				//FIXME
+
+				//the ! prefix after an operator
+
+				//FIXME
 				CompilerError("Illegal operator sequence '", last_character, i, "'");
 				return "";
 			}
