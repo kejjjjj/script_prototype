@@ -296,6 +296,83 @@ SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::strin
 
     return tokens.size();
 }
+SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::string>& tokens)
+{
+    auto begin = expr.begin();
+    auto end = expr.end();
+    CHAR i{};
+    std::string token;
+    bool ParseValue = true;
+
+    constexpr int32_t MAX_OPERATORS_IN_ROW = 3;
+
+    for (auto it = begin; it != end; it++) {
+
+        i = *it;
+
+        
+        if (ParseValue) {
+
+            while (IsPrefixOp(*it)) { //push all the prefixes
+                token.push_back(*it);
+                ++it;
+            }
+
+            if (!IsValidSyntaxForName(*it)) {
+                if (*it == '.' && std::isdigit(*(it - 1))) {
+                    goto fine; //decimal point
+                }
+
+                CompilerError("the character '", *it, "' was unexpected");
+                return 0;
+            }
+            fine:
+            while (IsValidSyntaxForName(*it)) {
+                token.push_back(*it);
+                ++it;
+            }
+            tokens.push_back(token);
+            token.clear(); //clear the token because it is saved
+            --it;
+            ParseValue = false;
+            continue;
+        }
+
+        //parse the operator
+        if (!IsOperator(i)) {
+            CompilerError("TokenizeStringOperands2(): expected an expression: [", *(it-1), i, "]");
+            return 0;
+        }
+
+        token.push_back(i); //push the first operator
+
+        //insert to the operator as long as it is a valid operator
+        while (true) {
+            ++it;
+            token.push_back(*it);
+
+            
+            if (!IsAnOperator(token)) {
+                token.pop_back(); //remove the last operator since it is invalid
+                break;
+            }
+
+        }
+
+
+
+        tokens.push_back(token); //save the operator
+        token.clear(); //clear the token because it is saved
+
+        --it;
+
+        ParseValue = true;
+
+    }
+
+    return tokens.size();
+
+}
 SIZE_T GetCharacterCount(const std::string_view& str, char c)
 {
     SIZE_T count=0;
@@ -604,24 +681,21 @@ std::string HasPrefix(const std::string_view& str)
     auto beg = str.begin();
     const auto begin = *beg;
 
-    if (IsPrefixOp(begin)) {
-        prefix.push_back(begin);
-        beg++;
-        for (auto& i = beg; i != str.end(); i++) {
-            if (*i != begin)
-                break;
-
-            prefix.push_back(begin);
-
+    for (auto& i = beg; i != str.end(); i++) {
+        if (IsPrefixOp(*i)) {
+            prefix.push_back(*i);
+            continue;
         }
-
+        break;
     }
 
     return prefix;
 }
 std::string EvalPrefixes(const std::string& value, const std::string_view& prefix)
 {
+
     const auto EvalSingularPrefix = [](char it, std::string& ref) {
+       // std::cout << "EvalSingularPrefix(): " << it << " with " << ref << '\n';
 
         switch (it) {
 
@@ -640,7 +714,7 @@ std::string EvalPrefixes(const std::string& value, const std::string_view& prefi
             break;
 
         default:
-            RuntimeError("EvalPrefixes(): impossible");
+            RuntimeError("EvalPrefixes(): impossible [", it , "]");
             return "";
         }
     };
@@ -659,10 +733,12 @@ std::string EvalPrefixes(const std::string& value, const std::string_view& prefi
 
 
 
-    for (auto it = end; it != begin; it--) { //evaluate from right to left
+    for (auto it = end; it != begin; ) { //evaluate from right to left
+        std::advance(it, -1);
 
         EvalSingularPrefix(*it, val);
 
+        
 
     }
 
@@ -847,5 +923,16 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
     RuntimeError("Unknown operator: ", ops);
 
     return "";
+
+}
+bool IsAnOperator(const std::string_view& op)
+{
+    
+
+    if (op.size() == 1) {
+        return IsOperator(op.front());
+    }
+
+    return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
 
 }

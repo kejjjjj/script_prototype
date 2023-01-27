@@ -243,8 +243,7 @@ std::string RuntimeExpression::EvaluateExpression(const std::string_view& expres
 
 	std::cout << "RuntimeExpression: " << expression << '\n';
 
-
-	size_t const opTokens = TokenizeStringOperands(expression, tokens); //separates all operators
+	size_t const opTokens = TokenizeStringOperands2(expression, tokens); //separates all operators
 
 	if (tokens.size() == 1)
 		return EvaluateSingular(tokens.front());
@@ -340,6 +339,8 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 
 		const std::string result = Eval(lval, rval, es_itr1->Operator);
 		std::cout << std::format("{} {} {} = {}\n", lval, es_itr1->Operator, rval, result);
+
+		constexpr int a = !1 + -1;
 
 		es.erase(es_itr1, es_itr2);
 		es_itr2->content = result;

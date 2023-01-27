@@ -103,6 +103,8 @@ uint32_t HashString(const std::string_view& s);
 std::string RemoveFromString(std::string& str, char a);
 SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& tokens);
 SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::string>& tokens);
+SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::string>& tokens);
+
 SIZE_T GetCharacterCount(const std::string_view& str, char c);
 Parenthesis_s GetStringWithinParentheses(const std::string_view& expr);
 float Eval(const float& a, const float& b, const std::string_view& ops);
@@ -124,4 +126,6 @@ std::string to_string(const float val, const bool integer);
 std::string HasPrefix(const std::string_view& str);
 std::string EvalPrefixes(const std::string& value, const std::string_view& prefix);
 std::string Eval(const std::string& a, const std::string& b, const std::string_view& ops);
+
+bool IsAnOperator(const std::string_view& op);
 #endif

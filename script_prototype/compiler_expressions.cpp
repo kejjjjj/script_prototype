@@ -36,14 +36,10 @@ void CompilerExpression::TestExpression(const std::string_view& expr)
 	isfine:
 
 		if (IsCalculationOp(i)) {
-			if (operands_in_a_row > 2) {
-				CompilerError("Illegal amount of expression operators");
-				return;
-			}
-			if (!NextOperatorIsLegal(last_character, i)) {
-				CompilerError("Illegal operator sequence '", last_character, i, "'");
-				return;
-			}
+			//if (!NextOperatorIsLegal(last_character, i)) {
+			//	CompilerError("Illegal operator sequence '", last_character, i, "'");
+			//	return;
+			//}
 
 			last_character = i;
 			operands_in_a_row++;
@@ -100,11 +96,6 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 	for (const auto& i : expr) {
 		idx++;
 
-		//pre-, and post-increments here probably...
-		// because ++ != + +
-
-		//idk I will probably do this when I actually have variable support
-
 		if (i == '"') 
 			within_quotes = !within_quotes;
 		
@@ -128,19 +119,19 @@ std::string CompilerExpression::CleanupExpression(const std::string_view& expr)
 		isfine:
 
 		if (IsCalculationOp(i)) {
-			if (operands_in_a_row > 2) {
-				CompilerError("Illegal amount of expression operators");
-				return "";
-			}
-			if (!NextOperatorIsLegal(last_character, i)) { 
-				//FIXME
+			//if (operands_in_a_row > 2) {
+			//	CompilerError("Illegal amount of expression operators");
+			//	return "";
+			//}
+			//if (!NextOperatorIsLegal(last_character, i)) { 
+			//	//FIXME
 
-				//the ! prefix after an operator
+			//	//the ! prefix after an operator
 
-				//FIXME
-				CompilerError("Illegal operator sequence '", last_character, i, "'");
-				return "";
-			}
+			//	//FIXME
+			//	CompilerError("Illegal operator sequence '", last_character, i, "'");
+			//	return "";
+			//}
 
 			last_character = i;
 			operands_in_a_row++;
@@ -260,6 +251,9 @@ bool CompilerExpression::NextOperatorIsLegal(char previous_op, char op)
 {
 	if (previous_op == '\0') //no previous character 
 		return true;
+
+	if (op == '!')
+		return true; //yep, always
 
 	switch (previous_op) {
 	case '+':
@@ -483,7 +477,7 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 	std::list<expression_stack> expressionstack;
 
 
-	size_t const opTokens = TokenizeStringOperands(expression, tokens);
+	size_t const opTokens = TokenizeStringOperands2(expression, tokens);
 
 	std::cout << "CompilerExpression: " << expression << '\n';
 
@@ -578,14 +572,19 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 
 			if (IsDataType(content)) {
 				CompilerError("type name is not allowed");
+				return VarType::VT_INVALID;
+
 			}
-			CompilerError("'", content, "' is undefined");
+			if (!ValidNumber(content)) {
+				CompilerError("'", content, "' is undefined");
+				return VarType::VT_INVALID;
 
-			if (fix)
-				for (auto& i : variable_prefix)
-					content.insert(content.begin(), i);
+			}
+			if(IsInteger(content))
+				return VarType::VT_INT;
 
-			return VarType::VT_INVALID;
+			return VarType::VT_FLOAT;
+
 		}
 
 		if (fix)
