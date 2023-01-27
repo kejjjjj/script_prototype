@@ -318,16 +318,17 @@ SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::stri
                 ++it;
             }
 
-            if (!IsValidSyntaxForName(*it)) {
-                if (*it == '.' && std::isdigit(*(it - 1))) {
-                    goto fine; //decimal point
-                }
+
+
+            if (!IsValidSyntaxForName(*it) && *it != '.') {
+                //if (*it == '.' && std::isdigit(*(it - 1))) {
+                //    goto fine; //decimal point
+                //}
 
                 CompilerError("the character '", *it, "' was unexpected");
                 return 0;
             }
-            fine:
-            while (IsValidSyntaxForName(*it)) {
+            while (IsValidSyntaxForName(*it) || *it == '.') {
                 token.push_back(*it);
                 ++it;
             }
@@ -712,7 +713,11 @@ std::string EvalPrefixes(const std::string& value, const std::string_view& prefi
             ref = Eval(ref, "0", "=="); //I think this is how the ! prefix works (val == false)
 
             break;
+        case '~':
 
+            ref = Eval(ref, "0", "~");
+
+            break;
         default:
             RuntimeError("EvalPrefixes(): impossible [", it , "]");
             return "";
@@ -801,6 +806,10 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 
     const bool a_int = IsInteger(a);
     const bool b_int = IsInteger(b);
+
+    if (ops == "~" && a_int) {
+        return to_string(~(int64_t)va, a_int);
+    }
 
     if (ops.size() < 2) {
         char op = ops[0];

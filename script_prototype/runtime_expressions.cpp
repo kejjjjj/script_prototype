@@ -227,6 +227,10 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 
 	std::cout << "value of '" << var->name << "' = " << var->value << '\n';
 
+	//constexpr int iVar = 5 * !(!- 1 + -!~2);
+	//constexpr int iVar2 = ~- (-iVar / 4);
+
+
 	return 1;
 }
 // expects an expression that does not include parantheses
@@ -340,7 +344,7 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		const std::string result = Eval(lval, rval, es_itr1->Operator);
 		std::cout << std::format("{} {} {} = {}\n", lval, es_itr1->Operator, rval, result);
 
-		constexpr int a = !1 + -1;
+		constexpr int a = ~0;
 
 		es.erase(es_itr1, es_itr2);
 		es_itr2->content = result;

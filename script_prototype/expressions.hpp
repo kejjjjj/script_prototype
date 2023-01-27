@@ -31,9 +31,9 @@ struct expression_stack
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%' || x == '=')
 #define IsAssignment2Op(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '&' || x == '|' || x == '^' || x == '%')
 #define IsDualOp(x)			(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%' || x == '=')
-#define IsPrefixOp(x)		(x == '+' || x == '-' || x == '!')
+#define IsPrefixOp(x)		(x == '+' || x == '-' || x == '!' || x == '~')
 #define IsPostEqualOp(x)	(x == '=') //==
-#define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=')
+#define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=' && x != '~')
 #define IsValidSyntaxForName(x) (std::isalnum(x) && x != '_')
 
 class Expression
