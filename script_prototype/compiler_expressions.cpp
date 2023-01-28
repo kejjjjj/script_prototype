@@ -396,6 +396,9 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 			return false;
 		}
 
+		var = *FindVariableFromStack(variableName);
+
+
 		//CompilerError("NIGGER");
 
 		break;
@@ -513,8 +516,15 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 }
 bool CompilerExpression::EvaluateSingular(std::string& content)
 {
+	if (ValidNumber(content))
+		return 1;
+
+	else if (content.front() == '"' && content.back() == '"') {
+		return 1; 
+	}
+
 	auto variable_prefix = HasPrefix(content);
-	bool fix = !variable_prefix.empty();
+	const bool fix = !variable_prefix.empty();
 
 	if (fix) //variable has a - or + prefix
 		content.erase(0, variable_prefix.size());
@@ -528,7 +538,11 @@ bool CompilerExpression::EvaluateSingular(std::string& content)
 			CompilerError("type name is not allowed");
 			return false;
 		}
-		if (!ValidNumber(content)) {
+		else if (StringType(content) == VarType::VT_STRING && fix) {
+			CompilerError("an operand with the type '", VarTypes[(int)VarType::VT_STRING], "' cannot have a prefix");
+			return false;
+		}
+		else if (!ValidNumber(content)) {
 			CompilerError("variable '", content, "' is undefined");
 			return false;
 		}
@@ -536,9 +550,32 @@ bool CompilerExpression::EvaluateSingular(std::string& content)
 		//	for (auto& i : variable_prefix)
 		//		content.insert(content.begin(), i);
 
+		auto leftop = var.type;
+		auto rightop = StringType(content);
+
+		if ((leftop == VarType::VT_STRING && rightop != VarType::VT_STRING || rightop == VarType::VT_STRING && leftop != VarType::VT_STRING)) {
+			CompilerError("no suitable conversion from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "' exists");
+			return false;
+		}
+
+
 		return true; //is a valid number lol pog
 
 		//return false;
+	}
+
+
+	if (v->type == VarType::VT_STRING && fix) {
+		CompilerError("an operand with the type '", VarTypes[(int)v->type], "' cannot have a prefix");
+		return false;
+	}
+
+	auto leftop = var.type;
+	auto rightop = v->type;
+
+	if ((leftop == VarType::VT_STRING && rightop != VarType::VT_STRING || rightop == VarType::VT_STRING && leftop != VarType::VT_STRING)) {
+		CompilerError("no suitable conversion from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "' exists");
+		return false;
 	}
 
 	//if (fix)
@@ -587,6 +624,8 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 
 		}
 
+
+
 		if (fix)
 			for (auto& i : variable_prefix)
 				content.insert(content.begin(), i);
@@ -628,7 +667,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		//is not || or &&
 
 		if ((leftop == VarType::VT_STRING && rightop != VarType::VT_STRING || rightop == VarType::VT_STRING && leftop != VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR)) {
-			CompilerError("cannot cast from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "'");
+			CompilerError("no suitable conversion from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "' exists");
 			return false;
 		}
 
@@ -636,7 +675,7 @@ bool CompilerExpression::EvaluateExpressionStack(std::list<expression_stack>& es
 		//equality operator not used
 
 		else if ((leftop == VarType::VT_STRING && rightop == VarType::VT_STRING) && (opriority != LOGICAL_AND && opriority != LOGICAL_OR && opriority != EQUALITY && i->Operator != "+")) {
-			CompilerError("cannot cast from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "'");
+			CompilerError("no suitable conversion from '", VarTypes[(int)leftop], "' to '", VarTypes[(int)rightop], "' exists");
 			return false;
 		}
 

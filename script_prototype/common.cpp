@@ -149,153 +149,6 @@ SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& t
 
     return tokens.size();
 }
-SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::string>& tokens)
-{
-    std::string token;
-
-    //std::string a = RemoveBlank(expr);
-    int32_t idx = -1;
-    char previous_character{'\0'};
-    size_t subtr_in_a_row{0}, equals_in_a_row{0}, size = expr.size();
-    auto begin = expr.begin();
-    auto end = expr.end();
-    for (auto it = begin; it != end; ++it) {
-
-        auto& i = *it;
-        idx++;
-
-        //this block is for ==
-        if (i == '=' && *(it - 1) != '!') { //!= is false
-
-            //std::cout << "yep: " << i << *(it -1) << '\n';
-            if (!equals_in_a_row) {
-                //save token before the operator (if it's not empty)
-                if (!token.empty()) {
-                    tokens.push_back(token);
-                    token.clear();
-                }
-            }
-
-            equals_in_a_row++;
-
-            // == is true here
-            if (equals_in_a_row == 2) {
-
-                token.push_back('=');
-                token.push_back('=');
-                tokens.push_back(token);
-                token.clear();
-
-            }
-            //invalid syntax
-            else if (equals_in_a_row > 2) {
-                CompilerError("unrecognized operator '==='");
-                return false;
-            }
-            continue;
-        }
-        else
-            equals_in_a_row = 0;
-
-        if (IsCalculationOp(i)) {
-            if(i == '-')
-                subtr_in_a_row++;
-
-            if (subtr_in_a_row > 2) { //works for cases like / -(-1) A.K.A 3 consecutive operators
-
-                if (subtr_in_a_row % 1 == 0) {//odd number 
-                    //make the number positive
-                    token.pop_back();
-                  //  std::cout << "making it positive\n";
-                }
-                else {
-                    //make the number negative
-                    token.push_back(i);
-                  //  std::cout << "making it negative\n";
-                }
-                continue;
-            }
-
-            //a check for negative numbers
-            if (idx == 0 || i == '-' && previous_character != '\0') {
-                token.push_back(i);
-                previous_character = i;
-               // std::cout << "negative value detected after an operator.. skipping!\n";
-                continue;
-            }
-        
-
-            //save the string before the operator
-            if (token.empty()) {
-                CompilerError("token.empty(): Expected an expression");
-                return false;
-            }
-
-            tokens.push_back(token);
-            token.clear();
-
-            //push first operator
-            token.push_back(i);
-
-            if (i == '&' || i == '|' || i == '<' || i == '>') {
-                ++it;
-
-                auto _c = *it;
-
-                if (_c == '&' || _c == '|' || _c == '<' || _c == '>') {
-                    token.push_back(_c);
-                   // std::cout << "duplicate " << i << '\n';
-                }
-                else
-                    --it;
-
-                equals_in_a_row = 0;
-            }
-
-            
-            //make sure buffer overflow won't happen
-            if (idx < size - 2) {
-                //is the character after the = an another =
-                if (*(it + 1) == '=') { // ==
-                    token.push_back('=');
-                    
-                }
-                if (i == '!' && *(it + 1) == '=') {
-                   // token.push_back('='); //!=
-                    it++;
-                }
-
-            }
-
-            //save the operator
-            tokens.push_back(token);
-            token.clear();
-
-            previous_character = i;
-            continue;
-        }
-            
-        //assignments are forbidden
-        //returns false if previous character is not !, < or > (!=, <=, >=)
-        char previous = expr[idx - 2];
-        if (equals_in_a_row == 1 && previous != '!' && previous != '<' && previous != '>') { //one = and ! doesn't exist (!=)
-            CompilerError("Assignments are not supported yet!: ", expr[idx - 2], '=');
-            return false;
-        }
-
-        token.push_back(i);
-        previous_character = '\0';
-        subtr_in_a_row = 0;
-        equals_in_a_row = 0;
-    }
-    if (token.empty()) {
-        CompilerError("CompilerError: Expected an expression");
-        return false;
-    }
-    tokens.push_back(token);
-
-    return tokens.size();
-}
 SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::string>& tokens)
 {
     auto begin = expr.begin();
@@ -320,7 +173,7 @@ SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::stri
 
 
 
-            if (!IsValidSyntaxForName(*it) && *it != '.') {
+            if (!IsValidSyntaxForName(*it) && *it != '.' && *it != '"') {
                 //if (*it == '.' && std::isdigit(*(it - 1))) {
                 //    goto fine; //decimal point
                 //}
@@ -328,7 +181,7 @@ SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::stri
                 CompilerError("the character '", *it, "' was unexpected");
                 return 0;
             }
-            while (IsValidSyntaxForName(*it) || *it == '.') {
+            while (IsValidSyntaxForName(*it) || *it == '.' || *it == '"') {
                 token.push_back(*it);
                 ++it;
             }
@@ -756,14 +609,14 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 
     const auto EvalStrings = [&a, &b, &ops]() -> std::string
     {
-
+        const std::string ac = RemoveQuotes(a), bc = RemoveQuotes(b);
 
         if (ops.size() < 2) {
 
             switch (ops[0]) {
             case '+':
 
-                return "\"" + a + b + "\"";
+                return "\"" + ac + bc + "\"";
             default:
                 RuntimeError("Illegal operator used on a string expression");
                 return "";
@@ -771,16 +624,16 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
         }
 
         if (ops == "==")
-            return (a == b) == true ? "1" : "0";
+            return (ac == bc) == true ? "1" : "0";
 
         else if (ops == "!=")
-            return (a != b) == true ? "1" : "0";
+            return (ac != bc) == true ? "1" : "0";
 
         else if (ops == "||")
-            return (!a.empty() || !b.empty()) == true ? "1" : "0";
+            return (!ac.empty() || !bc.empty()) == true ? "1" : "0";
 
         else if (ops == "&&")
-            return (!a.empty() && !b.empty()) == true ? "1" : "0";
+            return (!ac.empty() && !bc.empty()) == true ? "1" : "0";
 
 
         RuntimeError("Illegal operator used on a string expression");
@@ -944,4 +797,16 @@ bool IsAnOperator(const std::string_view& op)
 
     return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
 
+}
+bool CompatibleDataTypes(const VarType a, const VarType b)
+{
+    return !(a == VarType::VT_STRING && b != a || b == VarType::VT_STRING && a != b);
+}
+std::string RemoveQuotes(const std::string& str)
+{
+    if (str.front() == '"' && str.back() == '"') {
+        return str.substr(1, str.size() - 2);
+    }
+
+    return str;
 }

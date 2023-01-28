@@ -61,6 +61,8 @@ Variable* FindVariableFromStack(const std::string_view& var);
 bool IsVariableInitialization(const std::string_view& expr);
 bool VariableNameIsLegal(const std::string_view& var);
 
+bool CompatibleDataTypes(const VarType a, const VarType b);
+
 std::string VariableContentToValue(const std::string& str);
 
 #endif

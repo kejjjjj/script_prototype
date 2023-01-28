@@ -262,7 +262,7 @@ float Expression::EvaluateExpression(const std::string_view& expression)
 	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
 
-	size_t const opTokens = TokenizeStringOperands(expression, tokens);
+	size_t const opTokens = TokenizeStringOperands2(expression, tokens);
 
 	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 

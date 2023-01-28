@@ -238,7 +238,18 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 std::string RuntimeExpression::EvaluateExpression(const std::string_view& expression)
 {
 
-	if (ValidNumber(expression) || expression.front() == '"' && expression.front() == expression.back()) {
+	if (ValidNumber(expression)) {
+		const VarType vt2 = StringType(expression);
+
+		if (e.expression.type == ExpressionType::EXPR_CALCULATION) //not being assigned, so return early
+			return std::string(expression);
+
+	
+		if (!CompatibleDataTypes(var->type, vt2)) {
+			RuntimeError("cannot cast from '", VarTypes[(int)vt2], "' to '", VarTypes[(int)var->type], "'");
+			return "0";
+		}
+
 		return std::string(expression);
 	}
 
@@ -285,8 +296,8 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		if (ValidNumber(str))
 			return str;
 
-		else if (GetCharacterCount(str, '"') == 2) {
-			return str.substr(1, str.size() - 2);
+		else if (str.front() == '"' && str.back() == '"') {
+			return str;
 		}
 
 		std::string s = str;
@@ -309,6 +320,10 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		}
 		
 		s = v->value;
+
+		if (GetCharacterCount(s, '"') == 2) {
+			return s;
+		}
 
 		return EvalPrefixes(s, variable_prefix);
 	};
@@ -344,11 +359,20 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		const std::string result = Eval(lval, rval, es_itr1->Operator);
 		std::cout << std::format("{} {} {} = {}\n", lval, es_itr1->Operator, rval, result);
 
-		constexpr int a = ~0;
+	//	constexpr int a = !!!!!!!!!0 + !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!0;
 
 		es.erase(es_itr1, es_itr2);
 		es_itr2->content = result;
 		vals--;
+	}
+
+	if(e.expression.type == ExpressionType::EXPR_CALCULATION) //not being assigned, so return early
+		return es_itr2->content;
+
+	VarType vt2 = StringType(es_itr2->content);
+	if (!CompatibleDataTypes(var->type, vt2)) {
+		RuntimeError("cannot cast from '", VarTypes[(int)var->type], "' to '", VarTypes[(int)vt2], "'");
+		return "0";
 	}
 
 	return es_itr2->content;
