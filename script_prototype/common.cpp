@@ -25,7 +25,6 @@ uint32_t HashString(const std::string_view& s_)
     //std::cout << "s: " << s << '\n';
 
     uint32_t hash = 0;
-
     for (; *s; ++s)
     {
         hash += *s;
@@ -313,6 +312,35 @@ std::string RemoveIrrelevantCode(const std::string_view& expr)
         return "";
     }
     return fixed;
+}
+std::string RemoveBlanksFromBeginning(const std::string_view& in)
+{
+    std::string out;
+    size_t idx = 0;
+
+    while (std::isspace(in[idx])) 
+    {
+        idx++;
+    }
+
+    out = in.substr(idx);
+    return out;
+}
+size_t FindFirstBlank(const std::string_view& in)
+{
+    std::string out;
+    size_t idx = 0;
+
+    for (auto& i : in) {
+
+        if (std::isspace(i))
+            return idx;
+
+        idx++;
+    }
+
+    return std::string::npos;
+
 }
 std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in)
 {
@@ -809,4 +837,21 @@ std::string RemoveQuotes(const std::string& str)
     }
 
     return str;
+}
+std::string ExtractStatementName(const std::string_view& expr)
+{
+    std::string out;
+    size_t idx = 0;
+
+    out = RemoveBlanksFromBeginning(expr);
+
+    for (auto& i : expr) {
+
+        if (std::isspace(i) || i == '(')
+            break;
+
+        idx++;
+    }
+
+    return std::string(expr.substr(0, idx));
 }

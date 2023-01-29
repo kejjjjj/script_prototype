@@ -177,7 +177,6 @@ bool RuntimeExpression::ParseAssignment2()
 		return 0;
 	}
 
-
 	return true;
 
 }

@@ -403,7 +403,7 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 
 		break;
 	case ExpressionType::EXPR_CALCULATION:
-		TestExpression(e.expression.postOP);
+		TestExpression(e.expression.preOP);
 		expr = CleanupExpression(expr);
 		break;
 	default:
@@ -412,7 +412,6 @@ bool CompilerExpression::ParseExpression(std::string& expr)
 
 	}
 	
-
 	fscript += expr;
 
 	//called AFTER parsing the expression
@@ -442,7 +441,10 @@ bool CompilerExpression::ParseExpressionNumbers(std::string& expr)
 	const Parenthesis_s par = GetStringWithinParentheses(expr);
 
 	if (par.count_opening != par.count_closing) {
-		CompilerError("mismatching parenthesis");
+
+
+
+		CompilerError("no matching pair for '", par.count_opening > par.count_closing ? '(' : ')', "'");
 		return 0;
 	}
 	if (!par.result_string.empty()) {
@@ -516,10 +518,19 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 }
 bool CompilerExpression::EvaluateSingular(std::string& content)
 {
-	if (ValidNumber(content))
+	if (ValidNumber(content)) {
+		if (var.type == VarType::VT_STRING && e.expression.type != ExpressionType::EXPR_CALCULATION) {
+			CompilerError("no suitable conversion from '", VarTypes[(int)var.type], "' to '", VarTypes[(int)StringType(content)], "' exists");
+			return 0;
+		}
 		return 1;
+	}
 
 	else if (content.front() == '"' && content.back() == '"') {
+		if (var.type != VarType::VT_STRING && e.expression.type != ExpressionType::EXPR_CALCULATION) {
+			CompilerError("no suitable conversion from '", VarTypes[(int)var.type], "' to '", VarTypes[(int)VarType::VT_STRING], "' exists");
+			return 0;
+		}
 		return 1; 
 	}
 

@@ -28,6 +28,24 @@ bool Script::Compile()
 
 		char ch = fs::F_Get(f);
 
+		if (std::isspace(ch) || !std::isalnum(ch)) {
+			auto type = Compile_EvaluateStatement(expression_str);
+
+			if (type != StatementType::NO_STATEMENT) {
+
+				while (std::isspace(ch)) {
+					ch = fs::F_Get(f);
+				}
+
+				expression_str = (expression_str + FillStatement(ch, f)); //statement + (contents within the parantheses)
+
+				std::cout << "statement: [" << expression_str << "]\n";
+
+				expression_str.clear();
+				continue;
+			}
+		}
+
 		if (ch == ';') {
 
 			CompilerExpression expr(expression_str, this->rtScript);
@@ -41,7 +59,9 @@ bool Script::Compile()
 
 		expression_str.push_back(ch);
 	}
-	
+
+
+
 	std::cout << "---------------------\n";
 
 	std::cout << rtScript << '\n';
@@ -54,22 +74,22 @@ bool Script::Compile()
 
 	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
-	std::cout << "RUNTIME\n";
+	//std::cout << "RUNTIME\n";
 
-	for (const auto& i : rtScript) {
+	//for (const auto& i : rtScript) {
 
-		if (i == ';') {
+	//	if (i == ';') {
 
-			RuntimeExpression expr(expression_str);
+	//		RuntimeExpression expr(expression_str);
 
-			expr.ParseExpression(expression_str);
-			expression_str.clear();
-			continue;
+	//		expr.ParseExpression(expression_str);
+	//		expression_str.clear();
+	//		continue;
 
-		}
-		expression_str.push_back(i);
+	//	}
+	//	expression_str.push_back(i);
 
-	}
+	//}
 
 	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 	//std::chrono::duration<double> difference = now - old;

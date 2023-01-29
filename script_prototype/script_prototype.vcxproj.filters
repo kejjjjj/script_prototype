@@ -54,6 +54,15 @@
     <ClCompile Include="runtime_expressions.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
+    <ClCompile Include="when_statement.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler_whenstatement.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
+    <ClCompile Include="eval_statement.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -84,6 +93,15 @@
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
     <ClInclude Include="runtime_expressions.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="when_statement.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler_whenstatement.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="eval_statement.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
   </ItemGroup>

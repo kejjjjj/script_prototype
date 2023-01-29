@@ -119,6 +119,10 @@ std::string RemoveIrrelevantCode(const std::string_view& expr);
 
 size_t RemoveBlank(std::string_view& expr, std::string& out);
 std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in);
+std::string RemoveBlanksFromBeginning(const std::string_view& in);
+size_t FindFirstBlank(const std::string_view& in);
+
+
 std::string RemoveDuplicateBlanks(const std::string_view& in);
 void PushString(std::string* strptr, const std::string_view& str);
 
@@ -129,4 +133,5 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 
 bool IsAnOperator(const std::string_view& op);
 std::string RemoveQuotes(const std::string& str);
+std::string ExtractStatementName(const std::string_view& expr);
 #endif

@@ -153,6 +153,8 @@
     <ClCompile Include="common.cpp" />
     <ClCompile Include="compiler.cpp" />
     <ClCompile Include="compiler_expressions.cpp" />
+    <ClCompile Include="compiler_whenstatement.cpp" />
+    <ClCompile Include="eval_statement.cpp" />
     <ClCompile Include="expressions.cpp" />
     <ClCompile Include="filetools.cpp" />
     <ClCompile Include="pch.cpp">
@@ -163,18 +165,22 @@
     <ClCompile Include="runtime_expressions.cpp" />
     <ClCompile Include="script_prototype.cpp" />
     <ClCompile Include="variables.cpp" />
+    <ClCompile Include="when_statement.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="allocations.hpp" />
     <ClInclude Include="common.hpp" />
     <ClInclude Include="compiler.hpp" />
     <ClInclude Include="compiler_expressions.hpp" />
+    <ClInclude Include="compiler_whenstatement.hpp" />
+    <ClInclude Include="eval_statement.hpp" />
     <ClInclude Include="expressions.hpp" />
     <ClInclude Include="filetools.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="runtime.hpp" />
     <ClInclude Include="runtime_expressions.hpp" />
     <ClInclude Include="variables.hpp" />
+    <ClInclude Include="when_statement.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
