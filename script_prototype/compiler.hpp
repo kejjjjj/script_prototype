@@ -5,6 +5,8 @@
 
 #include "pch.h"
 
+inline std::fstream f;
+
 class Script : protected Runtime
 {
 public:
@@ -16,7 +18,7 @@ public:
 	std::string rtScript;
 
 private:
-	std::fstream f;
+	
 	bool compiled = false;
 	std::string compiled_file;
 };

@@ -63,6 +63,12 @@
     <ClCompile Include="eval_statement.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
+    <ClCompile Include="compiler_variables.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler_eval_code.cpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -102,6 +108,12 @@
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
     <ClInclude Include="eval_statement.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler_variables.hpp">
+      <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler_eval_code.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
   </ItemGroup>

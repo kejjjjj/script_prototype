@@ -74,14 +74,16 @@ std::string FillStatement(char start, std::fstream& f)
 
 }
 
-void ParseStatement(const StatementType stype, const std::string_view& statement)
+void ParseStatement(const StatementType stype, const std::string_view& full_statement)
 {
 	switch (stype) {
 
 	case StatementType::WHEN_STATEMENT:
-		cws::ParseWhenStatement(statement);
+		cws::ParseWhenStatement(full_statement);
 
 		break;
-
+	default:
+		CompilerError("Unknown statement");
+		break;
 	}
 }

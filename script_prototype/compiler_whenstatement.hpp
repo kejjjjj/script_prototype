@@ -14,7 +14,7 @@ struct whenstatement_s
 namespace cws
 {
 
-	bool ParseWhenStatement(const std::string_view& expr);
+	bool ParseWhenStatement(const std::string_view& full_statement);
 	bool EvaluateExpression(const std::string_view& expr);
 	bool ParseExpression(std::string& expr);
 	bool ParseExpressionNumbers(std::string& expr);

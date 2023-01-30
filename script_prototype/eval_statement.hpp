@@ -19,7 +19,7 @@ StatementType Compile_EvaluateStatement2(const std::string_view& expr);
 
 std::string FillStatement(char start, std::fstream& f);
 
-void ParseStatement(const StatementType stype, const std::string_view& statement);
+void ParseStatement(const StatementType stype, const std::string_view& full_statement);
 
 
 #endif

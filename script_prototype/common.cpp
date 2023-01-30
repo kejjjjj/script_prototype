@@ -847,7 +847,7 @@ std::string ExtractStatementName(const std::string_view& expr)
 
     for (auto& i : expr) {
 
-        if (std::isspace(i) || i == '(')
+        if (std::isspace(i) || !std::isalnum(i))
             break;
 
         idx++;

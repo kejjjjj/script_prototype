@@ -24,7 +24,13 @@ bool Script::Compile()
 	fs::F_Reset();
 
 	size_t expressions_parsed = 0;
-	while (f.good() && !f.eof()) {
+
+	code_type code = cec::Compiler_ReadNextCode();
+
+	std::cout << "code: " << code.code << '\n';
+	std::cout << "statement: " << (int)code.statement << '\n';
+
+	/*while (f.good() && !f.eof()) {
 
 		char ch = fs::F_Get(f);
 
@@ -36,10 +42,11 @@ bool Script::Compile()
 				while (std::isspace(ch)) {
 					ch = fs::F_Get(f);
 				}
+				std::string _expression = expression_str + FillStatement(ch, f);
 
-				expression_str = (expression_str + FillStatement(ch, f)); //statement + (contents within the parantheses)
+				std::cout << "statement: [" << _expression << "]\n";
 
-				std::cout << "statement: [" << expression_str << "]\n";
+				ParseStatement(type, _expression);
 
 				expression_str.clear();
 				continue;
@@ -58,19 +65,19 @@ bool Script::Compile()
 		}
 
 		expression_str.push_back(ch);
-	}
+	}*/
 
 
 
-	std::cout << "---------------------\n";
+	//std::cout << "---------------------\n";
 
-	std::cout << rtScript << '\n';
+	//std::cout << rtScript << '\n';
 
-	std::cout << "---------------------\n";
+	//std::cout << "---------------------\n";
 
-	//runtime script starts here
-	expression_str.clear();
-	scriptStack.stack.clear();
+	////runtime script starts here
+	//expression_str.clear();
+	//scriptStack.stack.clear();
 
 	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 

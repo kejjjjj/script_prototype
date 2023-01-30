@@ -15,7 +15,7 @@ public:
 	bool InitializeRuntime(const std::string& path);
 
 private:
-	std::fstream f;
+	//std::fstream f;
 };
 
 
