@@ -7,7 +7,10 @@
 
 namespace cv
 {
-	bool ParseVariableDeclaration(const std::string_view& full_statement);
+	bool ParseDeclarationType(const std::string_view& full_statement);
+	bool ParseTypeQualifier(const std::string_view& full_statement);
+	bool ParseIdentifier(const std::string_view& full_statement);
+	bool ParseInitializer(const std::string_view& full_statement);
 
 }
 

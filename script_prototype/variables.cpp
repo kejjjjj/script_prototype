@@ -70,7 +70,7 @@ std::string GetVariableTypeString(const std::string expr)
 	const size_t pos = expr.find_first_of(' ');
 
 	if (pos == std::string::npos)
-		return "";
+		return expr;
 
 	return expr.substr(0, pos);
 
@@ -92,7 +92,15 @@ size_t GetDataType(const std::string_view& str)
 
 	return 0u;
 }
+size_t GetTypeQualifier(const std::string_view& str)
+{
+	for (size_t i = 0; i < VarQualifiers.size(); i++) {
+		if (!str.compare(VarQualifiers[i]))
+			return i;
+	}
 
+	return 0u;
+}
 //assumes the whole string before the operator
 bool IsVariableInitialization(const std::string_view& expr)
 {

@@ -13,7 +13,8 @@
 //	"unknown"
 //};
 
-inline std::vector<const char*> VarTypes = {"NO_TYPE", "i64","float","string"};
+inline std::vector<const char*> VarTypes = {"NO_TYPE", "i64","float","string"},
+								VarQualifiers = { "NO_QUALIFIER", "const" };
 
 enum class VarType : char
 {
@@ -53,6 +54,8 @@ public:
 std::string GetVariableTypeString(const std::string expr);
 bool IsDataType(const std::string_view& str);
 size_t GetDataType(const std::string_view& str);
+size_t GetTypeQualifier(const std::string_view& str);
+
 bool VariableInStack(const std::string_view& var);
 
 Variable* FindVariableFromStack(const std::string_view& var);

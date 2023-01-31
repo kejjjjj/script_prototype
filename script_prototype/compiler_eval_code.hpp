@@ -8,6 +8,8 @@
 
 inline struct syntax_rules
 {
+	bool expecting_explicit_type = false;
+	bool expecting_initializer = false;
 	bool expecting_expression = false;
 	bool typename_allowed = true;
 	bool expecting_semicolon = false;
@@ -16,6 +18,23 @@ inline struct syntax_rules
 	bool expecting_closing_paranthesis = false;
 	size_t opening_paranthesis = 0;
 	size_t closing_paranthesis = 0;
+
+	//more general ones
+	bool expecting_variable_declaration = false; //<type> <var name> = <value>;
+
+	void ClearRules()
+	{
+		expecting_explicit_type = false;
+		expecting_initializer = false;
+		expecting_expression = false;
+		typename_allowed = true;
+		expecting_semicolon = false;
+		expecting_identifier = false;
+		expecting_opening_paranthesis = false;
+		expecting_closing_paranthesis = false;
+		opening_paranthesis = 0;
+		closing_paranthesis = 0;
+	}
 
 }syntaxrules;
 
@@ -30,7 +49,9 @@ struct code_type
 namespace cec
 {
 	code_type Compiler_ReadNextCode(char start = '\0');
-
+	void Compiler_ReadStatement();
+	void Compiler_ReadParanthesis(char ch, bool isspace);
+	void Compiler_ReadSemicolon();
 
 }
 
