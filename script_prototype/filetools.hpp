@@ -47,7 +47,7 @@ namespace fs
 	std::string F_GetFileName(const std::string& fullpath);
 	std::string F_GoToPreviousDirectory(std::string& directory);
 	//std::string F_GoToPreviousDirectory(const std::string directory);
-
+	std::string F_FileStreamToString(std::fstream& f);
 
 	uint64_t F_ReadAddress(std::fstream& fp);
 	std::string F_ReadUntil(std::fstream& fp, char end);

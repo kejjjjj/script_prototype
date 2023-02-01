@@ -118,6 +118,15 @@ std::string fs::F_GoToPreviousDirectory(std::string& directory)
 
 	return directory.substr(0, pos);
 }
+std::string fs::F_FileStreamToString(std::fstream& f)
+{
+	std::string ret;
+	char buffer[4096];
+	while (f.read(buffer, sizeof(buffer)))
+		ret.append(buffer, sizeof(buffer));
+	ret.append(buffer, f.gcount());
+	return ret;
+}
 //std::string fs::F_GoToPreviousDirectory(const std::string directory)
 //{
 //	size_t pos = directory.find_last_of('\\');

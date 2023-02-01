@@ -5,20 +5,21 @@
 
 #include "pch.h"
 
-inline std::fstream f;
+inline std::string f_str;
 
 class Script : protected Runtime
 {
 public:
 	Script(const std::string& path);
-	~Script();
+	~Script() = default;
 
 	bool Compile();
 
 	std::string rtScript;
 
 private:
-	
+	std::fstream f;
+
 	bool compiled = false;
 	std::string compiled_file;
 };

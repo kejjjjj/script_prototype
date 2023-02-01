@@ -9,13 +9,25 @@ Script::Script(const std::string& _path)
 		return;
 	}
 	std::cout << std::format("\"{}\" successfully opened!\n", path);
+
+	f_str = fs::F_FileStreamToString(f);
+
+	if (f_str.empty()) {
+		fs::F_CloseFile(f);
+		CompilerError("unable to read file contents");
+		return;
+	}
+
+	fs::F_CloseFile(f);
+
 	//fs::F_CloseFile(f);
 
 }
-Script::~Script()
-{
-	fs::F_CloseFile(f);
-}
+//Script::~Script()
+//{
+//	//std::cout << "Script::~Script()\n";
+//	//fs::F_CloseFile(f);
+//}
 bool Script::Compile()
 {
 	std::cout << "compiling project!\n";
@@ -25,9 +37,12 @@ bool Script::Compile()
 
 	size_t expressions_parsed = 0;
 
-	code_type code = cec::Compiler_ReadNextCode();
+	auto begin = f_str.begin();
+	code_type code = cec::Compiler_ReadNextCode(begin);
 
-	std::cout << "code: " << code.code << '\n';
+
+
+	std::cout << "\ncode: " << code.code << '\n';
 	std::cout << "statement: " << (int)code.statement << '\n';
 
 	/*while (f.good() && !f.eof()) {

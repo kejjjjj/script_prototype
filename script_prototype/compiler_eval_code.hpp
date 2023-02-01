@@ -48,9 +48,9 @@ struct code_type
 
 namespace cec
 {
-	code_type Compiler_ReadNextCode(char start = '\0');
+	code_type Compiler_ReadNextCode(std::string::iterator& it);
 	void Compiler_ReadStatement();
-	void Compiler_ReadParanthesis(char ch, bool isspace);
+	bool Compiler_ReadParanthesis(char ch, bool isspace);
 	void Compiler_ReadSemicolon();
 
 }
