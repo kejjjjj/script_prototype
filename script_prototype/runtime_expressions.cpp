@@ -120,7 +120,7 @@ bool RuntimeExpression::ParseExpression(std::string& expr)
 		expr = e.expression.postOP;
 		break;
 	case ExpressionType::EXPR_CALCULATION:
-		std::cout << "ExpressionType::EXPR_CALCULATION";
+		//std::cout << "ExpressionType::EXPR_CALCULATION";
 
 		break;
 	default:
@@ -224,7 +224,7 @@ bool RuntimeExpression::ParseExpressionNumbers(std::string& expr)
 		var->value = Eval(var->value, temp, op);
 	}
 
-	std::cout << "value of '" << var->name << "' = " << var->value << '\n';
+	//std::cout << "value of '" << var->name << "' = " << var->value << '\n';
 
 	//constexpr int iVar = 5 * !(!- 1 + -!~2);
 	//constexpr int iVar2 = ~- (-iVar / 4);
@@ -255,7 +255,7 @@ std::string RuntimeExpression::EvaluateExpression(const std::string_view& expres
 	std::list<std::string> tokens;
 	std::list<expression_stack> expressionstack;
 
-	std::cout << "RuntimeExpression: " << expression << '\n';
+	//std::cout << "RuntimeExpression: " << expression << '\n';
 
 	size_t const opTokens = TokenizeStringOperands2(expression, tokens); //separates all operators
 
@@ -356,7 +356,7 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		rval = ContentToValue(es_itr2->content);
 
 		const std::string result = Eval(lval, rval, es_itr1->Operator);
-		std::cout << std::format("{} {} {} = {}\n", lval, es_itr1->Operator, rval, result);
+		//std::cout << std::format("{} {} {} = {}\n", lval, es_itr1->Operator, rval, result);
 
 	//	constexpr int a = !!!!!!!!!0 + !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!0;
 

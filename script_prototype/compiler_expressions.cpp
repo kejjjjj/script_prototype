@@ -484,7 +484,7 @@ bool CompilerExpression::EvaluateExpression(const std::string_view& expression)
 
 	size_t const opTokens = TokenizeStringOperands2(expression, tokens);
 
-	std::cout << "CompilerExpression: " << expression << '\n';
+	//std::cout << "CompilerExpression: " << expression << '\n';
 
 	if (opTokens % 2 == 0) {
 		CompilerError("EvaluateExpression: Expected an expression");

@@ -6,7 +6,6 @@ code_type cec::Compiler_ReadNextCode(std::string::iterator& it)
 {
 	std::string parsed, before_space;
 	code_type code;
-	size_t opening_paranthesis = 0, closing_paranthesis = 0;
 	bool isspace = false, isalnum = false, clear = false, within_quotes = false, paranthesis = false;
 	char ch;
 
@@ -111,12 +110,12 @@ code_type cec::Compiler_ReadNextCode(std::string::iterator& it)
 				//}
 				syntaxrules.expecting_identifier = false;
 				syntaxrules.expecting_semicolon= true;
+				syntaxrules.expecting_expression = false;
 
 				if(syntaxrules.expecting_variable_declaration)
 					syntaxrules.expecting_initializer = true;
 
-
-
+			
 				code.variable_declaration = false;
 				code.statement = StatementType::NO_STATEMENT;
 				code.code = parsed + Compiler_ReadNextCode(--it).code;
@@ -124,34 +123,52 @@ code_type cec::Compiler_ReadNextCode(std::string::iterator& it)
 				return code;
 
 			}
-			if (cv::ParseInitializer(before_space)) {
-
-				if (syntaxrules.expecting_identifier) {
-					CompilerError("expected an identifier");
-					return code;
-				}
-				if (syntaxrules.expecting_expression) {
-					CompilerError("expected an expression");
-					return code;
-				}
-				syntaxrules.expecting_expression = true;
-				syntaxrules.expecting_initializer = false;
-				code.variable_declaration = false;
-				code.statement = StatementType::NO_STATEMENT;
-				code.code = parsed + Compiler_ReadNextCode(--it).code;
-
-				return code;
-			}
 			else if (syntaxrules.expecting_initializer) {
+				if (cv::ParseInitializer(before_space)) {
+
+					if (syntaxrules.expecting_identifier) {
+						CompilerError("expected an identifier");
+						return code;
+					}
+					if (syntaxrules.expecting_expression) {
+						CompilerError("expected an expression");
+						return code;
+					}
+					syntaxrules.expecting_expression = true;
+					syntaxrules.expecting_initializer = false;
+					code.variable_declaration = false;
+					code.statement = StatementType::NO_STATEMENT;
+					code.code = parsed + Compiler_ReadNextCode(--it).code;
+
+					return code;
+				}
 				CompilerError("expected an initializer");
 				return code;
 			}
-			before_space.clear();
+			if (IsOperator(*it)) 
+				syntaxrules.Operator.push_back(*it);
+				
+			if(IsAnOperator(syntaxrules.Operator)){
 
-			syntaxrules.expecting_semicolon = true;
+				syntaxrules.expecting_expression = true;
+
+				code.variable_declaration = false;
+				code.statement = StatementType::NO_STATEMENT;
+				code.code = parsed + Compiler_ReadNextCode(--it).code;
+				return code;
+
+			}else if (IsAnOperator2(syntaxrules.Operator)) {
+
+				if (syntaxrules.expecting_expression) {
+					CompilerError("Assignments within expressions are not supported");
+					return code;
+				}
+			}
 			
+			before_space.clear();
+			
+			syntaxrules.expecting_semicolon = true;
 		}
-
 
 		if (ch == '(')
 			syntaxrules.expecting_expression = true;
@@ -202,6 +219,7 @@ code_type cec::Compiler_ReadNextCode(std::string::iterator& it)
 }
 void cec::Compiler_ReadSemicolon()
 {
+
 	if (syntaxrules.expecting_closing_paranthesis && (syntaxrules.opening_paranthesis != syntaxrules.closing_paranthesis)) {
 		CompilerError("expected a ')'");
 		return;
@@ -209,6 +227,10 @@ void cec::Compiler_ReadSemicolon()
 	else if ((syntaxrules.opening_paranthesis != syntaxrules.closing_paranthesis)) {
 		CompilerError("expected a '", syntaxrules.opening_paranthesis > syntaxrules.closing_paranthesis ? '(' : ')', "'");
 	}
+	//else if (syntaxrules.expecting_expression) {
+	//	CompilerError("expected an expression");
+	//	return;
+	//}
 	else if (syntaxrules.expecting_initializer) {
 		CompilerError("expected an initializer");
 		return;

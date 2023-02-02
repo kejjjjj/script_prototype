@@ -18,6 +18,7 @@ inline struct syntax_rules
 	bool expecting_closing_paranthesis = false;
 	size_t opening_paranthesis = 0;
 	size_t closing_paranthesis = 0;
+	std::string Operator;
 
 	//more general ones
 	bool expecting_variable_declaration = false; //<type> <var name> = <value>;
@@ -34,6 +35,7 @@ inline struct syntax_rules
 		expecting_closing_paranthesis = false;
 		opening_paranthesis = 0;
 		closing_paranthesis = 0;
+		Operator.clear();
 	}
 
 }syntaxrules;

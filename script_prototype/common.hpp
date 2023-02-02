@@ -132,6 +132,8 @@ std::string EvalPrefixes(const std::string& value, const std::string_view& prefi
 std::string Eval(const std::string& a, const std::string& b, const std::string_view& ops);
 
 bool IsAnOperator(const std::string_view& op);
+bool IsAnOperator2(const std::string_view& op);
+
 std::string RemoveQuotes(const std::string& str);
 std::string ExtractStatementName(const std::string_view& expr);
 #endif
