@@ -11,6 +11,7 @@ inline struct syntax_rules
 	bool expecting_explicit_type = false;
 	bool expecting_initializer = false;
 	bool expecting_expression = false;
+	bool expecting_operand = false;
 	bool typename_allowed = true;
 	bool expecting_semicolon = false;
 	bool expecting_identifier = false;
@@ -28,6 +29,7 @@ inline struct syntax_rules
 		expecting_explicit_type = false;
 		expecting_initializer = false;
 		expecting_expression = false;
+		expecting_operand = false;
 		typename_allowed = true;
 		expecting_semicolon = false;
 		expecting_identifier = false;
@@ -50,6 +52,8 @@ struct code_type
 
 namespace cec
 {
+	code_type Compiler_ReadNextCode2(std::string::iterator& it);
+
 	code_type Compiler_ReadNextCode(std::string::iterator& it);
 	void Compiler_ReadStatement();
 	bool Compiler_ReadParanthesis(char ch, bool isspace);

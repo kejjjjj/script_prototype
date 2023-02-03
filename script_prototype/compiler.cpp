@@ -38,7 +38,7 @@ bool Script::Compile()
 	size_t expressions_parsed = 0;
 
 	auto begin = f_str.begin();
-	code_type code = cec::Compiler_ReadNextCode(begin);
+	code_type code = cec::Compiler_ReadNextCode2(begin);
 
 
 

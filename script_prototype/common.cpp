@@ -829,7 +829,7 @@ bool IsAnOperator(const std::string_view& op)
 bool IsAnOperator2(const std::string_view& op)
 {
     
-    return (op == "=" || op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=");
+    return IsAnOperator(op) || (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=");
 }
 bool CompatibleDataTypes(const VarType a, const VarType b)
 {
