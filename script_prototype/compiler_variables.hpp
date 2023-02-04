@@ -11,6 +11,8 @@ namespace cv
 	bool ParseTypeQualifier(const std::string_view& full_statement);
 	bool ParseIdentifier(const std::string_view& full_statement);
 	bool ParseInitializer(const std::string_view& full_statement);
+	bool ParseNumericValue(const std::string_view& full_statement);
+
 	std::string ParseOperator(std::string::iterator& it);
 }
 

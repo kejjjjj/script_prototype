@@ -46,14 +46,18 @@ bool cv::ParseInitializer(const std::string_view& full_statement)
 	if (cut != "=")
 		return false;
 
-
+	
 	return true;
 
+}
+bool cv::ParseNumericValue(const std::string_view& full_statement)
+{
+	return ValidNumber(full_statement);
 }
 std::string cv::ParseOperator(std::string::iterator& it)
 {
 	std::string token;
-
+	
 	//parse the operator
 	if (!IsOperator(*it)) {
 		return "";
@@ -74,6 +78,7 @@ std::string cv::ParseOperator(std::string::iterator& it)
 		}
 
 	}
+
 
 	
 
