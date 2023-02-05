@@ -6,6 +6,23 @@
 
 #include "pch.h"
 
+enum expected_rules
+{
+	E_EXPLICIT_TYPE,
+	E_INITIALIZER,
+	E_EXPRESSION,
+	E_OPERAND,
+	E_TYPENAME,
+	E_SEMICOLON,
+	E_IDENTIFIER,
+	E_OPENING_PARANTHESIS,
+	E_CLOSING_PARANTHESIS,
+	E_DOT_IS_ALLOWED,
+	E_CONSTANT_NUMERIC,
+	E_END_OF_NUMBER
+
+};
+
 inline struct syntax_rules
 {
 	bool expecting_explicit_type = false;
@@ -17,6 +34,9 @@ inline struct syntax_rules
 	bool expecting_identifier = false;
 	bool expecting_opening_paranthesis = false;
 	bool expecting_closing_paranthesis = false;
+	bool dot_is_allowed = false;
+	bool expecting_constant_numeric_value = false;
+	bool expecting_end_of_number = false;
 	size_t opening_paranthesis = 0;
 	size_t closing_paranthesis = 0;
 	std::string Operator;
@@ -35,6 +55,9 @@ inline struct syntax_rules
 		expecting_identifier = false;
 		expecting_opening_paranthesis = false;
 		expecting_closing_paranthesis = false;
+		dot_is_allowed = false;
+		expecting_constant_numeric_value = false;
+		expecting_end_of_number = false;
 		opening_paranthesis = 0;
 		closing_paranthesis = 0;
 		Operator.clear();
@@ -52,6 +75,8 @@ struct code_type
 
 namespace cec
 {
+
+
 	code_type Compiler_ReadNextCode2(std::string::iterator& it);
 
 	code_type Compiler_ReadNextCode(std::string::iterator& it);
