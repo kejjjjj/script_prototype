@@ -14,9 +14,6 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 	while (true) {
 
 		ch = *it;
-
-
-
 		isspace = std::isspace(ch);
 		isalnum = std::isalnum(ch);
 
@@ -44,13 +41,19 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				syntaxrules.dot_is_allowed = false;
 				syntaxrules.expecting_constant_numeric_value = false;
 				syntaxrules.expecting_end_of_number = false;
-			}
-			if (!IsOperator(ch)) {
-				if (!syntaxrules.Operator.empty()) {
+
+				if (!syntaxrules.Operator.empty()) { //a space after an operator if this is true
 					syntaxrules.Operator.clear();
-					syntaxrules.expecting_operand = true;
+					syntaxrules.expecting_expression = true;
+					syntaxrules.unary_allowed = true;
 				}
 			}
+			//if (!IsOperator(ch)) {
+			//	if (!syntaxrules.Operator.empty()) {
+			//		syntaxrules.Operator.clear();
+			//		syntaxrules.expecting_expression = true;
+			//	}
+			//}
 		}
 
 		if (before_space.empty()) {
@@ -61,8 +64,15 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 		std::cout << before_space;
 
 		Compiler_ReadParanthesis(ch, isspace);
-
 		//here before_space contains a keyword
+
+		if (ch == ';') {
+			Compiler_ReadSemicolon();
+			code.variable_declaration = false;
+			code.statement = StatementType::NO_STATEMENT;
+			code.code = parsed;
+			return code;
+		}
 
 		auto type = Compile_EvaluateStatement(before_space);
 		if (type != StatementType::NO_STATEMENT) {
@@ -73,9 +83,9 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			code.variable_declaration = false;
 			return code;
 		}
-		
 		else if (cv::ParseDeclarationType(before_space)) {
-			cv::CheckRules(E_CONSTANT_NUMERIC, E_END_OF_NUMBER);
+			cv::CheckRules(E_CONSTANT_NUMERIC);
+			cv::CheckRules(E_END_OF_NUMBER);
 
 			if (!syntaxrules.typename_allowed || syntaxrules.expecting_expression) {
 				CompilerError("type name is not allowed");
@@ -90,13 +100,16 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_explicit_type = false;
 			syntaxrules.expecting_variable_declaration = true;
 			syntaxrules.expecting_semicolon = false;
+			syntaxrules.unary_allowed = false;
+
 			code.variable_declaration = true;
 			code.statement = StatementType::NO_STATEMENT;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
 			return code;
 		}
 		else if (cv::ParseTypeQualifier(before_space)) {
-			cv::CheckRules(E_CONSTANT_NUMERIC, E_END_OF_NUMBER);
+			cv::CheckRules(E_CONSTANT_NUMERIC);
+			cv::CheckRules(E_END_OF_NUMBER);
 
 			if (syntaxrules.expecting_expression) {
 				CompilerError("type qualifier is not allowed");
@@ -120,6 +133,8 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_initializer = false;
 			syntaxrules.expecting_semicolon = false;
 			syntaxrules.typename_allowed = true;
+			syntaxrules.unary_allowed = false;
+
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
@@ -149,6 +164,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_operand = false;
 			syntaxrules.typename_allowed = false;
 			syntaxrules.dot_is_allowed = true;
+			syntaxrules.unary_allowed = false;
 
 			if (syntaxrules.expecting_constant_numeric_value) { // expecting a spacebar after a decimal point number ends
 				syntaxrules.expecting_end_of_number = true;
@@ -161,11 +177,11 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
-
 			return code;
 		}
 		else if (cv::ParseIdentifier(before_space)) {
-			cv::CheckRules(E_CONSTANT_NUMERIC, E_END_OF_NUMBER);
+			cv::CheckRules(E_CONSTANT_NUMERIC);
+			cv::CheckRules(E_END_OF_NUMBER);
 
 			if (syntaxrules.expecting_explicit_type) {
 				CompilerError("expected an explicit type");
@@ -185,9 +201,13 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_expression = false;
 			syntaxrules.expecting_operand = false;
 			syntaxrules.typename_allowed = false;
+			syntaxrules.unary_allowed = false;
 
-			if (syntaxrules.expecting_variable_declaration)
+			if (syntaxrules.expecting_variable_declaration) {
 				syntaxrules.expecting_initializer = true;
+				syntaxrules.expecting_semicolon = false;
+
+			}
 
 			syntaxrules.Operator.clear();
 
@@ -213,6 +233,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				syntaxrules.expecting_initializer = false;
 				syntaxrules.typename_allowed = false;
 				syntaxrules.expecting_semicolon = false;
+				syntaxrules.unary_allowed = true;
 
 				code.variable_declaration = false;
 				code.statement = StatementType::NO_STATEMENT;
@@ -224,14 +245,44 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			return code;
 		}
 		auto op = before_space.front();
+
 		if (IsOperator(op)) {
-			cv::CheckRules(E_CONSTANT_NUMERIC, E_END_OF_NUMBER);
+
+			cv::CheckRules(E_INITIALIZER);
+			cv::CheckRules(E_IDENTIFIER);
+			cv::CheckRules(E_EXPLICIT_TYPE);
+
+			if (syntaxrules.expecting_expression && !IsPrefixOp(ch)) {
+				CompilerError('"', op, '"',  " is not an unary operator");
+				return code;
+			}
+			else if (syntaxrules.expecting_expression && IsPrefixOp(ch) && syntaxrules.unary_allowed) { //unary
+				code.variable_declaration = false;
+				code.statement = StatementType::NO_STATEMENT;
+				code.code = parsed + Compiler_ReadNextCode2(++it).code;
+				syntaxrules.expecting_semicolon = false;
+
+				return code;
+			}
+			cv::CheckRules(E_EXPRESSION);
+
+			cv::CheckRules(E_CONSTANT_NUMERIC);
+			cv::CheckRules(E_END_OF_NUMBER);
 
 			std::cout << "\npushing[" << op << "]\n";
 			syntaxrules.Operator.push_back(op);
 			syntaxrules.expecting_semicolon = false;
+			
+			syntaxrules.unary_allowed = false;
+
+			if (!IsAnOperator2(syntaxrules.Operator)) {
+				CompilerError("expected an expression");
+				return code;
+				
+			}
+
 		}
-		if (IsAnOperator2(syntaxrules.Operator)) {
+		else if (IsAnOperator2(syntaxrules.Operator)) {
 			if (syntaxrules.expecting_operand) {
 				CompilerError("expected an operand");
 				return code;
@@ -239,16 +290,19 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_expression = true;
 			syntaxrules.expecting_semicolon = false;
 
-
+			syntaxrules.unary_allowed = true;
+			
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
 			return code;
 
 		}
-		else if (!syntaxrules.Operator.empty()) {
+		else if (!syntaxrules.Operator.empty()) { //operator ends here
 			--it;
 			syntaxrules.expecting_operand = true;
+			syntaxrules.expecting_expression = true;
+			syntaxrules.unary_allowed = true;
 			syntaxrules.Operator.clear();
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
@@ -279,18 +333,13 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 
 		//////////////////////////////////////////////END OF THE WORD//////////////////////////////////////////////
 
-		
-		if (ch == ';') {
-			Compiler_ReadSemicolon();
-			code.variable_declaration = false;
-			code.statement = StatementType::NO_STATEMENT;
-			code.code = parsed;
-			return code;
-		}
+	
 
 		if (ch == '(') {
 			syntaxrules.expecting_operand = true;
 			syntaxrules.expecting_expression = true;
+			syntaxrules.unary_allowed = true;
+
 		}
 		else if (ch == ')' && syntaxrules.expecting_expression) {
 			CompilerError("expected an expression");
@@ -318,7 +367,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 
 		++it;
 
-
+		float ok = -45.20 - ~(+~+~~+-~~-+-+-1);
 	}
 }
 void cec::Compiler_ReadSemicolon()
@@ -359,10 +408,11 @@ bool cec::Compiler_ReadParanthesis(char ch, bool isspace)
 			CompilerError("expected a '(' instead of a '", ch, "'");
 			return 0;
 		}
-			
+		
 		syntaxrules.expecting_opening_paranthesis = false;
 		syntaxrules.expecting_closing_paranthesis = true;
 		syntaxrules.opening_paranthesis++;
+
 		return 1;
 	}
 //	else if (syntaxrules.expecting_closing_paranthesis) {
@@ -403,4 +453,6 @@ void cec::Compiler_ReadStatement()
 	syntaxrules.typename_allowed = false;
 	syntaxrules.expecting_opening_paranthesis = true;
 	syntaxrules.expecting_semicolon = false;
+	syntaxrules.unary_allowed = false;
+
 }

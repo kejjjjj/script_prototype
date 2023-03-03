@@ -831,6 +831,24 @@ bool IsAnOperator2(const std::string_view& op)
     
     return IsAnOperator(op) || (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=");
 }
+bool NextOperatorCanBeAnOperator(const std::string_view& op)
+{
+
+    if (op.back() == '=')
+        return false;
+
+    const auto size = op.size();
+
+    if (size > 2)
+        return false;
+    
+    if ((op.front() == '~')) //unary
+        return false;
+
+
+    return true;
+
+}
 bool CompatibleDataTypes(const VarType a, const VarType b)
 {
     return !(a == VarType::VT_STRING && b != a || b == VarType::VT_STRING && a != b);
