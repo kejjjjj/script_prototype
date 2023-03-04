@@ -134,6 +134,7 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 bool IsAnOperator(const std::string_view& op);
 bool IsAnOperator2(const std::string_view& op);
 bool NextOperatorCanBeAnOperator(const std::string_view& op);
+bool EndOfOperator(const std::string_view& op);
 
 std::string RemoveQuotes(const std::string& str);
 std::string ExtractStatementName(const std::string_view& expr);

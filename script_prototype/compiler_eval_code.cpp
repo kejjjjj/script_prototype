@@ -43,6 +43,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				syntaxrules.expecting_end_of_number = false;
 
 				if (!syntaxrules.Operator.empty()) { //a space after an operator if this is true
+
 					syntaxrules.Operator.clear();
 					syntaxrules.expecting_expression = true;
 					syntaxrules.unary_allowed = true;
@@ -55,6 +56,9 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			//	}
 			//}
 		}
+		int a = 1;
+
+		a+ ~++a/-+!--a;
 
 		if (before_space.empty()) {
 			++it;
@@ -196,8 +200,10 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				return code;
 			}
 
+			//a + ~+ (+a / -+!a) --a;
 			syntaxrules.expecting_identifier = false;
-			syntaxrules.expecting_semicolon = true;
+			if(syntaxrules.expecting_expression)
+				syntaxrules.expecting_semicolon = true;
 			syntaxrules.expecting_expression = false;
 			syntaxrules.expecting_operand = false;
 			syntaxrules.typename_allowed = false;
@@ -246,7 +252,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 		}
 		auto op = before_space.front();
 
-		if (IsOperator(op)) {
+		if (IsOperator(op) && (!syntaxrules.next_unary_is_not_an_operator && !IsPrefixOp(op))) {
 
 			cv::CheckRules(E_INITIALIZER);
 			cv::CheckRules(E_IDENTIFIER);
@@ -278,28 +284,62 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			if (!IsAnOperator2(syntaxrules.Operator)) {
 				CompilerError("expected an expression");
 				return code;
-				
 			}
 
-		}
-		else if (IsAnOperator2(syntaxrules.Operator)) {
-			if (syntaxrules.expecting_operand) {
-				CompilerError("expected an operand");
+			if (EndOfOperator(syntaxrules.Operator)) {
+				syntaxrules.Operator.clear();
+				syntaxrules.expecting_operand = true;
+				syntaxrules.expecting_expression = true;
+				syntaxrules.unary_allowed = true;
+
+				code.variable_declaration = false;
+				code.statement = StatementType::NO_STATEMENT;
+				code.code = parsed + Compiler_ReadNextCode2(++it).code;
+				syntaxrules.expecting_semicolon = false;
+
+				syntaxrules.next_unary_is_not_an_operator = false;
+
 				return code;
 			}
-			syntaxrules.expecting_expression = true;
-			syntaxrules.expecting_semicolon = false;
+			if (!IsPrefixOp(op)) {
+				syntaxrules.next_unary_is_not_an_operator = true;
+			}
 
-			syntaxrules.unary_allowed = true;
-			
-			code.variable_declaration = false;
-			code.statement = StatementType::NO_STATEMENT;
-			code.code = parsed + Compiler_ReadNextCode2(++it).code;
-			return code;
 
 		}
+		//else if (IsAnOperator2(syntaxrules.Operator)) {
+		//	if (syntaxrules.expecting_operand) {
+		//		CompilerError("expected an operand");
+		//		return code;
+		//	}
+		//	syntaxrules.expecting_expression = true;
+		//	syntaxrules.expecting_semicolon = false;
+
+		//	syntaxrules.unary_allowed = true;
+		//	
+		//	code.variable_declaration = false;
+		//	code.statement = StatementType::NO_STATEMENT;
+		//	code.code = parsed + Compiler_ReadNextCode2(++it).code;
+		//	return code;
+
+		//}
 		else if (!syntaxrules.Operator.empty()) { //operator ends here
 			--it;
+
+			auto front = syntaxrules.Operator.front();
+			if (syntaxrules.Operator.size() == 1 && front == '!' && !syntaxrules.expecting_expression) {
+				CompilerError("an unary operator \"", front, "\" cannot be used as an operator between two operands");
+				return code;
+			}
+			if (!IsAnOperator2(syntaxrules.Operator)) {
+				CompilerError("expected an expression");
+				return code;
+
+			}
+			if ((syntaxrules.next_unary_is_not_an_operator && IsPrefixOp(op)))
+				++it;
+			syntaxrules.next_unary_is_not_an_operator = false;
+			std::cout << "\nyep: the operator " << "[ " << syntaxrules.Operator << " ] is completely valid!\n";
 			syntaxrules.expecting_operand = true;
 			syntaxrules.expecting_expression = true;
 			syntaxrules.unary_allowed = true;
@@ -307,10 +347,13 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
+			
+
 			return code;
 		}
 		else if (before_space == ".") {
-
+			int ok = 1;
+			1 != -(-(--ok));
 			cv::CheckRules(E_END_OF_NUMBER);
 
 			if (!syntaxrules.dot_is_allowed) {
@@ -322,6 +365,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.dot_is_allowed = false;
 			syntaxrules.expecting_expression = false;
 			syntaxrules.expecting_semicolon = true;
+			syntaxrules.next_unary_is_not_an_operator = false;
 
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
@@ -340,6 +384,9 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_expression = true;
 			syntaxrules.unary_allowed = true;
 
+		}
+		else if (ch == ')') {
+			syntaxrules.expecting_semicolon = true;
 		}
 		else if (ch == ')' && syntaxrules.expecting_expression) {
 			CompilerError("expected an expression");

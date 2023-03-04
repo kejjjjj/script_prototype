@@ -38,6 +38,7 @@ inline struct syntax_rules
 	bool expecting_constant_numeric_value = false;
 	bool expecting_end_of_number = false;
 	bool unary_allowed = false;
+	bool next_unary_is_not_an_operator;
 	size_t opening_paranthesis = 0;
 	size_t closing_paranthesis = 0;
 	std::string Operator;

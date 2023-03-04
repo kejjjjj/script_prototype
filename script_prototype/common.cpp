@@ -831,6 +831,10 @@ bool IsAnOperator2(const std::string_view& op)
     
     return IsAnOperator(op) || (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=");
 }
+bool EndOfOperator(const std::string_view& op)
+{
+    return (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=" || op == "++" || op == "--" || op == "!=");
+}
 bool NextOperatorCanBeAnOperator(const std::string_view& op)
 {
 
