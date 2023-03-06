@@ -33,7 +33,8 @@ namespace cv
 				CompilerError("expected a type name");
 			return;
 		case E_SEMICOLON:
-			CompilerError("expected a \";\"");
+			if(syntaxrules.expecting_semicolon)
+				CompilerError("expected a \";\"");
 			return;
 		case E_IDENTIFIER:
 			if (syntaxrules.expecting_identifier)
@@ -58,6 +59,14 @@ namespace cv
 		case E_END_OF_NUMBER:
 			if (syntaxrules.expecting_end_of_number && syntaxrules.expecting_expression)
 				CompilerError("extra text after expected end of number");
+			return;
+		case E_POSTFIX:
+			if (!syntaxrules.postfix_allowed)
+				CompilerError("postfix operator is not allowed here");
+			return;
+		case E_UNARY:
+			if (!syntaxrules.postfix_allowed)
+				CompilerError("unary operator is not allowed here");
 			return;
 		default:
 			return;

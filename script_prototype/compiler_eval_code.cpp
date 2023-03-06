@@ -43,7 +43,6 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				syntaxrules.expecting_end_of_number = false;
 
 				if (!syntaxrules.Operator.empty()) { //a space after an operator if this is true
-
 					syntaxrules.Operator.clear();
 					syntaxrules.expecting_expression = true;
 					syntaxrules.unary_allowed = true;
@@ -76,26 +75,34 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			return code;
 		}
 
-		auto type = Compile_EvaluateStatement(before_space);
+		const auto type = Compile_EvaluateStatement(before_space);
 		if (type != StatementType::NO_STATEMENT) {
+			cv::CheckRules(E_SEMICOLON);
+			cv::CheckRules(E_EXPRESSION);
+			cv::CheckRules(E_IDENTIFIER);
+			cv::CheckRules(E_EXPLICIT_TYPE);
+			cv::CheckRules(E_INITIALIZER);
+			cv::CheckRules(E_TYPENAME);
 
-			Compiler_ReadStatement();
+			syntaxrules.expecting_expression = true;
+			syntaxrules.typename_allowed = false;
+			syntaxrules.expecting_opening_paranthesis = true;
+			syntaxrules.expecting_semicolon = false;
+			syntaxrules.unary_allowed = false;
+			syntaxrules.postfix_allowed = false;
+
 			code.statement = type;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
 			code.variable_declaration = false;
-			a-~2;
 			return code;
 		}
 		else if (cv::ParseDeclarationType(before_space)) {
 			cv::CheckRules(E_CONSTANT_NUMERIC);
 			cv::CheckRules(E_END_OF_NUMBER);
+			cv::CheckRules(E_SEMICOLON);
 
 			if (!syntaxrules.typename_allowed || syntaxrules.expecting_expression) {
 				CompilerError("type name is not allowed");
-				return code;
-			}
-			if (syntaxrules.expecting_semicolon) {
-				CompilerError("expected a ';'");
 				return code;
 			}
 			syntaxrules.expecting_identifier = true;
@@ -105,6 +112,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_semicolon = false;
 			syntaxrules.unary_allowed = false;
 			syntaxrules.next_unary_is_not_an_operator = true;
+			syntaxrules.postfix_allowed = false;
 
 
 			code.variable_declaration = true;
@@ -113,26 +121,13 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			return code;
 		}
 		else if (cv::ParseTypeQualifier(before_space)) {
+
 			cv::CheckRules(E_CONSTANT_NUMERIC);
 			cv::CheckRules(E_END_OF_NUMBER);
-
-			if (syntaxrules.expecting_expression) {
-				CompilerError("type qualifier is not allowed");
-				return code;
-			}
-			if (syntaxrules.expecting_explicit_type)
-			{
-				CompilerError("expected an explicit type");
-				return code;
-			}
-			if (syntaxrules.expecting_identifier) {
-				CompilerError("expected an identifier");
-				return code;
-			}
-			if (syntaxrules.expecting_semicolon) {
-				CompilerError("expected a ';'");
-				return code;
-			}
+			cv::CheckRules(E_SEMICOLON);
+			cv::CheckRules(E_IDENTIFIER);
+			cv::CheckRules(E_EXPLICIT_TYPE);
+			cv::CheckRules(E_EXPRESSION);
 
 			syntaxrules.expecting_explicit_type = true;
 			syntaxrules.expecting_initializer = false;
@@ -140,6 +135,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.typename_allowed = true;
 			syntaxrules.unary_allowed = false;
 			syntaxrules.next_unary_is_not_an_operator = false;
+			syntaxrules.postfix_allowed = false;
 
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
@@ -148,20 +144,13 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 		}
 		else if (cv::ParseNumericValue(before_space)) {
 
-			if (syntaxrules.expecting_explicit_type) {
-				CompilerError("expected an explicit type");
-				return code;
-			}
-			if (syntaxrules.expecting_initializer) {
-				CompilerError("expected an initializer");
-				return code;
-			}
+			cv::CheckRules(E_POSTFIX);
+			cv::CheckRules(E_EXPLICIT_TYPE);
+			cv::CheckRules(E_INITIALIZER);
+			cv::CheckRules(E_IDENTIFIER);
+
 			if (syntaxrules.expecting_semicolon && !syntaxrules.expecting_constant_numeric_value) {
 				CompilerError("expected a ';'");
-				return code;
-			}
-			if (syntaxrules.expecting_identifier) {
-				CompilerError("expected an identifier");
 				return code;
 			}
 
@@ -171,12 +160,15 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.typename_allowed = false;
 			syntaxrules.dot_is_allowed = true;
 			syntaxrules.unary_allowed = false;
+			syntaxrules.next_unary_is_not_an_operator = false;
+
 
 			if (syntaxrules.expecting_constant_numeric_value) { // expecting a spacebar after a decimal point number ends
 				syntaxrules.expecting_end_of_number = true;
 			}
 
 			syntaxrules.expecting_constant_numeric_value = false;
+			syntaxrules.postfix_allowed = false;
 
 			syntaxrules.Operator.clear();
 
@@ -188,19 +180,9 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 		else if (cv::ParseIdentifier(before_space)) {
 			cv::CheckRules(E_CONSTANT_NUMERIC);
 			cv::CheckRules(E_END_OF_NUMBER);
-
-			if (syntaxrules.expecting_explicit_type) {
-				CompilerError("expected an explicit type");
-				return code;
-			}
-			if (syntaxrules.expecting_initializer) {
-				CompilerError("expected an initializer");
-				return code;
-			}
-			if (syntaxrules.expecting_semicolon) {
-				CompilerError("expected a ';'");
-				return code;
-			}
+			cv::CheckRules(E_EXPLICIT_TYPE);
+			cv::CheckRules(E_INITIALIZER);
+			cv::CheckRules(E_SEMICOLON);
 
 			//a + ~+ (+a / -+!a) --a;
 			syntaxrules.expecting_identifier = false;
@@ -208,12 +190,13 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			//	syntaxrules.expecting_semicolon = true;
 			//else
 			//	syntaxrules.expecting_semicolon = false;
-
+			syntaxrules.postfix_allowed = true;
 			syntaxrules.expecting_expression = false;
 			syntaxrules.expecting_operand = false;
 			syntaxrules.typename_allowed = false;
 			syntaxrules.unary_allowed = false;
 			syntaxrules.expecting_semicolon = true;
+			syntaxrules.next_unary_is_not_an_operator = false;
 
 			if (syntaxrules.expecting_variable_declaration) {
 				syntaxrules.expecting_initializer = true;
@@ -232,7 +215,6 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 		}
 		else if (syntaxrules.expecting_initializer) {
 			if (cv::ParseInitializer(before_space)) {
-
 				if (syntaxrules.expecting_identifier) {
 					CompilerError("expected an identifier");
 					return code;
@@ -246,6 +228,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				syntaxrules.typename_allowed = false;
 				syntaxrules.expecting_semicolon = false;
 				syntaxrules.unary_allowed = true;
+				syntaxrules.postfix_allowed = false;
 
 				code.variable_declaration = false;
 				code.statement = StatementType::NO_STATEMENT;
@@ -327,9 +310,33 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				return code;
 			}
 			if (EndOfOperator(syntaxrules.Operator)) {
-				syntaxrules.Operator.clear();
 				syntaxrules.expecting_operand = true;
 				syntaxrules.expecting_expression = true;
+				if ((syntaxrules.Operator == "++" || syntaxrules.Operator == "--")) {
+					cv::CheckRules(E_POSTFIX);
+
+					if (!syntaxrules.unary_allowed && !syntaxrules.postfix_allowed) {
+						if(!syntaxrules.unary_allowed)
+							CompilerError("an unary operator is not allowed here");
+						else
+							CompilerError("a postfix operator is not allowed here");
+						return code;
+					}
+
+					if (syntaxrules.postfix_allowed) {
+						
+						syntaxrules.expecting_expression = false;
+						syntaxrules.unary_allowed = false;
+						syntaxrules.postfix_allowed = false;
+						syntaxrules.expecting_operand = false;
+						syntaxrules.expecting_semicolon = true;
+					}
+					else {
+
+					}
+				}
+
+				syntaxrules.Operator.clear();
 				syntaxrules.unary_allowed = true;
 
 				code.variable_declaration = false;
@@ -412,12 +419,14 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_operand = true;
 			syntaxrules.expecting_expression = true;
 			syntaxrules.unary_allowed = true;
+			syntaxrules.postfix_allowed = false;
 
 		}
 		else if (ch == ')') {
 			syntaxrules.expecting_expression = false;
 			syntaxrules.unary_allowed = false;
 			syntaxrules.next_unary_is_not_an_operator = false;
+			syntaxrules.postfix_allowed = false;
 
 		}
 		else if (ch == ')' && syntaxrules.expecting_expression) {
@@ -505,37 +514,4 @@ bool cec::Compiler_ReadParanthesis(char ch, bool isspace)
 			syntaxrules.closing_paranthesis++;
 	// }
 	return 0;
-}
-void cec::Compiler_ReadStatement()
-{
-	if (syntaxrules.expecting_semicolon) {
-		CompilerError("expected a ';'");
-		return;
-	}
-	if (syntaxrules.expecting_expression) {
-		CompilerError("a statement within an expression is not valid syntax");
-		return;
-	}
-	else if (syntaxrules.expecting_identifier) {
-		CompilerError("expected an identifier");
-		return;
-	}
-	else if (syntaxrules.expecting_explicit_type) {
-		CompilerError("expected an explicit type");
-		return;
-	}
-	else if (syntaxrules.expecting_initializer) {
-		CompilerError("expected an initializer");
-		return;
-	}
-	else if (!syntaxrules.typename_allowed) {
-		CompilerError("type name is not allowed");
-		return;
-	}
-	syntaxrules.expecting_expression = true;
-	syntaxrules.typename_allowed = false;
-	syntaxrules.expecting_opening_paranthesis = true;
-	syntaxrules.expecting_semicolon = false;
-	syntaxrules.unary_allowed = false;
-
 }

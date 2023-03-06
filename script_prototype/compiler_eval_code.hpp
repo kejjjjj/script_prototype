@@ -19,7 +19,9 @@ enum expected_rules
 	E_CLOSING_PARANTHESIS,
 	E_DOT_IS_ALLOWED,
 	E_CONSTANT_NUMERIC,
-	E_END_OF_NUMBER
+	E_END_OF_NUMBER,
+	E_POSTFIX,
+	E_UNARY
 
 };
 
@@ -38,7 +40,8 @@ inline struct syntax_rules
 	bool expecting_constant_numeric_value = false;
 	bool expecting_end_of_number = false;
 	bool unary_allowed = false;
-	bool next_unary_is_not_an_operator;
+	bool postfix_allowed = false;
+	bool next_unary_is_not_an_operator = false;
 	size_t opening_paranthesis = 0;
 	size_t closing_paranthesis = 0;
 	std::string Operator;
