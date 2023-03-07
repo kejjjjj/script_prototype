@@ -46,6 +46,9 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 					syntaxrules.Operator.clear();
 					syntaxrules.expecting_expression = true;
 					syntaxrules.unary_allowed = true;
+					syntaxrules.postfix_allowed = false;
+					syntaxrules.next_unary_is_not_an_operator = true;
+
 				}
 			}
 			//if (!IsOperator(ch)) {
@@ -197,13 +200,12 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.unary_allowed = false;
 			syntaxrules.expecting_semicolon = true;
 			syntaxrules.next_unary_is_not_an_operator = false;
-
+			
 			if (syntaxrules.expecting_variable_declaration) {
 				syntaxrules.expecting_initializer = true;
 				syntaxrules.expecting_semicolon = false;
 
 			}
-
 			syntaxrules.Operator.clear();
 
 			code.variable_declaration = false;
@@ -260,6 +262,50 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 
 			if (syntaxrules.next_unary_is_not_an_operator) {
 				syntaxrules.expecting_expression = true;
+				if (ch == syntaxrules.Operator.front() && (ch == '-' || ch =='+')) {
+
+					cv::CheckRules(E_INITIALIZER);
+					cv::CheckRules(E_IDENTIFIER);
+					cv::CheckRules(E_EXPLICIT_TYPE);
+					cv::CheckRules(E_CONSTANT_NUMERIC);
+					cv::CheckRules(E_END_OF_NUMBER);
+
+
+
+					std::cout << "unary : " << syntaxrules.Operator << ch << '\n';
+
+					if (!syntaxrules.unary_allowed && !syntaxrules.postfix_allowed) {
+						if (!syntaxrules.unary_allowed)
+							CompilerError("an unary operator is not allowed here");
+						else
+							CompilerError("a postfix operator is not allowed here");
+						return code;
+					}
+					syntaxrules.Operator.clear();
+
+					if (syntaxrules.unary_allowed) { //expecting an identifier after ++ or --
+
+						cv::CheckRules(E_EXPRESSION);
+
+
+						syntaxrules.expecting_identifier = true;
+					}
+					else if (syntaxrules.postfix_allowed) {
+						syntaxrules.expecting_semicolon = true;
+						syntaxrules.unary_allowed = false;
+						syntaxrules.next_unary_is_not_an_operator = false;
+
+					}
+
+					syntaxrules.expecting_expression = false;
+					syntaxrules.unary_allowed = false;
+					syntaxrules.postfix_allowed = false;
+					syntaxrules.expecting_operand = false;
+				
+
+				}
+
+				
 				code.statement = StatementType::NO_STATEMENT;
 				code.code = parsed + Compiler_ReadNextCode2(++it).code;
 				syntaxrules.expecting_semicolon = false;
@@ -303,7 +349,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.Operator.push_back(op);
 			syntaxrules.expecting_semicolon = false;
 
-			syntaxrules.unary_allowed = false;
+			//syntaxrules.unary_allowed = false;
 
 			if (!IsAnOperator2(syntaxrules.Operator)) {
 				CompilerError("expected an expression");
@@ -313,6 +359,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				syntaxrules.expecting_operand = true;
 				syntaxrules.expecting_expression = true;
 				if ((syntaxrules.Operator == "++" || syntaxrules.Operator == "--")) {
+					std::cout << "unary : " << syntaxrules.Operator << '\n';
 					cv::CheckRules(E_POSTFIX);
 
 					if (!syntaxrules.unary_allowed && !syntaxrules.postfix_allowed) {
@@ -337,20 +384,20 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				}
 
 				syntaxrules.Operator.clear();
-				syntaxrules.unary_allowed = true;
+				//syntaxrules.unary_allowed = true;
 
 				code.variable_declaration = false;
 				code.statement = StatementType::NO_STATEMENT;
 				code.code = parsed + Compiler_ReadNextCode2(++it).code;
-				syntaxrules.expecting_semicolon = false;
+				//syntaxrules.expecting_semicolon = false;
 
-				syntaxrules.next_unary_is_not_an_operator = false;
+				//syntaxrules.next_unary_is_not_an_operator = false;
 
 				return code;
 			}
-			if (!IsPrefixOp(op)) {
+			//if (!IsPrefixOp(op)) {
 				syntaxrules.next_unary_is_not_an_operator = true;
-			}
+			//}
 			
 
 

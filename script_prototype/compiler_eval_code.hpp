@@ -39,7 +39,7 @@ inline struct syntax_rules
 	bool dot_is_allowed = false;
 	bool expecting_constant_numeric_value = false;
 	bool expecting_end_of_number = false;
-	bool unary_allowed = false;
+	bool unary_allowed = true;
 	bool postfix_allowed = false;
 	bool next_unary_is_not_an_operator = false;
 	size_t opening_paranthesis = 0;
