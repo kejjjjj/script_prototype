@@ -41,7 +41,7 @@ inline struct syntax_rules
 	bool expecting_end_of_number = false;
 	bool unary_allowed = true;
 	bool postfix_allowed = false;
-	bool next_unary_is_not_an_operator = false;
+	bool next_unary_is_not_an_operator = true;
 	size_t opening_paranthesis = 0;
 	size_t closing_paranthesis = 0;
 	std::string Operator;

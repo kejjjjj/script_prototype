@@ -93,6 +93,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.expecting_semicolon = false;
 			syntaxrules.unary_allowed = false;
 			syntaxrules.postfix_allowed = false;
+			syntaxrules.Operator.clear();
 
 			code.statement = type;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
@@ -147,16 +148,30 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 		}
 		else if (cv::ParseNumericValue(before_space)) {
 
-			cv::CheckRules(E_POSTFIX);
+			//cv::CheckRules(E_POSTFIX);
 			cv::CheckRules(E_EXPLICIT_TYPE);
 			cv::CheckRules(E_INITIALIZER);
 			cv::CheckRules(E_IDENTIFIER);
+			cv::CheckRules(E_SEMICOLON);
+
+			if (!syntaxrules.expecting_expression && !syntaxrules.Operator.empty()) {
+				CompilerError("didn't expect an expression");
+				return code;
+
+			}
 
 			if (syntaxrules.expecting_semicolon && !syntaxrules.expecting_constant_numeric_value) {
 				CompilerError("expected a ';'");
 				return code;
 			}
+			//if (!syntaxrules.Operator.empty()) {
+			//	if (!IsAnOperator2(syntaxrules.Operator)) {
 
+			//		CompilerError("expected an expression");
+			//		return code;
+
+			//	}
+			//}
 			syntaxrules.expecting_semicolon = true;
 			syntaxrules.expecting_expression = false;
 			syntaxrules.expecting_operand = false;
@@ -164,6 +179,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			syntaxrules.dot_is_allowed = true;
 			syntaxrules.unary_allowed = false;
 			syntaxrules.next_unary_is_not_an_operator = false;
+			syntaxrules.postfix_allowed = false;
 
 
 			if (syntaxrules.expecting_constant_numeric_value) { // expecting a spacebar after a decimal point number ends
@@ -171,7 +187,6 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			}
 
 			syntaxrules.expecting_constant_numeric_value = false;
-			syntaxrules.postfix_allowed = false;
 
 			syntaxrules.Operator.clear();
 
@@ -186,6 +201,19 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			cv::CheckRules(E_EXPLICIT_TYPE);
 			cv::CheckRules(E_INITIALIZER);
 			cv::CheckRules(E_SEMICOLON);
+
+			if (!syntaxrules.expecting_expression && !syntaxrules.Operator.empty()) {
+				CompilerError("didn't expect an expression");
+				return code;
+
+			}
+
+			//if (!IsAnOperator2(syntaxrules.Operator)) {
+
+			//	CompilerError("expected an expression");
+			//	return code;
+
+			//}
 
 			//a + ~+ (+a / -+!a) --a;
 			syntaxrules.expecting_identifier = false;
@@ -207,7 +235,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 
 			}
 			syntaxrules.Operator.clear();
-
+			//a - += 1;
 			code.variable_declaration = false;
 			code.statement = StatementType::NO_STATEMENT;
 			code.code = parsed + Compiler_ReadNextCode2(++it).code;
@@ -248,6 +276,21 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			cv::CheckRules(E_INITIALIZER);
 			cv::CheckRules(E_IDENTIFIER);
 			cv::CheckRules(E_EXPLICIT_TYPE);
+
+			if (syntaxrules.postfix_allowed && !syntaxrules.Operator.empty()) {
+				auto front = syntaxrules.Operator.front();
+
+				if (front == '+' && ch != '+' || front == '-' && ch != '-') {
+					syntaxrules.postfix_allowed = false;
+				}
+
+				
+			}
+
+			if ((op == '!' || op == '~') && syntaxrules.postfix_allowed) {
+				CompilerError("'", op, "' is not a postfix operator");
+				return code;
+			}
 
 			syntaxrules.expecting_operand = true;
 			syntaxrules.expecting_semicolon = false;
@@ -339,7 +382,6 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 
 				return code;
 			}
-
 			cv::CheckRules(E_EXPRESSION);
 
 			cv::CheckRules(E_CONSTANT_NUMERIC);
@@ -348,6 +390,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			std::cout << "\npushing[" << op << "]\n";
 			syntaxrules.Operator.push_back(op);
 			syntaxrules.expecting_semicolon = false;
+
 
 			//syntaxrules.unary_allowed = false;
 
@@ -411,7 +454,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			--it;
 
 			auto front = syntaxrules.Operator.front();
-			if (syntaxrules.Operator.size() == 1 && front == '!' && !syntaxrules.expecting_expression) {
+			if (syntaxrules.Operator.size() == 1 && front == '!' && !syntaxrules.unary_allowed) {
 				CompilerError("an unary operator \"", front, "\" cannot be used as an operator between two operands");
 				return code;
 			}
@@ -420,8 +463,11 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 				return code;
 
 			}
-			if ((syntaxrules.next_unary_is_not_an_operator && IsPrefixOp(op)))
-				++it;
+			//if ((syntaxrules.next_unary_is_not_an_operator && IsPrefixOp(ch))) {
+			//	std::cout << "SKIP!\n";
+			//	
+			//}
+			++it;
 			syntaxrules.next_unary_is_not_an_operator = false;
 			std::cout << "\nyep: the operator " << "[ " << syntaxrules.Operator << " ] is completely valid!\n";
 			syntaxrules.expecting_operand = true;
@@ -463,6 +509,7 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 	
 
 		if (ch == '(') {
+			syntaxrules.Operator.clear();
 			syntaxrules.expecting_operand = true;
 			syntaxrules.expecting_expression = true;
 			syntaxrules.unary_allowed = true;
@@ -497,7 +544,6 @@ code_type cec::Compiler_ReadNextCode2(std::string::iterator& it)
 			code.code = parsed;
 			return code;
 		}
-
 		before_space.clear();
 
 		++it;
