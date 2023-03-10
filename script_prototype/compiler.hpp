@@ -6,7 +6,7 @@
 #include "pch.h"
 
 inline std::string f_str;
-
+inline Syntax syntax;
 class Script : protected Runtime
 {
 public:
@@ -19,9 +19,6 @@ public:
 
 private:
 	std::fstream f;
-
-	bool compiled = false;
-	std::string compiled_file;
 };
 
 #endif

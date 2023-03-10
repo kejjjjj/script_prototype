@@ -31,95 +31,12 @@ Script::Script(const std::string& _path)
 bool Script::Compile()
 {
 	std::cout << "compiling project!\n";
-	std::string expression_str;
-
-	fs::F_Reset();
-
-	size_t expressions_parsed = 0;
-
 	auto begin = f_str.begin();
-	code_type code = cec::Compiler_ReadNextCode2(begin);
+	code_type code = cec::Compiler_ReadNextCode3(begin);
 
+	std::cout << "code: " << code.code << '\n';
 
-
-	std::cout << "\ncode: " << code.code << '\n';
-	std::cout << "statement: " << (int)code.statement << '\n';
-
-	/*while (f.good() && !f.eof()) {
-
-		char ch = fs::F_Get(f);
-
-		if (std::isspace(ch) || !std::isalnum(ch)) {
-			auto type = Compile_EvaluateStatement(expression_str);
-
-			if (type != StatementType::NO_STATEMENT) {
-
-				while (std::isspace(ch)) {
-					ch = fs::F_Get(f);
-				}
-				std::string _expression = expression_str + FillStatement(ch, f);
-
-				std::cout << "statement: [" << _expression << "]\n";
-
-				ParseStatement(type, _expression);
-
-				expression_str.clear();
-				continue;
-			}
-		}
-
-		if (ch == ';') {
-
-			CompilerExpression expr(expression_str, this->rtScript);
-
-			expr.ParseExpression(expression_str);
-			expressions_parsed++;
-			expression_str.clear();
-			rtScript += ";";
-			continue;
-		}
-
-		expression_str.push_back(ch);
-	}*/
-
-
-
-	//std::cout << "---------------------\n";
-
-	//std::cout << rtScript << '\n';
-
-	//std::cout << "---------------------\n";
-
-	////runtime script starts here
-	//expression_str.clear();
-	//scriptStack.stack.clear();
-
-	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
-
-	//std::cout << "RUNTIME\n";
-
-	//for (const auto& i : rtScript) {
-
-	//	if (i == ';') {
-
-	//		RuntimeExpression expr(expression_str);
-
-	//		expr.ParseExpression(expression_str);
-	//		expression_str.clear();
-	//		continue;
-
-	//	}
-	//	expression_str.push_back(i);
-
-	//}
-
-	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-	//std::chrono::duration<double> difference = now - old;
-
-
-	//printf("runtime parsing: %.12f\n", difference.count());
-
-	//runtime script ends here
+	//std::cout << "\ncode: " << code.code << '\n';
 
 	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
 
@@ -127,10 +44,7 @@ bool Script::Compile()
 	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
 	//std::chrono::duration<float> difference = now - old;
-
 	//printf("time taken: %.6f\n", difference.count());
-
-	std::cout << "expressions parsed: " << expressions_parsed << '\n';
 
 	return true;
 }

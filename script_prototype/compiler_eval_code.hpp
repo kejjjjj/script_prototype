@@ -6,75 +6,55 @@
 
 #include "pch.h"
 
-enum expected_rules
+enum SYNTAX_FLAGS : unsigned int
 {
-	E_EXPLICIT_TYPE,
-	E_INITIALIZER,
-	E_EXPRESSION,
-	E_OPERAND,
-	E_TYPENAME,
-	E_SEMICOLON,
-	E_IDENTIFIER,
-	E_OPENING_PARANTHESIS,
-	E_CLOSING_PARANTHESIS,
-	E_DOT_IS_ALLOWED,
-	E_CONSTANT_NUMERIC,
-	E_END_OF_NUMBER,
-	E_POSTFIX,
-	E_UNARY
+	S_NONE = 0x00,
+	S_EXPRESSION = 0x01,
+	S_SEMICOLON = 0x02
 
 };
 
-inline struct syntax_rules
+struct Syntax
 {
-	bool expecting_explicit_type = false;
-	bool expecting_initializer = false;
-	bool expecting_expression = false;
-	bool expecting_operand = false;
-	bool typename_allowed = true;
-	bool expecting_semicolon = false;
-	bool expecting_identifier = false;
-	bool expecting_opening_paranthesis = false;
-	bool expecting_closing_paranthesis = false;
-	bool dot_is_allowed = false;
-	bool expecting_constant_numeric_value = false;
-	bool expecting_end_of_number = false;
-	bool unary_allowed = true;
-	bool postfix_allowed = false;
-	bool next_unary_is_not_an_operator = true;
-	size_t opening_paranthesis = 0;
-	size_t closing_paranthesis = 0;
-	std::string Operator;
+	Syntax() = default;
+	~Syntax() = default;
+private:
+	SYNTAX_FLAGS uFlags = S_NONE;
 
-	//more general ones
-	bool expecting_variable_declaration = false; //<type> <var name> = <value>;
-
-	void ClearRules()
+	std::vector<std::pair<unsigned int, const char*>> errorcodes
 	{
-		expecting_explicit_type = false;
-		expecting_initializer = false;
-		expecting_expression = false;
-		expecting_operand = false;
-		typename_allowed = true;
-		expecting_semicolon = false;
-		expecting_identifier = false;
-		expecting_opening_paranthesis = false;
-		expecting_closing_paranthesis = false;
-		dot_is_allowed = false;
-		expecting_constant_numeric_value = false;
-		expecting_end_of_number = false;
-		opening_paranthesis = 0;
-		closing_paranthesis = 0;
-		Operator.clear();
-	}
+		std::make_pair(S_EXPRESSION, "Expected an expression"),
+		std::make_pair(S_SEMICOLON, "Expected a \";\"")
 
-}syntaxrules;
+	};
+
+public:
+	std::string Op; //operator
+
+	void SetFlags(const unsigned int flags) { uFlags = (SYNTAX_FLAGS)flags; }
+	void ClearFlags() { uFlags = S_NONE; }
+	SYNTAX_FLAGS GetFlags() const { return uFlags; }
+	void CheckRules(const unsigned int flags) const {
+
+		if (!flags)
+			return;
+
+		if ((flags & uFlags) != 0) {
+			for (const auto& [code, description] : errorcodes) {
+				std::cout << std::format("[{}, {}]\n", code, description);
+				if ((flags & code) != 0)
+					return CompilerError(description);
+			}
+
+		}
+	}
+};
 
 //contains the parsed code
 struct code_type
 {
-	StatementType statement = StatementType::NO_STATEMENT;
-	bool variable_declaration = false;
+	//StatementType statement = StatementType::NO_STATEMENT;
+	//bool variable_declaration = false;
 	std::string code;
 };
 struct token_t
@@ -88,21 +68,17 @@ struct token_t
 
 	}t_type = tokentype::INVALID;
 
-	bool whitespace = false;
+	char whitespace = false;
 	std::string value; //does not include whitespaces
 };
 namespace cec
 {
-	std::optional<token_t> Compiler_ReadToken(std::string::iterator& it);
+	token_t Compiler_ReadToken(std::string::iterator& it); //doesn't require std::optional<token_t> yet
+	bool Compiler_SemiColon(const token_t* token);
+	void Compiler_WhiteSpace(const token_t* token);
+	bool Compiler_EvaluateToken(const token_t* token);
 
 	code_type Compiler_ReadNextCode3(std::string::iterator& it);
-
-	code_type Compiler_ReadNextCode2(std::string::iterator& it);
-
-	code_type Compiler_ReadNextCode(std::string::iterator& it);
-	void Compiler_ReadStatement();
-	bool Compiler_ReadParanthesis(char ch, bool isspace);
-	void Compiler_ReadSemicolon();
 
 }
 
