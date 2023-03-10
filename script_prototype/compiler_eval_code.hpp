@@ -77,10 +77,25 @@ struct code_type
 	bool variable_declaration = false;
 	std::string code;
 };
+struct token_t
+{
+	enum class tokentype : char
+	{
+		INVALID,
+		DIGIT,
+		OPERATOR,
+		STRING
 
+	}t_type = tokentype::INVALID;
+
+	bool whitespace = false;
+	std::string value; //does not include whitespaces
+};
 namespace cec
 {
+	std::optional<token_t> Compiler_ReadToken(std::string::iterator& it);
 
+	code_type Compiler_ReadNextCode3(std::string::iterator& it);
 
 	code_type Compiler_ReadNextCode2(std::string::iterator& it);
 

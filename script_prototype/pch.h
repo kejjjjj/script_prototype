@@ -15,7 +15,6 @@
 #include <list>
 #include <ranges>
 
-
 #include "filetools.hpp"
 #include "variables.hpp"
 #include "common.hpp"
