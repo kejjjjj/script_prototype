@@ -906,7 +906,7 @@ std::optional<std::list<std::string>> TokenizeOperatorSequence(const std::string
         while (it != expr.cend()) {
             token.push_back(*it);
 
-            if (!IsAnOperator2(token) || *it == '~') {
+            if (*it == '~' || !IsAnOperator2(token)) {
                 token.pop_back();
                 return token;
             }
