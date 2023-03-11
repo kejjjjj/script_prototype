@@ -835,6 +835,15 @@ bool EndOfOperator(const std::string_view& op)
 {
     return (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=" || op == "++" || op == "--" || op == "!=");
 }
+bool IsUnaryOperator(const std::string_view& op)
+{
+    if (op.size() == 1) {
+        auto o = op.front();
+        return (o == '+' || o == '-' || o == '!' || o == '~');
+    }
+    return UnaryArithmeticOp(op); //++ or --
+        
+}
 bool NextOperatorCanBeAnOperator(const std::string_view& op)
 {
 
@@ -881,4 +890,46 @@ std::string ExtractStatementName(const std::string_view& expr)
     }
 
     return std::string(expr.substr(0, idx));
+}
+std::optional<std::list<std::string>> TokenizeOperatorSequence(const std::string_view& expr)
+{
+    if (expr.empty())
+        return std::nullopt;
+
+    std::list<std::string> tokens;
+    auto begin = expr.cbegin();
+    auto end = expr.cend();
+
+    const auto Tokenize = [&expr](std::string_view::const_iterator& it) -> std::optional<std::string>
+    {
+        std::string token;
+        while (it != expr.cend()) {
+            token.push_back(*it);
+
+            if (!IsAnOperator2(token) || *it == '~') {
+                token.pop_back();
+                return token;
+            }
+
+            ++it;
+        }
+        if (token.empty()) {
+            CompilerError("ain't no way\n");
+            return std::nullopt;
+        }
+        return token;
+    };
+
+    for (auto& it = begin; it != end;) {
+
+        if (const auto token = Tokenize(it)) {
+            tokens.push_back(token.value());
+        }
+
+    }
+
+    if (tokens.empty())
+        return std::nullopt;
+
+    return tokens;
 }

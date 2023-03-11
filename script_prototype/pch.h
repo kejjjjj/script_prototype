@@ -14,6 +14,7 @@
 #include <array>
 #include <list>
 #include <ranges>
+#include <functional>
 
 #include "filetools.hpp"
 #include "variables.hpp"

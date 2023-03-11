@@ -36,6 +36,7 @@ struct expression_stack
 #define IsPostEqualOp(x)	(x == '=') //==
 #define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=' && x != '~')
 #define IsValidSyntaxForName(x) (std::isalnum(x) && x != '_')
+#define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
 class Expression
 {
