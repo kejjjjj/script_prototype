@@ -56,16 +56,16 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it)
 
 	if (std::isdigit(ch)) {
 		token.t_type = token_t::tokentype::DIGIT;
-		token.eval_fc = std::make_unique<std::function<bool(const token_t*)>>(Compiler_NumericToken);
+		token.eval_fc = std::make_unique<std::function<bool( token_t*)>>(Compiler_NumericToken);
 	}
 	else if (IsAnyOperator(ch)) {
 		token.t_type = token_t::tokentype::OPERATOR;
-		token.eval_fc = std::make_unique<std::function<bool(const token_t*)>>(Compiler_OperatorToken);
+		token.eval_fc = std::make_unique<std::function<bool( token_t*)>>(Compiler_OperatorToken);
 
 	}
 	else if (std::isalpha(ch)) {
 		token.t_type = token_t::tokentype::STRING;
-		token.eval_fc = std::make_unique<std::function<bool(const token_t*)>>(Compiler_StringToken);
+		token.eval_fc = std::make_unique<std::function<bool( token_t*)>>(Compiler_StringToken);
 	}
 	else if (std::isspace(ch)) { //store whitespaces to maintain 1:1 to original code
 		++it;
@@ -135,7 +135,6 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 	if (Compiler_SemiColon(&token)) {
 		return code;
 	}
-
 	std::cout << "token: " << token.value << '\n';
 
 	if (!Compiler_WhiteSpace(&token)) {
@@ -149,7 +148,9 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 		else
 			std::cout << "no assigned function\n";
 	}
-
+	else { //whitespaces are unnecessary in most cases, so don't include them
+		token.value.clear();
+	}
 	code.code = token.value + Compiler_ReadNextCode3(it).code;
 
 	
@@ -185,7 +186,7 @@ bool cec::Compiler_StringToken(const token_t* token)
 
 	return true;
 }
-bool cec::Compiler_OperatorToken(const token_t* token)
+bool cec::Compiler_OperatorToken(token_t* token)
 {
 	if (!token)
 		return false;
@@ -198,25 +199,29 @@ bool cec::Compiler_OperatorToken(const token_t* token)
 
 	//tokens contains a list of tokenized operators
 	const auto& tokens = tokens_opt.value(); 
-
-	for (const auto& i : tokens) {
+	token->value.clear();
+	bool p_ws = false;
+	for (auto& i : tokens) {
 		std::cout << "op: " << i << '\n';
-		if (!Compiler_SyntaxCheckOperator(i))
-			return false;
+		token->value += Compiler_SyntaxCheckOperator(i, p_ws); //fix the whitespaces
 	}
 	return true;
+	int a = 1;
+	//1+++a;
 }
-bool cec::Compiler_SyntaxCheckOperator(const std::string_view& op)
+std::string cec::Compiler_SyntaxCheckOperator(const std::string& op, bool& p_ws)
 {
 	const auto front = op.front();
 	if (IsUnaryOperator(op)) {
 		if(front == '~' || front == '!')
 			syntax.CheckRules(S_SEMICOLON);  //unary ~ and ! cannot be used after an expression
 
-		else if(syntax.FlagActive(S_SEMICOLON) && UnaryArithmeticOp(op)) //we just read a numeric/string token and this is a postfix operator
-			return true;
-
-
+		else if (syntax.FlagActive(S_SEMICOLON) && UnaryArithmeticOp(op)) { //we just read a numeric/string token and this is a postfix operator
+			return p_ws = true, (op + ' ');
+		}
+		else if (UnaryArithmeticOp(op)) {
+			return p_ws ? op : (' ' + op); //fixes a duplicate whitespace
+		}
 	}
 	else {
 		syntax.CheckRules(S_EXPRESSION); //not an unary operator, so error out if we are expecting an expression, example: a - / 1;
@@ -228,5 +233,5 @@ bool cec::Compiler_SyntaxCheckOperator(const std::string_view& op)
 		syntax.ClearFlag(S_SEMICOLON);
 	}
 
-	return true;
+	return op;
 }

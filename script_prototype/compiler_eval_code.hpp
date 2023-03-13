@@ -91,7 +91,7 @@ struct token_t
 
 	char whitespace = false;
 	std::string value; //does not include whitespaces
-	std::unique_ptr<std::function<bool(const token_t*)>> eval_fc = 0;
+	std::unique_ptr<std::function<bool(token_t*)>> eval_fc = 0;
 };
 namespace cec
 {
@@ -102,8 +102,8 @@ namespace cec
 	bool Compiler_WhiteSpace(const token_t* token);
 	bool Compiler_NumericToken(const token_t* token);
 	bool Compiler_StringToken(const token_t* token);
-	bool Compiler_OperatorToken(const token_t* token);
-	bool Compiler_SyntaxCheckOperator(const std::string_view& op);
+	bool Compiler_OperatorToken(token_t* token);
+	std::string Compiler_SyntaxCheckOperator(const std::string& op, bool& p_ws);
 	code_type Compiler_ReadNextCode3(std::string::iterator& it);
 
 }
