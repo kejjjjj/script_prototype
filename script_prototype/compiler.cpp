@@ -32,9 +32,14 @@ bool Script::Compile()
 {
 	std::cout << "compiling project!\n";
 	auto begin = f_str.begin();
-	code_type code = cec::Compiler_ReadNextCode3(begin);
+	try {
+		code_type code = cec::Compiler_ReadNextCode3(begin);
+		std::cout << "code: " << code.code << '\n';
+	}
+	catch (std::exception& ex) {
+		std::cout << "exception caught: " << ex.what() << '\n';
 
-	std::cout << "code: " << code.code << '\n';
+	}
 
 	//std::cout << "\ncode: " << code.code << '\n';
 

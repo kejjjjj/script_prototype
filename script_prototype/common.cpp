@@ -820,7 +820,7 @@ bool IsAnOperator(const std::string_view& op)
     
 
     if (op.size() == 1) {
-        return IsOperator(op.front());
+        return IsAnyOperator(op.front());
     }
 
     return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
