@@ -31,10 +31,20 @@ Script::Script(const std::string& _path)
 bool Script::Compile()
 {
 	std::cout << "compiling project!\n";
+
+
 	auto begin = f_str.begin();
 	try {
+
 		code_type code = cec::Compiler_ReadNextCode3(begin);
 		std::cout << "code: " << code.code << '\n';
+		if (code.type == code.STATEMENT) {
+			code_type code = cec::Compiler_ReadNextCode3(begin);
+			std::cout << "code: " << code.code << '\n';
+
+			
+		}
+		expr::EvaluateEntireExpression(code.code.substr(0, code.code.size() - 1));
 	}
 	catch (std::exception& ex) {
 		std::cout << "exception caught: " << ex.what() << '\n';

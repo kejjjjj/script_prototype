@@ -38,30 +38,23 @@ struct expression_stack
 #define IsValidSyntaxForName(x) (std::isalnum(x) && x != '_')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
-class Expression
+namespace expr
 {
-public:
-	Expression(const std::string expr) : expression_str(expr){};
+	std::string EvaluateEntireExpression(const std::string& str);
+	std::string EvaluateExpression(const std::string& str);
+	std::string TokenizeExpression(std::string::iterator& it, std::string::iterator& end);
 
-	void TokenizeExpression(const std::string_view& expr_str, expression_s* expr);  
-	ExpressionType EvaluateExpressionType(const std::string_view& operand);
-	bool NextOperatorIsLegal(char previous_op, char op);
-
-
-	float EvaluateExpression(const std::string_view& expr);
-	bool ParseExpression(std::string &expr);
-	float ParseExpressionNumbers(std::string& expr);
-
-	float EvaluateExpressionStack(std::list<expression_stack>& es);
-
-	struct e_s
+	struct expression_token
 	{
-		expression_s expression;
-		size_t operands = 0;
+		std::string content;
+		std::string Operator;
+		bool evaluate = false;
+	};
 
-	}e{};
-
-	std::string expression_str;
-};
-
+	struct s_rules
+	{
+		bool next_postfix = false;
+		bool next_unary = true;
+	}inline rules;
+}
 #endif

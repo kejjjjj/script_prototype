@@ -134,6 +134,7 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 bool IsAnOperator(const std::string_view& op);
 bool IsAnOperator2(const std::string_view& op);
 bool IsUnaryOperator(const std::string_view& op);
+bool IsPostfixOperator(const std::string_view& op);
 
 bool NextOperatorCanBeAnOperator(const std::string_view& op);
 bool EndOfOperator(const std::string_view& op);

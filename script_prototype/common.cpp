@@ -267,7 +267,11 @@ Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
 
     const int len = closing - opening - count_opening;
     //note: cuts out the parantheses
-    return { count_opening, count_closing, opening, len, expr.substr(opening + 1, len) };
+    std::string_view result_string = expr.substr(opening + 1, len);
+    if (count_opening && count_closing && result_string.empty())
+        result_string = ("empty");
+
+    return { count_opening, count_closing, opening, len, result_string };
 }
 std::string RemoveBlank(const std::string_view& expr)
 {
@@ -843,6 +847,10 @@ bool IsUnaryOperator(const std::string_view& op)
     }
     return UnaryArithmeticOp(op); //++ or --
         
+}
+bool IsPostfixOperator(const std::string_view& op)
+{
+    return UnaryArithmeticOp(op); //++ or --
 }
 bool NextOperatorCanBeAnOperator(const std::string_view& op)
 {
