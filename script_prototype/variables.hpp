@@ -67,5 +67,5 @@ bool VariableNameIsLegal(const std::string_view& var);
 bool CompatibleDataTypes(const VarType a, const VarType b);
 
 std::string VariableContentToValue(const std::string& str);
-
+bool IsConst(const std::string_view& v);
 #endif

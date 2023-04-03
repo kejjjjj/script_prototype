@@ -160,3 +160,10 @@ std::string VariableContentToValue(const std::string& str)
 
 	return s;
 }
+bool IsConst(const std::string_view& v)
+{
+	if (ValidNumber(v))
+		return true;
+	
+	return false;
+}

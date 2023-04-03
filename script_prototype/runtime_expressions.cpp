@@ -344,7 +344,7 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		while (next_op > op) {
 
 			op = GetOperandPriority(es_itr1->Operator);
-			next_op = GetOperandPriority(es_itr2->Operator); //i+1 is always in range unless this function was called with bad arguments
+			next_op = GetOperandPriority(es_itr2->Operator); 
 			if (next_op <= op)
 				break;
 
@@ -358,7 +358,6 @@ std::string RuntimeExpression::EvaluateExpressionStack(std::list<expression_stac
 		const std::string result = Eval(lval, rval, es_itr1->Operator);
 		//std::cout << std::format("{} {} {} = {}\n", lval, es_itr1->Operator, rval, result);
 
-	//	constexpr int a = !!!!!!!!!0 + !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!0;
 
 		es.erase(es_itr1, es_itr2);
 		es_itr2->content = result;

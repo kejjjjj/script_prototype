@@ -28,7 +28,7 @@ struct expression_stack
 
 #define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=' || x == '!' || x == '~')
 
-#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%')
+#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%')
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=' || x == '!' || x == '~')
 #define IsAssignment2Op(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '&' || x == '|' || x == '^' || x == '%')
 #define IsDualOp(x)			(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%' || x == '=')
@@ -40,21 +40,24 @@ struct expression_stack
 
 namespace expr
 {
-	std::string EvaluateEntireExpression(const std::string& str);
-	std::string EvaluateExpression(const std::string& str);
-	std::string TokenizeExpression(std::string::iterator& it, std::string::iterator& end);
-
 	struct expression_token
 	{
 		std::string content;
-		std::string Operator;
-		bool evaluate = false;
+		std::list<std::string> prefix;
+		std::list<std::string> postfix;
+		bool op = false;
 	};
+
+	std::string EvaluateEntireExpression(const std::string& str);
+	std::string EvaluateExpression(const std::string& str);
+	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens);
+	std::string TokenToValue(const expression_token& token);
 
 	struct s_rules
 	{
 		bool next_postfix = false;
 		bool next_unary = true;
+		bool next_operator = false;
 	}inline rules;
 }
 #endif

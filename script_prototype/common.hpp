@@ -132,6 +132,7 @@ std::string EvalPrefixes(const std::string& value, const std::string_view& prefi
 std::string Eval(const std::string& a, const std::string& b, const std::string_view& ops);
 
 bool IsAnOperator(const std::string_view& op);
+bool SatisfiesOperator(const std::string_view& op);
 bool IsAnOperator2(const std::string_view& op);
 bool IsUnaryOperator(const std::string_view& op);
 bool IsPostfixOperator(const std::string_view& op);

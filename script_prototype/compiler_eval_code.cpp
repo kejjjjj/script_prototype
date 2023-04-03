@@ -23,7 +23,7 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 	token_t token; //entire string that can include whitespaces
 	bool isspace, isalnum;
 	char ch;
-
+	token.eof_character = 0;
 	if ((it == ref)) {
 		auto ch = *(it - 1);
 		if (ch != expected_eof && expected_eof)
@@ -74,7 +74,7 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 	token.value.push_back(ch);
 	ch = *(++it);
 
-	do{
+	while (it != ref){
 		switch (token.t_type) {
 		case token_t::tokentype::DIGIT:
 			if (!std::isdigit(ch)) {
@@ -88,7 +88,8 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 				return token;
 			}
 			if ((it + 1) == f_str.end()) {
-				return token;
+				std::cout << "omg it's the end :o and the token is: " << token.value << '\n';
+					return token;
 			}
 			break;
 		case token_t::tokentype::STRING:
@@ -106,7 +107,16 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 		ch = *(++it);
 		
 
-	} while (it != ref);
+	}
+
+	if (token.t_type == token_t::tokentype::OPERATOR) {
+		if (!IsAnOperator2(token.value)) {
+			token.value.pop_back();
+			--it;
+			return token;
+		}
+	}
+
 	if(token.value.front() != expected_eof && expected_eof)
 		throw std::exception(std::format("Compiler_ReadToken(): unexpected end of file\nexpected {} instead of {}", expected_eof, token.value).c_str());
 
@@ -201,7 +211,7 @@ void cec::Compiler_SetOperatorFlags()
 
 	syntax.ClearFlag(S_SEMICOLON);
 
-	syntax.AddFlag(S_EXPRESSION);
+	//syntax.AddFlag(S_EXPRESSION);
 }
 void cec::Compiler_SetNumberFlags()
 {

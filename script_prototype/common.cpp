@@ -650,7 +650,7 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 
                 return "\"" + ac + bc + "\"";
             default:
-                RuntimeError("Illegal operator used on a string expression");
+                throw std::exception("Illegal operator used on a string expression");
                 return "";
             }
         }
@@ -668,7 +668,7 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
             return (!ac.empty() && !bc.empty()) == true ? "1" : "0";
 
 
-        RuntimeError("Illegal operator used on a string expression");
+        throw std::exception("Illegal operator used on a string expression");
         return "";
 
     };
@@ -677,11 +677,6 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 
     if (at == VarType::VT_STRING && bt == at) //both are strings
         return EvalStrings();
-
-    else if (at == VarType::VT_STRING && bt != at || bt == VarType::VT_STRING && at != bt) { //a string and a non-string
-        RuntimeError("Cannot cast from '", VarTypes[(int)at], "' to '", VarTypes[(int)bt], "'");
-        return "";
-    }
 
     float va, vb;
 
@@ -825,6 +820,15 @@ bool IsAnOperator(const std::string_view& op)
 
     if (op.size() == 1) {
         return IsAnyOperator(op.front());
+    }
+
+    return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
+
+}
+bool SatisfiesOperator(const std::string_view& op)
+{
+    if (op.size() == 1) {
+        return IsOperator(op.front());
     }
 
     return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
