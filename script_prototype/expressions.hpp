@@ -51,7 +51,8 @@ namespace expr
 	std::string EvaluateEntireExpression(const std::string& str);
 	std::string EvaluateExpression(const std::string& str);
 	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens);
-	std::string TokenToValue(const expression_token& token);
+	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
+	void EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
 
 	struct s_rules
 	{

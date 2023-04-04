@@ -32,7 +32,6 @@ bool Script::Compile()
 {
 	std::cout << "compiling project!\n";
 
-
 	auto begin = f_str.begin();
 	try {
 
