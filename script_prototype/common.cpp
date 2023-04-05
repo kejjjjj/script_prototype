@@ -267,7 +267,7 @@ Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
 
     const int len = closing - opening - count_opening;
     //note: cuts out the parantheses
-    std::string_view result_string = expr.substr(opening + 1, len);
+    std::string result_string = std::string(expr).substr(opening + 1, len);
     if (count_opening && count_closing && result_string.empty())
         result_string = ("empty");
 

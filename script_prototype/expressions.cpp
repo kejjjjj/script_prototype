@@ -9,9 +9,17 @@ std::string expr::EvaluateEntireExpression(const std::string& str)
 
 	//parentheses exists
 	if (!par.result_string.empty()) {
+		std::string copy = str;
 
+		auto result = EvaluateExpression(par.result_string);
+
+		copy.erase((size_t)par.opening, (size_t)par.strlength + 2ull);
+		copy.insert((size_t)par.opening, ' ' + result + ' '); //spacebar fixes cases like (500+200)0 (without the space this would turn into 7000)
+		
+
+		result = EvaluateEntireExpression(copy);
+		return result;
 	}
-
 	auto result = expr::EvaluateExpression(str);
 	return result;
 }
@@ -21,9 +29,10 @@ std::string expr::EvaluateExpression(const std::string& str)
 	rules.next_unary = true;
 	rules.next_operator = false;
 
-	//if (ValidNumber(str)) {
-	//	return std::string(str);
-	//}
+	if (ValidNumber(str)) {
+		return std::string(str);
+	}
+	
 	std::cout << "EvaluateExpression(" << str << ")\n";
 	std::string s_str = std::string(str);
 	auto it = s_str.begin(); auto end = s_str.end();
@@ -32,6 +41,7 @@ std::string expr::EvaluateExpression(const std::string& str)
 	auto tbegin = tokens.begin(); auto tend = tokens.end();
 	EvaluatePostfix(tbegin, tend); tbegin = tokens.begin();
 	EvaluatePrefix(tbegin, tend);
+
 
 	std::cout << "made this token: " << '\n';
 
@@ -52,8 +62,9 @@ std::string expr::EvaluateExpression(const std::string& str)
 
 		std::cout << ")\n";
 	}
-	EvaluateExpressionTokens(tokens);
-	return "";
+	
+	return EvaluateExpressionTokens(tokens);
+
 }
 void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens)
 {
@@ -111,6 +122,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			//kill_loop = true;
 			break;
 		}
+		constexpr int a = -(-(-(500 / -~3) + - - -~~200))/3 * -(-(500) + -(-(-200)));
 
 	}
 	rules.next_operator = !rules.next_operator;
@@ -199,6 +211,9 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 }
 std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 {
+	if (tokens.size() == 1)
+		return tokens.front().content;
+
 	std::string result;
 	std::list<expression_token>::iterator itr1, itr2;
 	const auto& op_end = --tokens.end();

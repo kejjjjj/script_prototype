@@ -94,7 +94,7 @@ struct Parenthesis_s
 	int32_t count_closing;
 	int32_t opening; //string index where the ( is
 	int32_t strlength; //number of characters after opening until )
-	std::string_view result_string;
+	std::string result_string;
 };
 
 uint32_t HashString(const char* s);
