@@ -667,7 +667,6 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
         else if (ops == "&&")
             return (!ac.empty() && !bc.empty()) == true ? "1" : "0";
 
-
         throw std::exception("Illegal operator used on a string expression");
         return "";
 
@@ -708,9 +707,7 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
         case '/':
 
             if (vb == 0) {
-                RuntimeError("Division by zero");
-                return "0";
-
+                throw std::exception("Division by zero");
             }
 
             return to_string(
@@ -724,24 +721,21 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
                 (a_int == true ? (int64_t)va : va) < (b_int == true ? (int64_t)vb : vb), a_int);
         case '&':
             if (!a_int || !b_int) {
-                RuntimeError("'", op, "' operator used with non-integral operands");
-                return "";
+                throw std::exception("'&' operator used with non - integral operands");
             }
 
             return to_string(
                 (int64_t)va & (int64_t)vb, a_int);
         case '|':
             if (!a_int || !b_int) {
-                RuntimeError("'", op, "' operator used with non-integral operands");
-                return "";
+                throw std::exception("'|' operator used with non-integral operands");
             }
 
             return to_string(
                 (int64_t)va | (int64_t)vb, a_int);
         case '^':
             if (!a_int || !b_int) {
-                RuntimeError("'", op, "' operator used with non-integral operands");
-                return "";
+                throw std::exception("'^' operator used with non - integral operands");
             }
 
             return to_string(
@@ -749,12 +743,10 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 
         case '%':
             if (!a_int || !b_int) {
-                RuntimeError("'", op, "' operator used with non-integral operands");
-                return "";
+                throw std::exception("% operator used with non-integral operands");
             }
             else if (vb == 0) {
-                RuntimeError("Division by zero");
-                return "";
+                throw std::exception("Division by zero");
             }
             return to_string(
                 (int64_t)va % (int64_t)vb, a_int);
@@ -782,13 +774,11 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
     else if (ops == "<<") {
 
         if (!a_int || !b_int) {
-            RuntimeError("'", ops, "' operator used with non-integral operands");
-            return "";
+            throw std::exception("'<<' operator used with non - integral operands");
         }
 
         else if (vb < 0) {
-            RuntimeError("shift count is negative");
-            return "";
+            throw std::exception("shift count is negative");
         }
 
         return  to_string((int64_t)va << (int64_t)vb, a_int);
@@ -796,20 +786,18 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
     else if (ops == ">>") {
 
         if (!a_int || !b_int) {
-            RuntimeError("'", ops, "' operator used with non-integral operands");
-            return "";
+            throw std::exception("'>>' operator used with non-integral operands");
         }
 
         else if (vb < 0) {
-            RuntimeError("shift count is negative");
-            return "";
+            throw std::exception("shift count is negative");
         }
 
         return  to_string((int64_t)va >> (int64_t)vb, a_int);
     }
 
 
-    RuntimeError("Unknown operator: ", ops);
+    throw std::exception("unknown operator");
 
     return "";
 

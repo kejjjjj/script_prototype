@@ -52,6 +52,7 @@ std::string expr::EvaluateExpression(const std::string& str)
 
 		std::cout << ")\n";
 	}
+	EvaluateExpressionTokens(tokens);
 	return "";
 }
 void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens)
@@ -123,10 +124,18 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 }
 void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end)
 {
-	if (it == end)
+	if (it == end) {
+		if ((--it)->op) {
+			throw std::exception("expected an expression");
+		}
+		++it;
 		return;
+	}
 
 	auto& token = *it;
+
+	if (token.content.empty())
+		throw std::exception("expected an operand");
 
 	if (token.postfix.empty())
 		return EvaluatePostfix(++it, end);
@@ -152,6 +161,8 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 		return;
 
 	auto& token = *it;
+	if (token.content.empty())
+		throw std::exception("expected an operand");
 
 	if (token.prefix.empty()) {
 		return EvaluatePrefix(++it, end);
@@ -169,7 +180,7 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 			token.content = Eval(token.content, "-1", "*");
 			break;
 		case '+':
-			token.content = Eval(token.content, "-1", "*");
+			token.content = Eval(token.content, "1", "*");
 			break;
 		case '~':
 			token.content = Eval(token.content, "0", "~");
@@ -185,4 +196,48 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 
 	return EvaluatePrefix(it, end);
 
+}
+std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
+{
+	std::string result;
+	std::list<expression_token>::iterator itr1, itr2;
+	const auto& op_end = --tokens.end();
+	OperatorPriority op, next_op;
+
+	while (tokens.size() > 2) {
+
+		itr1 = ++tokens.begin(); 
+		itr2 = itr1;
+		std::advance(itr2, 2);
+
+		if (!itr1->op)
+			throw std::exception("this is not supposed to happen at all");
+
+		if (itr2 != tokens.end()) {
+			do {
+				op = GetOperandPriority(itr1->content);
+				next_op = GetOperandPriority(itr2->content);
+
+				if (next_op <= op || itr2 == op_end)
+					break;
+
+				std::advance(itr1, 2);
+				std::advance(itr2, 2);
+
+			} while (next_op > op);
+		}
+		itr2 = itr1;
+
+		const auto& Operator = itr1->content;
+		const auto& lval = (--itr1)->content;
+		const auto& rval = (++itr2)->content;
+
+		const std::string result = Eval(lval, rval, Operator);
+		std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
+
+		tokens.erase(itr1, itr2);
+		itr2->content = result;
+	}
+	std::cout << "success!\n";
+	return itr2->content;
 }

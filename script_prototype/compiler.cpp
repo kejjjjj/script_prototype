@@ -5,6 +5,7 @@ Script::Script(const std::string& _path)
 {
 	std::string path = _path;
 	path = fs::GetRootDirectory() + "\\" + path;
+	std::cout << "path: " << path << '\n';
 	if (!fs::F_OpenFile(f, path, fs::fileopen::FILE_IN)) {
 		return;
 	}
