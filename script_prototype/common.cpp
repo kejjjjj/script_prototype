@@ -525,8 +525,8 @@ bool ValidNumber(const std::string_view& expr)
 
     if (dot_count) {
 
-        if (dot_idx == expr.size() - 1) //last character cannot be a dot
-            return false;
+        if (dot_idx == expr.back()) //last character can be a dot
+            return true;
 
         if (!std::isdigit(expr[dot_idx + 1])) //next character is not a number
             return false;
@@ -824,7 +824,6 @@ bool SatisfiesOperator(const std::string_view& op)
 }
 bool IsAnOperator2(const std::string_view& op)
 {
-    
     return IsAnOperator(op) || (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=" || op == "++" ||op == "--");
 }
 bool EndOfOperator(const std::string_view& op)

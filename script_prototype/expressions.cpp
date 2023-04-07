@@ -39,9 +39,8 @@ std::string expr::EvaluateExpression(const std::string& str)
 	std::list<expression_token> tokens;
 	TokenizeExpression(it, end, tokens);
 	auto tbegin = tokens.begin(); auto tend = tokens.end();
-	EvaluatePostfix(tbegin, tend); tbegin = tokens.begin();
+	EvaluatePostfix(tbegin, tend, tokens); tbegin = tokens.begin();
 	EvaluatePrefix(tbegin, tend);
-
 
 	std::cout << "made this token: " << '\n';
 
@@ -73,11 +72,12 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 	bool kill_loop = false;
 	rules.next_unary = true;
 	rules.next_postfix = false;
-	
+	bool break_on_whitespace = false;
 	while (!kill_loop && it != end) {
 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
 		std::cout << "token: " << token.value << '\n';
+
 		switch (token.t_type) {
 		case token_t::tokentype::STRING:
 		case token_t::tokentype::DIGIT:
@@ -93,10 +93,13 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			rules.next_unary = false;
 			rules.next_postfix = true;
 			expr_token.content = token.value;
+			break_on_whitespace = true;
 			break;
 		case token_t::tokentype::OPERATOR:
 
 			if (rules.next_operator) {
+
+
 				expr_token.op = true;
 				if(!SatisfiesOperator(token.value))
 					throw std::exception("expected an expression");
@@ -110,7 +113,14 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 			}
 			else if (IsPostfixOperator(token.value) && rules.next_postfix) {
+
 				expr_token.postfix.push_back(token.value);
+			}else if (token.value.front() == '.') {
+
+				expr_token.postfix.push_back(token.value);
+				kill_loop = true;
+				rules.next_operator = !rules.next_operator;
+				break;
 			}
 			else {
 				it -= token.value.length();
@@ -118,12 +128,14 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			}
 			break;
 		case token_t::tokentype::WHITESPACE:
-			//expr_token.content += ' ';
-			//kill_loop = true;
+			if (expr_token.content.empty())
+				expr_token.whitespace = true;
+			else if(break_on_whitespace) {
+				--it;
+				kill_loop = true;
+			}
 			break;
 		}
-		constexpr int a = -(-(-(500 / -~3) + - - -~~200))/3 * -(-(500) + -(-(-200)));
-
 	}
 	rules.next_operator = !rules.next_operator;
 	tokens.push_back(expr_token);
@@ -134,7 +146,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 	return;
 }
-void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end)
+void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
 {
 	if (it == end) {
 		if ((--it)->op) {
@@ -150,13 +162,16 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 		throw std::exception("expected an operand");
 
 	if (token.postfix.empty())
-		return EvaluatePostfix(++it, end);
+		return EvaluatePostfix(++it, end, tokens);
 
 	if (!ValidNumber(token.content))
 		throw std::exception("EvaluatePostfix(): variables are not supported yet");
 
-	if (IsConst(token.content))
+	if (IsConst(token.content) && UnaryArithmeticOp(token.postfix.front()))
 		throw std::exception("expression must be non-const");
+
+	if(EvaluatePeriodPostFix(it, tokens))
+		return EvaluatePostfix(it, end, tokens);
 
 	//this will NOT execute until variable support
 
@@ -164,8 +179,9 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 	op.push_back(token.postfix.front().front());
 	token.content = Eval(token.content, "1", op);
 	token.postfix.pop_front();
+	syntax.ClearFlag(S_END_OF_NUMBER);
 	
-	return EvaluatePostfix(it, end);
+	return EvaluatePostfix(it, end, tokens);
 }
 void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end)
 {
@@ -209,6 +225,36 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	return EvaluatePrefix(it, end);
 
 }
+bool expr::EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens)
+{
+	if (it->postfix.front() != ".")
+		return false;
+	
+
+	if (IsInteger(it->content)) {
+		syntax.CheckRules(S_END_OF_NUMBER);
+		syntax.AddFlag(S_END_OF_NUMBER);
+
+		//check what is on the right hand side of the postfix
+		
+		std::list<expression_token>::iterator it2 = it;
+		++it2;
+		if (!it2->whitespace) {
+			if (it2->content.empty() || IsInteger(it2->content)) { //floating point literal
+				it->content += '.' + it2->content; //create a floating point value
+				it->postfix.pop_front();
+				tokens.erase(it2);
+
+				return true;
+			}
+		}
+
+	}
+
+	it->postfix.pop_front();
+	return true;
+
+}
 std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 {
 	if (tokens.size() == 1)
@@ -226,7 +272,7 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 		std::advance(itr2, 2);
 
 		if (!itr1->op)
-			throw std::exception("this is not supposed to happen at all");
+			throw std::exception("expected an expression");
 
 		if (itr2 != tokens.end()) {
 			do {

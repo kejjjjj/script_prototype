@@ -10,7 +10,7 @@ enum SYNTAX_FLAGS : size_t
 {
 	S_NONE					= 0x0ULL,
 	S_OPENING_PARENTHESIS	= 0x2ULL,
-	S_POSTFIX				= 0x4ULL,
+	S_END_OF_NUMBER			= 0x4ULL,
 	S_UNARY					= 0x8ULL,
 	S_IDENTIFIER			= 0x10ULL,
 	S_SEMICOLON				= 0x20ULL,
@@ -34,7 +34,9 @@ private:
 		std::make_pair(S_EXPRESSION, "Expected an expression"),
 		std::make_pair(S_SEMICOLON, "Expected a \";\""),
 		std::make_pair(S_IDENTIFIER, "Expected an identifier"),
-		std::make_pair(S_OPENING_PARENTHESIS, "Expected a \"(\"")
+		std::make_pair(S_OPENING_PARENTHESIS, "Expected a \"(\""),
+		std::make_pair(S_END_OF_NUMBER, "extra text after expected end of number")
+
 	};
 
 public:

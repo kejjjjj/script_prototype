@@ -26,7 +26,7 @@ struct expression_stack
 	std::string Operator;
 };
 
-#define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=' || x == '!' || x == '~')
+#define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.')
 
 #define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%')
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=')
@@ -46,13 +46,16 @@ namespace expr
 		std::list<std::string> prefix;
 		std::list<std::string> postfix;
 		bool op = false;
+		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
 	};
 
 	std::string EvaluateEntireExpression(const std::string& str);
 	std::string EvaluateExpression(const std::string& str);
 	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens);
-	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
+	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
 	void EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
+	bool EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens);
+
 	std::string EvaluateExpressionTokens(std::list<expression_token>& tokens);
 	struct s_rules
 	{
