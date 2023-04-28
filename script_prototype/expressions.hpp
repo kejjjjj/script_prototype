@@ -54,7 +54,8 @@ namespace expr
 	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens);
 	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
 	void EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
-	bool EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens);
+	bool EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens);
+	bool EvaluatePeriodPrefix(std::list<expression_token>::iterator& it);
 
 	std::string EvaluateExpressionTokens(std::list<expression_token>& tokens);
 	struct s_rules
@@ -62,6 +63,7 @@ namespace expr
 		bool next_postfix = false;
 		bool next_unary = true;
 		bool next_operator = false;
+		bool ignore_postfix = false;
 	}inline rules;
 }
 #endif

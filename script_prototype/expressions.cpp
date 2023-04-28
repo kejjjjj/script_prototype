@@ -5,7 +5,11 @@
 std::string expr::EvaluateEntireExpression(const std::string& str)
 {
 
-	const Parenthesis_s par = GetStringWithinParentheses(str);
+	Parenthesis_s par = GetStringWithinParentheses(str);
+
+	if (par.result_string == "empty") {
+		par.result_string = "";
+	}
 
 	//parentheses exists
 	if (!par.result_string.empty()) {
@@ -28,7 +32,7 @@ std::string expr::EvaluateExpression(const std::string& str)
 	rules.next_postfix = false;
 	rules.next_unary = true;
 	rules.next_operator = false;
-
+	syntax.ClearFlag(S_END_OF_NUMBER);
 	if (ValidNumber(str)) {
 		return std::string(str);
 	}
@@ -40,7 +44,12 @@ std::string expr::EvaluateExpression(const std::string& str)
 	TokenizeExpression(it, end, tokens);
 	auto tbegin = tokens.begin(); auto tend = tokens.end();
 	EvaluatePostfix(tbegin, tend, tokens); tbegin = tokens.begin();
+	syntax.ClearFlag(S_END_OF_NUMBER);
 	EvaluatePrefix(tbegin, tend);
+
+	constexpr float a = (-!2.1 / (((+4.0) - !(-7.8))) + ((-9.4)));
+
+	//constexpr float a = -!2.1 / (+4.0) + 0.94;
 
 	std::cout << "made this token: " << '\n';
 
@@ -73,6 +82,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 	rules.next_unary = true;
 	rules.next_postfix = false;
 	bool break_on_whitespace = false;
+	rules.ignore_postfix = false;
 	while (!kill_loop && it != end) {
 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
@@ -94,9 +104,17 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			rules.next_postfix = true;
 			expr_token.content = token.value;
 			break_on_whitespace = true;
+
+			if (rules.ignore_postfix) {
+				//it -= token.value.length();
+				kill_loop = true;
+				break;
+			}
+
 			break;
 		case token_t::tokentype::OPERATOR:
 
+			rules.ignore_postfix = false;
 			if (rules.next_operator) {
 
 
@@ -108,14 +126,18 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 				kill_loop = true;
 				break;
 			}
-			if (IsUnaryOperator(token.value) && (rules.next_unary)) {
+			if ((IsUnaryOperator(token.value) || token.value == ".") && (rules.next_unary)) {
 				expr_token.prefix.push_back(token.value);
+
+				if (token.value == ".") {
+					rules.ignore_postfix = true;
+				}
 
 			}
 			else if (IsPostfixOperator(token.value) && rules.next_postfix) {
 
 				expr_token.postfix.push_back(token.value);
-			}else if (token.value.front() == '.') {
+			}else if (token.value.front() == '.' && rules.next_postfix) {
 
 				expr_token.postfix.push_back(token.value);
 				kill_loop = true;
@@ -138,7 +160,8 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		}
 	}
 	rules.next_operator = !rules.next_operator;
-	tokens.push_back(expr_token);
+	if(!expr_token.content.empty())
+		tokens.push_back(expr_token);
 	if(it != end)
 		TokenizeExpression(it, end, tokens);
 
@@ -173,7 +196,7 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 	if (IsConst(token.content) && UnaryArithmeticOp(token.postfix.front()))
 		throw std::exception("expression must be non-const");
 
-	if(EvaluatePeriodPostFix(it, tokens))
+	if(EvaluatePeriodPostfix(it, tokens))
 		return EvaluatePostfix(it, end, tokens);
 
 	//this will NOT execute until variable support
@@ -192,6 +215,7 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 		return;
 
 	auto& token = *it;
+	bool integer = false;
 	if (token.content.empty())
 		throw std::exception("expected an operand");
 
@@ -205,6 +229,9 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	if (IsConst(token.content) && token.prefix.back().size() > 1)
 		throw std::exception("expression must be non-const");
 
+	if (EvaluatePeriodPrefix(it))
+		return EvaluatePrefix(it, end);
+
 	switch (token.prefix.back().front())
 	{
 		case '-':
@@ -214,10 +241,16 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 			token.content = Eval(token.content, "1", "*");
 			break;
 		case '~':
+			
 			token.content = Eval(token.content, "0", "~");
 			break;
 		case '!':
+			integer = (IsInteger(token.content));
 			token.content = Eval(token.content, "0", "==");
+
+			if (!integer)
+				token.content += ".0";
+
 			break;
 		default:
 			break;
@@ -228,14 +261,36 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	return EvaluatePrefix(it, end);
 
 }
-bool expr::EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens)
+bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
+{
+	if (it->prefix.back() != ".") {
+		return false;
+	}
+
+	if (IsInteger(it->content)) {
+		//if (syntax.FlagActive(S_END_OF_NUMBER))
+		//	syntax.CheckRules(S_END_OF_NUMBER);
+		//syntax.AddFlag(S_END_OF_NUMBER);
+
+		it->content = "0." + it->content;
+		it->prefix.pop_back();
+
+		return true;
+	}
+	throw std::exception("expected an integral type");
+
+	return false;
+
+}
+bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens)
 {
 	if (it->postfix.front() != ".") {
 		return false;
 	}
 	
 	if (IsInteger(it->content)) {
-		syntax.CheckRules(S_END_OF_NUMBER);
+		if(syntax.FlagActive(S_END_OF_NUMBER))
+			syntax.CheckRules(S_END_OF_NUMBER);
 		syntax.AddFlag(S_END_OF_NUMBER);
 
 		//check what is on the right hand side of the postfix
@@ -256,7 +311,7 @@ bool expr::EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std:
 			}
 		}
 	}
-
+	
 	it->postfix.pop_front();
 	return true;
 

@@ -677,11 +677,17 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
     if (at == VarType::VT_STRING && bt == at) //both are strings
         return EvalStrings();
 
-    float va, vb;
+    //float va_d, vb_d;
+    double va, vb;
 
+    const auto result_a = std::from_chars(a.data(), a.data() + a.size(), va, std::chars_format::fixed);
+    const auto result_b = std::from_chars(b.data(), b.data() + b.size(), vb, std::chars_format::fixed);
 
-    const auto resa = std::from_chars(a.data(), a.data() + a.size(), va);
-    const auto resb = std::from_chars(b.data(), b.data() + b.size(), vb);
+    //va_d = std::stof(a);
+    //vb_d = std::stof(b);
+
+    //va = va_d;
+    //vb = vb_d;
 
     const bool a_int = IsInteger(a);
     const bool b_int = IsInteger(b);
