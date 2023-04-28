@@ -78,11 +78,20 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 {
 	expression_token expr_token;
 
+
 	bool kill_loop = false;
 	rules.next_unary = true;
 	rules.next_postfix = false;
 	bool break_on_whitespace = false;
 	rules.ignore_postfix = false;
+	rules.operator_allowed = true;
+	if (!tokens.empty()) {
+		if (tokens.back().postfix.front() == ".") { //for cases like 2. + 1;
+			rules.next_unary = false;
+			//rules.next_operator = true;
+		}
+	}
+
 	while (!kill_loop && it != end) {
 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
@@ -91,6 +100,9 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		switch (token.t_type) {
 		case token_t::tokentype::STRING:
 		case token_t::tokentype::DIGIT:
+
+			rules.operator_allowed = true;
+
 
 			if (rules.next_operator) {
 				throw std::exception("expected an expression");
@@ -114,6 +126,10 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			break;
 		case token_t::tokentype::OPERATOR:
 
+			if (!rules.operator_allowed) {
+				throw std::exception("expected an integral type instead of operator");
+			}
+
 			rules.ignore_postfix = false;
 			if (rules.next_operator) {
 
@@ -131,6 +147,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 				if (token.value == ".") {
 					rules.ignore_postfix = true;
+					rules.operator_allowed = false;
 				}
 
 			}
@@ -141,7 +158,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 				expr_token.postfix.push_back(token.value);
 				kill_loop = true;
-				rules.next_operator = !rules.next_operator;
+				rules.next_operator = true;
 				break;
 			}
 			else {
@@ -160,8 +177,10 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		}
 	}
 	rules.next_operator = !rules.next_operator;
-	if(!expr_token.content.empty())
+	if (!expr_token.content.empty()) {
+		expr_token.whitespace = false;
 		tokens.push_back(expr_token);
+	}
 	if(it != end)
 		TokenizeExpression(it, end, tokens);
 
@@ -196,7 +215,7 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 	if (IsConst(token.content) && UnaryArithmeticOp(token.postfix.front()))
 		throw std::exception("expression must be non-const");
 
-	if(EvaluatePeriodPostfix(it, tokens))
+	if(EvaluatePeriodPostfix(it, end, tokens))
 		return EvaluatePostfix(it, end, tokens);
 
 	//this will NOT execute until variable support
@@ -216,6 +235,10 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 
 	auto& token = *it;
 	bool integer = false;
+
+	if (token.op)
+		syntax.ClearFlag(S_END_OF_NUMBER);
+
 	if (token.content.empty())
 		throw std::exception("expected an operand");
 
@@ -259,18 +282,17 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	token.prefix.pop_back();
 
 	return EvaluatePrefix(it, end);
-
 }
 bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 {
 	if (it->prefix.back() != ".") {
 		return false;
 	}
-
+	constexpr float a = 2. - -(-.2 / +1.51);
 	if (IsInteger(it->content)) {
-		//if (syntax.FlagActive(S_END_OF_NUMBER))
-		//	syntax.CheckRules(S_END_OF_NUMBER);
-		//syntax.AddFlag(S_END_OF_NUMBER);
+		if (syntax.FlagActive(S_END_OF_NUMBER))
+			syntax.CheckRules(S_END_OF_NUMBER);
+		syntax.AddFlag(S_END_OF_NUMBER);
 
 		it->content = "0." + it->content;
 		it->prefix.pop_back();
@@ -282,7 +304,7 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 	return false;
 
 }
-bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens)
+bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
 {
 	if (it->postfix.front() != ".") {
 		return false;
@@ -297,13 +319,22 @@ bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std:
 		
 		std::list<expression_token>::iterator it2 = it;
 		++it2;
+
+		if (it2 == end || it2->op) {
+
+			it->content += ".0"; //create a floating point value
+			it->postfix.pop_front();
+			return true;
+			//tokens.erase(it2);
+		}
+
 		if (!it2->whitespace) {
 			if (it2->content.empty() || IsInteger(it2->content)) { //floating point literal
 
 				if(!it2->postfix.empty() || !it2->prefix.empty())
 					syntax.CheckRules(S_END_OF_NUMBER); //force error
 
-				it->content += '.' + it2->content; //create a floating point value
+				it->content += "." + (it2->content.empty() ? "0" : it2->content); //create a floating point value
 				it->postfix.pop_front();
 				tokens.erase(it2);
 
