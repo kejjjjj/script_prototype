@@ -158,6 +158,9 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 
 	auto& token = *it;
 
+	if (token.op)
+		syntax.ClearFlag(S_END_OF_NUMBER);
+
 	if (token.content.empty())
 		throw std::exception("expected an operand");
 
@@ -227,10 +230,10 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 }
 bool expr::EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std::list<expression_token>& tokens)
 {
-	if (it->postfix.front() != ".")
+	if (it->postfix.front() != ".") {
 		return false;
+	}
 	
-
 	if (IsInteger(it->content)) {
 		syntax.CheckRules(S_END_OF_NUMBER);
 		syntax.AddFlag(S_END_OF_NUMBER);
@@ -241,6 +244,10 @@ bool expr::EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std:
 		++it2;
 		if (!it2->whitespace) {
 			if (it2->content.empty() || IsInteger(it2->content)) { //floating point literal
+
+				if(!it2->postfix.empty() || !it2->prefix.empty())
+					syntax.CheckRules(S_END_OF_NUMBER); //force error
+
 				it->content += '.' + it2->content; //create a floating point value
 				it->postfix.pop_front();
 				tokens.erase(it2);
@@ -248,7 +255,6 @@ bool expr::EvaluatePeriodPostFix(std::list<expression_token>::iterator& it, std:
 				return true;
 			}
 		}
-
 	}
 
 	it->postfix.pop_front();

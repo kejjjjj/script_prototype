@@ -688,6 +688,8 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
 
     if (ops == "~" && a_int) {
         return to_string(~(int64_t)va, a_int);
+    }else if (ops == "~" && !a_int) {
+        throw std::exception("expected an integral type");
     }
 
     if (ops.size() < 2) {
@@ -797,7 +799,7 @@ std::string Eval(const std::string& a, const std::string& b, const std::string_v
     }
 
 
-    throw std::exception("unknown operator");
+    throw std::exception(std::string(std::string("unknown operator \"") + std::string(ops) + "\"").c_str());
 
     return "";
 
