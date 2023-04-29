@@ -38,8 +38,17 @@ struct expression_stack
 #define IsValidSyntaxForName(x) (std::isalnum(x) && x != '_')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
+struct rvalue
+{
+	std::string ref;
+};
+struct lvalue
+{
+	Variable* ref;
+};
 namespace expr
 {
+
 	struct expression_token
 	{
 		std::string content;
@@ -47,11 +56,23 @@ namespace expr
 		std::list<std::string> postfix;
 		bool op = false;
 		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
+
+		std::unique_ptr<rvalue> rval;
+		std::unique_ptr<lvalue> lval;
+
+		bool is_rvalue() const {
+			return rval.get() != nullptr;
+		}
+		bool is_lvalue() const {
+			return lval.get() != nullptr;
+		}
+
 	};
 
 	std::string EvaluateEntireExpression(const std::string& str);
 	std::string EvaluateExpression(const std::string& str);
 	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens);
+	void SetTokenValueCategory(expression_token& token);
 	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
 	void EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
 	bool EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);

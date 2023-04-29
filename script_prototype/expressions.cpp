@@ -47,10 +47,6 @@ std::string expr::EvaluateExpression(const std::string& str)
 	syntax.ClearFlag(S_END_OF_NUMBER);
 	EvaluatePrefix(tbegin, tend);
 
-	constexpr float a = (-!2.1 / (((+4.0) - !(-7.8))) + ((-9.4)));
-
-	//constexpr float a = -!2.1 / (+4.0) + 0.94;
-
 	std::cout << "made this token: " << '\n';
 
 	for (auto& i : tokens) {
@@ -188,6 +184,22 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 	return;
 }
+void expr::SetTokenValueCategory(expression_token& token)
+{
+	if (ValidNumber(token.content)) {
+		token.rval = std::make_unique<rvalue>(new rvalue);
+		token.rval->ref = token.content;
+		return;
+	}
+	auto v = FindVariableFromStack(token.content);
+	if (!v) {
+		throw std::exception(std::format("identifier \"{}\" is undefined", token.content).c_str());
+	}
+
+	token.lval = std::make_unique<lvalue>(new lvalue);
+	token.lval->ref = v;
+
+}
 void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
 {
 	if (it == end) {
@@ -288,7 +300,7 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 	if (it->prefix.back() != ".") {
 		return false;
 	}
-	constexpr float a = 2. - -(-.2 / +1.51);
+	constexpr float a = 2. - -(-.2 / +1.51) * 3. - .2;
 	if (IsInteger(it->content)) {
 		if (syntax.FlagActive(S_END_OF_NUMBER))
 			syntax.CheckRules(S_END_OF_NUMBER);
@@ -299,6 +311,7 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 
 		return true;
 	}
+
 	throw std::exception("expected an integral type");
 
 	return false;
@@ -373,7 +386,7 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 
 				if (next_op <= op || itr2 == op_end)
 					break;
-
+				
 				std::advance(itr1, 2);
 				std::advance(itr2, 2);
 

@@ -7,7 +7,7 @@
 
 inline std::string f_str;
 inline Syntax syntax;
-class Script : protected Runtime
+class Script
 {
 public:
 	Script(const std::string& path);

@@ -6,6 +6,13 @@
 
 #include "pch.h"
 
+inline struct srules_s
+{
+	bool typename_allowed = true;
+	bool expecting_identifier = false;
+
+}srules;
+
 enum SYNTAX_FLAGS : size_t
 {
 	S_NONE					= 0x0ULL,
@@ -93,6 +100,7 @@ struct token_t
 	{
 		DEFAULT,
 		STATEMENT,
+		DECLARATION,
 		TYPE_SPECIFIER,
 		TYPE_QUALIFIER
 	};
@@ -112,12 +120,16 @@ struct token_t
 	char eof_character = '\0';
 	std::string value; //does not include whitespaces
 	std::unique_ptr<std::function<bool(token_t*)>> eval_fc = 0;
-	keywordtype GetKeywordtype() {
+	keywordtype GetKeywordtype() const {
 		if (t_type != tokentype::STRING)
 			return keywordtype::DEFAULT;
 		
 		if (Compile_EvaluateStatement2(this->value) != StatementType::NO_STATEMENT)
 			return keywordtype::STATEMENT;
+
+		for (const auto& i : VarTypes)
+			if (this->value == i)
+				return keywordtype::DECLARATION;
 		
 		return keywordtype::DEFAULT;
 	}

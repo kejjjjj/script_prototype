@@ -148,7 +148,9 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 			code.type = code_type::code_type_e::STATEMENT;
 			code.code = token.value;
 			return code;
+		case token_t::keywordtype::DECLARATION:
 
+			return code;
 		default:
 			break;
 		}

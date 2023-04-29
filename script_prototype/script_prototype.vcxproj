@@ -153,9 +153,7 @@
     <ClCompile Include="common.cpp" />
     <ClCompile Include="compiler.cpp" />
     <ClCompile Include="compiler_eval_code.cpp" />
-    <ClCompile Include="compiler_expressions.cpp" />
     <ClCompile Include="compiler_variables.cpp" />
-    <ClCompile Include="compiler_whenstatement.cpp" />
     <ClCompile Include="eval_statement.cpp" />
     <ClCompile Include="expressions.cpp" />
     <ClCompile Include="filetools.cpp" />
@@ -174,9 +172,7 @@
     <ClInclude Include="common.hpp" />
     <ClInclude Include="compiler.hpp" />
     <ClInclude Include="compiler_eval_code.hpp" />
-    <ClInclude Include="compiler_expressions.hpp" />
     <ClInclude Include="compiler_variables.hpp" />
-    <ClInclude Include="compiler_whenstatement.hpp" />
     <ClInclude Include="eval_statement.hpp" />
     <ClInclude Include="expressions.hpp" />
     <ClInclude Include="filetools.hpp" />

@@ -48,16 +48,10 @@
     <ClCompile Include="compiler.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
-    <ClCompile Include="compiler_expressions.cpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClCompile>
     <ClCompile Include="runtime_expressions.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
     <ClCompile Include="when_statement.cpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClCompile>
-    <ClCompile Include="compiler_whenstatement.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
     <ClCompile Include="eval_statement.cpp">
@@ -95,16 +89,10 @@
     <ClInclude Include="compiler.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
-    <ClInclude Include="compiler_expressions.hpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClInclude>
     <ClInclude Include="runtime_expressions.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
     <ClInclude Include="when_statement.hpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler_whenstatement.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
     <ClInclude Include="eval_statement.hpp">
