@@ -78,10 +78,6 @@ void ParseStatement(const StatementType stype, const std::string_view& full_stat
 {
 	switch (stype) {
 
-	case StatementType::WHEN_STATEMENT:
-		cws::ParseWhenStatement(full_statement);
-
-		break;
 	default:
 		CompilerError("Unknown statement");
 		break;

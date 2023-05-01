@@ -154,18 +154,17 @@
     <ClCompile Include="compiler.cpp" />
     <ClCompile Include="compiler_eval_code.cpp" />
     <ClCompile Include="compiler_variables.cpp" />
+    <ClCompile Include="declarations.cpp" />
     <ClCompile Include="eval_statement.cpp" />
     <ClCompile Include="expressions.cpp" />
     <ClCompile Include="filetools.cpp" />
+    <ClCompile Include="hashing.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="runtime.cpp" />
-    <ClCompile Include="runtime_expressions.cpp" />
     <ClCompile Include="script_prototype.cpp" />
     <ClCompile Include="variables.cpp" />
-    <ClCompile Include="when_statement.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="allocations.hpp" />
@@ -173,14 +172,13 @@
     <ClInclude Include="compiler.hpp" />
     <ClInclude Include="compiler_eval_code.hpp" />
     <ClInclude Include="compiler_variables.hpp" />
+    <ClInclude Include="declarations.hpp" />
     <ClInclude Include="eval_statement.hpp" />
     <ClInclude Include="expressions.hpp" />
     <ClInclude Include="filetools.hpp" />
+    <ClInclude Include="hashing.hpp" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="runtime.hpp" />
-    <ClInclude Include="runtime_expressions.hpp" />
     <ClInclude Include="variables.hpp" />
-    <ClInclude Include="when_statement.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

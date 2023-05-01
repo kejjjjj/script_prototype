@@ -149,7 +149,7 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 			code.code = token.value;
 			return code;
 		case token_t::keywordtype::DECLARATION:
-
+			decl::EvaluateDeclaration(token.value, it);
 			return code;
 		default:
 			break;

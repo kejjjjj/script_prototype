@@ -32,6 +32,8 @@ std::string expr::EvaluateExpression(const std::string& str)
 	rules.next_postfix = false;
 	rules.next_unary = true;
 	rules.next_operator = false;
+	srules.expecting_identifier = false;
+
 	syntax.ClearFlag(S_END_OF_NUMBER);
 	if (ValidNumber(str)) {
 		return std::string(str);
@@ -42,6 +44,7 @@ std::string expr::EvaluateExpression(const std::string& str)
 	auto it = s_str.begin(); auto end = s_str.end();
 	std::list<expression_token> tokens;
 	TokenizeExpression(it, end, tokens);
+	std::for_each(tokens.begin(), tokens.end(), SetTokenValueCategory);
 	auto tbegin = tokens.begin(); auto tend = tokens.end();
 	EvaluatePostfix(tbegin, tend, tokens); tbegin = tokens.begin();
 	syntax.ClearFlag(S_END_OF_NUMBER);
@@ -92,13 +95,20 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
 		std::cout << "token: " << token.value << '\n';
-
+		
 		switch (token.t_type) {
 		case token_t::tokentype::STRING:
 		case token_t::tokentype::DIGIT:
 
+			if(expr_token.tokentype == token_t::tokentype::INVALID)
+				expr_token.tokentype = token.t_type;
+
 			rules.operator_allowed = true;
 
+			//if (srules.expecting_identifier && token.t_type == token_t::tokentype::DIGIT) {
+			//	throw std::exception("expected an identifier");
+
+			//}
 
 			if (rules.next_operator) {
 				throw std::exception("expected an expression");
@@ -112,15 +122,20 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			rules.next_postfix = true;
 			expr_token.content = token.value;
 			break_on_whitespace = true;
-
 			if (rules.ignore_postfix) {
-				//it -= token.value.length();
 				kill_loop = true;
 				break;
 			}
 
 			break;
 		case token_t::tokentype::OPERATOR:
+
+			//if (srules.expecting_identifier) {
+			//	throw std::exception("expected an identifier");
+
+			//}
+			if (expr_token.tokentype == token_t::tokentype::INVALID)
+				expr_token.tokentype = token.t_type;
 
 			if (!rules.operator_allowed) {
 				throw std::exception("expected an integral type instead of operator");
@@ -161,6 +176,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 				it -= token.value.length();
 				kill_loop = true;
 			}
+
 			break;
 		case token_t::tokentype::WHITESPACE:
 			if (expr_token.content.empty())
@@ -186,18 +202,22 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 }
 void expr::SetTokenValueCategory(expression_token& token)
 {
-	if (ValidNumber(token.content)) {
-		token.rval = std::make_unique<rvalue>(new rvalue);
+	if (token.op)
+		return;
+
+	if (token.tokentype == token_t::tokentype::DIGIT) {
+		token.rval = std::shared_ptr<rvalue>(new rvalue);
 		token.rval->ref = token.content;
 		return;
 	}
-	auto v = FindVariableFromStack(token.content);
-	if (!v) {
+
+	const auto v = stack_variables.find(token.content);
+	if (v == stack_variables.end()) {
 		throw std::exception(std::format("identifier \"{}\" is undefined", token.content).c_str());
 	}
+	token.lval = std::unique_ptr<lvalue>(new lvalue);
+	token.lval->ref = &v->second;
 
-	token.lval = std::make_unique<lvalue>(new lvalue);
-	token.lval->ref = v;
 
 }
 void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
@@ -224,8 +244,8 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 	if (!ValidNumber(token.content))
 		throw std::exception("EvaluatePostfix(): variables are not supported yet");
 
-	if (IsConst(token.content) && UnaryArithmeticOp(token.postfix.front()))
-		throw std::exception("expression must be non-const");
+	if (token.is_rvalue() && UnaryArithmeticOp(token.postfix.front()))
+		throw std::exception("expression must be an lvalue");
 
 	if(EvaluatePeriodPostfix(it, end, tokens))
 		return EvaluatePostfix(it, end, tokens);
@@ -261,8 +281,8 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	if (!ValidNumber(token.content))
 		throw std::exception("EvaluatePrefix(): variables are not supported yet");
 
-	if (IsConst(token.content) && token.prefix.back().size() > 1)
-		throw std::exception("expression must be non-const");
+	if (token.is_rvalue() && UnaryArithmeticOp(token.prefix.back()))
+		throw std::exception("expression must be an lvalue");
 
 	if (EvaluatePeriodPrefix(it))
 		return EvaluatePrefix(it, end);

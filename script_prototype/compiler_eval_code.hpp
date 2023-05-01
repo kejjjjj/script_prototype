@@ -10,6 +10,7 @@ inline struct srules_s
 {
 	bool typename_allowed = true;
 	bool expecting_identifier = false;
+	bool expected_end_of_number = false;
 
 }srules;
 
@@ -92,7 +93,7 @@ struct code_type
 	//StatementType statement = StatementType::NO_STATEMENT;
 	//bool variable_declaration = false;
 	std::string code;
-	code_type_e type;
+	code_type_e type = EXPRESSION;
 };
 struct token_t
 {

@@ -40,11 +40,15 @@ struct expression_stack
 
 struct rvalue
 {
+	//rvalue() {};
+	//~rvalue() = default;
 	std::string ref;
 };
 struct lvalue
 {
-	Variable* ref;
+	//lvalue() : ref(nullptr) {};
+	//~lvalue() = default;
+	Variable* ref = 0;
 };
 namespace expr
 {
@@ -56,9 +60,9 @@ namespace expr
 		std::list<std::string> postfix;
 		bool op = false;
 		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
-
-		std::unique_ptr<rvalue> rval;
-		std::unique_ptr<lvalue> lval;
+		token_t::tokentype tokentype = token_t::tokentype::INVALID;
+		std::shared_ptr<rvalue> rval;
+		std::shared_ptr<lvalue> lval;
 
 		bool is_rvalue() const {
 			return rval.get() != nullptr;

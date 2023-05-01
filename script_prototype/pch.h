@@ -15,14 +15,17 @@
 #include <list>
 #include <ranges>
 #include <functional>
+#include <unordered_map>
 
+
+#include "hashing.hpp"
 #include "filetools.hpp"
 #include "variables.hpp"
 #include "common.hpp"
-#include "expressions.hpp"
-#include "declarations.hpp"
 #include "eval_statement.hpp"
 #include "compiler_eval_code.hpp"
+#include "expressions.hpp"
+#include "declarations.hpp"
 #include "compiler_variables.hpp"
 #include "compiler.hpp"
 #include "allocations.hpp"

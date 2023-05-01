@@ -1,6 +1,6 @@
 #include "pch.h"
 
-void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterator& it)
+void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterator& it_)
 {
 
 	if (!srules.typename_allowed) {
@@ -8,12 +8,29 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 		return;
 	}
 
+	srules.typename_allowed = false;
 	srules.expecting_identifier = true;
 
-	const auto expression = cec::Compiler_ParseExpression(';', it);
+	auto expression = cec::Compiler_ParseExpression(';', it_);
 
-	auto res = expr::EvaluateEntireExpression(expression);
+	auto it = expression.begin(); auto end = expression.end();
+	std::list<expr::expression_token> tokens;
+	TokenizeExpression(it, end, tokens);
+	auto t_it = tokens.begin();
 
+	if (tokens.front().tokentype != token_t::tokentype::STRING) {
+		throw std::exception("expected an identifier");
+	}
 
+	if (tokens.size() > 1) {
+		if((++t_it)->op && t_it->content != "=" || !t_it->op)
+		{
+			throw std::exception("expected a ';'");
+		}
+	}
+
+	DeclareVariable(type, tokens.front().content);
+
+	expr::EvaluateEntireExpression(expression); //now it can be evaluated since it's been pushed to the stack
 
 }

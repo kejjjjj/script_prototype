@@ -19,15 +19,15 @@
     <Filter Include="Source Files\scripting\code">
       <UniqueIdentifier>{3c6e522e-3fd7-4760-8ab5-f4f34cbe0f4d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\tools">
+      <UniqueIdentifier>{3f93ebd7-10a9-4a3e-b0da-f75e41efa5c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="script_prototype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="filetools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="expressions.cpp">
@@ -42,16 +42,7 @@
     <ClCompile Include="variables.cpp">
       <Filter>Source Files\scripting</Filter>
     </ClCompile>
-    <ClCompile Include="runtime.cpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClCompile>
     <ClCompile Include="compiler.cpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClCompile>
-    <ClCompile Include="runtime_expressions.cpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClCompile>
-    <ClCompile Include="when_statement.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
     <ClCompile Include="eval_statement.cpp">
@@ -63,13 +54,19 @@
     <ClCompile Include="compiler_eval_code.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
+    <ClCompile Include="declarations.cpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="filetools.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="hashing.cpp">
+      <Filter>Source Files\tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="filetools.hpp">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="expressions.hpp">
       <Filter>Source Files\scripting</Filter>
@@ -83,16 +80,7 @@
     <ClInclude Include="variables.hpp">
       <Filter>Source Files\scripting</Filter>
     </ClInclude>
-    <ClInclude Include="runtime.hpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClInclude>
     <ClInclude Include="compiler.hpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClInclude>
-    <ClInclude Include="runtime_expressions.hpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClInclude>
-    <ClInclude Include="when_statement.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
     <ClInclude Include="eval_statement.hpp">
@@ -103,6 +91,15 @@
     </ClInclude>
     <ClInclude Include="compiler_eval_code.hpp">
       <Filter>Source Files\scripting\code</Filter>
+    </ClInclude>
+    <ClInclude Include="declarations.hpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="filetools.hpp">
+      <Filter>Source Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="hashing.hpp">
+      <Filter>Source Files\tools</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
