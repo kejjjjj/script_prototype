@@ -31,7 +31,6 @@ struct VariableValue
 {
 	void* buffer;
 	unsigned int buf_size;
-	VarType datatype;
 };
 
 
@@ -42,11 +41,19 @@ public:
 	Variable() = delete;
 	~Variable() = default;
 
+	VariableValue& get_value(long index) 
+	{
+		if (index >= values.size() || index < 0) {
+			throw std::exception("attempting to access array out of bounds");
+		}
+
+		return values[index];
+	}
+	auto get_type() const { return type; }
+private:
 	std::string name;
 	VarType type = VarType::VT_INVALID;
 	std::vector<VariableValue> values;
-
-
 };
 struct ScriptBlock : Variable
 {
@@ -69,7 +76,7 @@ struct hasher
 	}
 };
 
-inline std::unordered_map<std::string_view, Variable, hasher> stack_variables;
+inline std::unordered_map<std::string_view, Variable> stack_variables;
 
 bool IsDataType(const std::string_view& str);
 size_t GetDataType(const std::string_view& str);

@@ -100,15 +100,15 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		case token_t::tokentype::STRING:
 		case token_t::tokentype::DIGIT:
 
-			if(expr_token.tokentype == token_t::tokentype::INVALID)
-				expr_token.tokentype = token.t_type;
+			if (expr_token.tokentype == VarType::VT_INVALID) {
+
+				if(token.t_type == token_t::tokentype::STRING)
+					expr_token.tokentype = VarType::VT_STRING;
+				else
+					expr_token.tokentype = VarType::VT_INT;
+			}
 
 			rules.operator_allowed = true;
-
-			//if (srules.expecting_identifier && token.t_type == token_t::tokentype::DIGIT) {
-			//	throw std::exception("expected an identifier");
-
-			//}
 
 			if (rules.next_operator) {
 				throw std::exception("expected an expression");
@@ -130,12 +130,8 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			break;
 		case token_t::tokentype::OPERATOR:
 
-			//if (srules.expecting_identifier) {
-			//	throw std::exception("expected an identifier");
-
-			//}
-			if (expr_token.tokentype == token_t::tokentype::INVALID)
-				expr_token.tokentype = token.t_type;
+			if (expr_token.tokentype == VarType::VT_INVALID)
+				expr_token.tokentype = VarType::VT_INVALID;
 
 			if (!rules.operator_allowed) {
 				throw std::exception("expected an integral type instead of operator");
@@ -202,12 +198,12 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 }
 void expr::SetTokenValueCategory(expression_token& token)
 {
+
+
 	if (token.op)
 		return;
 
-	if (token.tokentype == token_t::tokentype::DIGIT) {
-		token.rval = std::shared_ptr<rvalue>(new rvalue);
-		token.rval->ref = token.content;
+	if (token.tokentype != VarType::VT_STRING) {
 		return;
 	}
 
@@ -215,7 +211,7 @@ void expr::SetTokenValueCategory(expression_token& token)
 	if (v == stack_variables.end()) {
 		throw std::exception(std::format("identifier \"{}\" is undefined", token.content).c_str());
 	}
-	token.lval = std::unique_ptr<lvalue>(new lvalue);
+	token.lval = std::shared_ptr<lvalue>(new lvalue);
 	token.lval->ref = &v->second;
 
 
@@ -278,14 +274,16 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 		return EvaluatePrefix(++it, end);
 	}
 
-	if (!ValidNumber(token.content))
-		throw std::exception("EvaluatePrefix(): variables are not supported yet");
-
-	if (token.is_rvalue() && UnaryArithmeticOp(token.prefix.back()))
-		throw std::exception("expression must be an lvalue");
-
 	if (EvaluatePeriodPrefix(it))
 		return EvaluatePrefix(it, end);
+
+	if (UnaryArithmeticOp(token.prefix.back())) {
+		if (token.is_rvalue())
+			throw std::exception("expression must be an lvalue");
+
+		EvaluatePrefixArithmetic(token, token.prefix.back() == "++");
+
+	}
 
 	switch (token.prefix.back().front())
 	{
@@ -335,6 +333,40 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 	throw std::exception("expected an integral type");
 
 	return false;
+
+}
+void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
+{
+	if (token.is_rvalue())
+		throw std::exception("expression must be an lvalue");
+
+	const auto type = token.lval->ref->get_type();
+
+	if (type != VarType::VT_INT && type != VarType::VT_FLOAT)
+		throw std::exception("expected an int or float");
+	
+	auto& value = token.lval->ref->get_value(0);
+
+	if (type == VarType::VT_FLOAT) {
+
+		if (value.buf_size < 8) {
+			*reinterpret_cast<float*>(value.buffer) += 1;
+			token.content = std::to_string(*reinterpret_cast<float*>(value.buffer));
+
+		}
+		else {
+			*reinterpret_cast<double*>(value.buffer) += 1;
+			token.content = std::to_string(*reinterpret_cast<double*>(value.buffer));
+
+		}
+	}
+	else {
+		*reinterpret_cast<int*>(value.buffer) += 1;
+		token.content = std::to_string(*reinterpret_cast<int*>(value.buffer));
+	}
+
+	delete token.lval.get();
+	
 
 }
 bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
@@ -426,4 +458,10 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 	}
 	std::cout << "success!\n";
 	return itr2->content;
+}
+
+
+bool ExpressionCompatibleOperands(const VarType left, const VarType right)
+{
+	//implement some sort of flag system
 }

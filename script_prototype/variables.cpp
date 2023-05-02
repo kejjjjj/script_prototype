@@ -32,25 +32,6 @@ size_t GetTypeQualifier(const std::string_view& str)
 
 	return 0u;
 }
-bool VariableInStack(const std::string_view& var)
-{
-	for (auto& i : scriptStack.stack) {
-		if (!i.name.compare(var)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-Variable* FindVariableFromStack(const std::string_view& var)
-{
-	for (auto& i : scriptStack.stack) {
-		if (!i.name.compare(var)) {
-			return &i;
-		}
-	}
-	return 0;
-}
 bool IsConst(const std::string_view& v)
 {
 	if (ValidNumber(v))

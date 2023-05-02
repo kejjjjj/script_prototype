@@ -38,18 +38,20 @@ struct expression_stack
 #define IsValidSyntaxForName(x) (std::isalnum(x) && x != '_')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
-struct rvalue
-{
-	//rvalue() {};
-	//~rvalue() = default;
-	std::string ref;
-};
+//struct rvalue
+//{
+//	//rvalue() {};
+//	//~rvalue() = default;
+//	std::string ref;
+//};
 struct lvalue
 {
 	//lvalue() : ref(nullptr) {};
 	//~lvalue() = default;
 	Variable* ref = 0;
 };
+
+
 namespace expr
 {
 
@@ -60,12 +62,12 @@ namespace expr
 		std::list<std::string> postfix;
 		bool op = false;
 		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
-		token_t::tokentype tokentype = token_t::tokentype::INVALID;
-		std::shared_ptr<rvalue> rval;
+		VarType tokentype = VarType::VT_INVALID;
+		//std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
 
 		bool is_rvalue() const {
-			return rval.get() != nullptr;
+			return lval.get() == nullptr;
 		}
 		bool is_lvalue() const {
 			return lval.get() != nullptr;
@@ -81,8 +83,13 @@ namespace expr
 	void EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
 	bool EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
 	bool EvaluatePeriodPrefix(std::list<expression_token>::iterator& it);
+	void EvaluatePrefixArithmetic(expression_token& token, bool increment);
+	bool ExpressionCompatibleOperands(const VarType left, const VarType right);
 
 	std::string EvaluateExpressionTokens(std::list<expression_token>& tokens);
+
+	void Eval(expression_token& left, expression_token& right, std::function<void(expression_token&, expression_token&)>& eval_fc);
+
 	struct s_rules
 	{
 		bool next_postfix = false;
@@ -91,5 +98,18 @@ namespace expr
 		bool ignore_postfix = false;
 		bool operator_allowed = false;
 	}inline rules;
+
+	std::unordered_map < const std::string_view, std::function<void(expression_token&, expression_token&)>> eval_funcs = 
+	{  
+		{"+", [](expression_token& left, expression_token& right) -> void 
+		{
+
+
+			return;
+		}  
+		
+		}
+	};
+
 }
 #endif
