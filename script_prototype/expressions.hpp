@@ -38,12 +38,49 @@ struct expression_stack
 #define IsValidSyntaxForName(x) (std::isalnum(x) && x != '_')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
-//struct rvalue
-//{
-//	//rvalue() {};
-//	//~rvalue() = default;
-//	std::string ref;
-//};
+struct rvalue
+{
+	rvalue(const VarType type) {
+		switch (type) {
+		case VarType::VT_INT:
+			value.buffer = new int;
+			value.buf_size = sizeof(int);
+
+			break;
+		case VarType::VT_FLOAT:
+			value.buffer = new float;
+			value.buf_size = sizeof(float);
+			break;
+		case VarType::VT_STRING:
+			throw std::exception("rvalue(VarType type): VT_STRING case not supported");
+			break;
+		}
+	}
+	~rvalue()
+	{
+		delete value.buffer;
+	}
+	rvalue() = delete;
+
+private:
+	VariableValue value;
+
+public:
+	int get_int(int index) const {
+		return *reinterpret_cast<int*>(value.buffer);
+	}
+	float get_float(int index) const {
+		return *reinterpret_cast<float*>(value.buffer);
+	}
+	double get_double(int index) const {
+		return *reinterpret_cast<double*>(value.buffer);
+	}
+	template <typename T>
+	void set_value(const T v) {
+		*reinterpret_cast<T*>(value.buffer) = v;
+	}
+	
+};
 struct lvalue
 {
 	//lvalue() : ref(nullptr) {};
@@ -63,11 +100,11 @@ namespace expr
 		bool op = false;
 		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
 		VarType tokentype = VarType::VT_INVALID;
-		//std::shared_ptr<rvalue> rval;
+		std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
 
 		bool is_rvalue() const {
-			return lval.get() == nullptr;
+			return rval.get() != nullptr;
 		}
 		bool is_lvalue() const {
 			return lval.get() != nullptr;
@@ -88,7 +125,7 @@ namespace expr
 
 	std::string EvaluateExpressionTokens(std::list<expression_token>& tokens);
 
-	void Eval(expression_token& left, expression_token& right, std::function<void(expression_token&, expression_token&)>& eval_fc);
+	//void Eval(expression_token& left, expression_token& right, std::function<void(expression_token&, expression_token&)>& eval_fc);
 
 	struct s_rules
 	{
@@ -99,16 +136,19 @@ namespace expr
 		bool operator_allowed = false;
 	}inline rules;
 
-	std::unordered_map < const std::string_view, std::function<void(expression_token&, expression_token&)>> eval_funcs = 
+	inline std::unordered_map <std::string_view, std::function<void(expression_token&, expression_token&)>> eval_funcs = 
 	{  
-		{"+", [](expression_token& left, expression_token& right) -> void 
+		{"+", [](expression_token& left, expression_token& right) -> void
 		{
 
 
+
+			if (left.is_lvalue()) {
+
+			}
+
 			return;
-		}  
-		
-		}
+		}}
 	};
 
 }

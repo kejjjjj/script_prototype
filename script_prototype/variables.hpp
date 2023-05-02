@@ -13,7 +13,7 @@
 //	"unknown"
 //};
 
-inline std::vector<const char*> VarTypes = {"NO_TYPE", "int","float","string"},
+inline std::vector<const char*> VarTypes = {"NO_TYPE", "void", "int","float","string"},
 								VarQualifiers = { "NO_QUALIFIER", "const" };
 
 
@@ -21,6 +21,7 @@ inline std::vector<const char*> VarTypes = {"NO_TYPE", "int","float","string"},
 enum class VarType : char
 {
 	VT_INVALID,
+	VT_VOID,
 	VT_INT,
 	VT_FLOAT,
 	VT_STRING,
@@ -30,7 +31,7 @@ enum class VarType : char
 struct VariableValue
 {
 	void* buffer;
-	unsigned int buf_size;
+	unsigned int buf_size = 0; 
 };
 
 
@@ -41,7 +42,7 @@ public:
 	Variable() = delete;
 	~Variable() = default;
 
-	VariableValue& get_value(long index) 
+	const VariableValue& get_value(int index) const
 	{
 		if (index >= values.size() || index < 0) {
 			throw std::exception("attempting to access array out of bounds");
@@ -49,6 +50,18 @@ public:
 
 		return values[index];
 	}
+
+	int get_int(int index) const {
+		return *reinterpret_cast<int*>(get_value(index).buffer);
+
+	}
+	float get_float(int index) const {
+		return *reinterpret_cast<float*>(get_value(index).buffer);
+	}
+	double get_double(int index) const {
+		return *reinterpret_cast<double*>(get_value(index).buffer);
+	}
+
 	auto get_type() const { return type; }
 private:
 	std::string name;

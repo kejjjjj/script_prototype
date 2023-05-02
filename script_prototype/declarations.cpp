@@ -18,7 +18,7 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 	TokenizeExpression(it, end, tokens);
 	auto t_it = tokens.begin();
 
-	if (tokens.front().tokentype != token_t::tokentype::STRING) {
+	if (tokens.front().tokentype != VarType::VT_STRING) {
 		throw std::exception("expected an identifier");
 	}
 

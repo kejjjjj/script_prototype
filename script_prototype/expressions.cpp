@@ -203,7 +203,12 @@ void expr::SetTokenValueCategory(expression_token& token)
 	if (token.op)
 		return;
 
+
+
 	if (token.tokentype != VarType::VT_STRING) {
+		
+		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype));
+		token.rval->set_value<int>(std::stoi(token.content));
 		return;
 	}
 
@@ -318,13 +323,15 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 	if (it->prefix.back() != ".") {
 		return false;
 	}
-	constexpr float a = 2. - -(-.2 / +1.51) * 3. - .2;
 	if (IsInteger(it->content)) {
 		if (syntax.FlagActive(S_END_OF_NUMBER))
 			syntax.CheckRules(S_END_OF_NUMBER);
 		syntax.AddFlag(S_END_OF_NUMBER);
 
 		it->content = "0." + it->content;
+		it->tokentype = VarType::VT_FLOAT;
+		it->rval->set_value<float>(std::stof(it->content));
+
 		it->prefix.pop_back();
 
 		return true;
@@ -389,6 +396,9 @@ bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std:
 
 			it->content += ".0"; //create a floating point value
 			it->postfix.pop_front();
+			it->tokentype = VarType::VT_FLOAT;
+			it->rval->set_value<float>(std::stof(it->content));
+
 			return true;
 			//tokens.erase(it2);
 		}
@@ -401,6 +411,8 @@ bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std:
 
 				it->content += "." + (it2->content.empty() ? "0" : it2->content); //create a floating point value
 				it->postfix.pop_front();
+				it->tokentype = VarType::VT_FLOAT;
+				it->rval->set_value<float>(std::stof(it->content));
 				tokens.erase(it2);
 
 				return true;
@@ -450,6 +462,12 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 		const auto& lval = (--itr1)->content;
 		const auto& rval = (++itr2)->content;
 
+		std::cout << itr1->content << " is " << VarTypes[(int)itr1->tokentype] << '\n';
+
+		if (!ExpressionCompatibleOperands(itr1->tokentype, itr2->tokentype)) {
+			throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(itr1->tokentype)], VarTypes[int(itr2->tokentype)]).c_str());
+		}
+
 		const std::string result = Eval(lval, rval, Operator);
 		std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
 
@@ -461,7 +479,31 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 }
 
 
-bool ExpressionCompatibleOperands(const VarType left, const VarType right)
+bool expr::ExpressionCompatibleOperands(const VarType left, const VarType right)
 {
-	//implement some sort of flag system
+	if (left < VarType::VT_VOID || right < VarType::VT_VOID)
+		return false;
+
+	int leftFlag = 0;
+	int rightFlag = 0;
+
+	leftFlag |= int(left);
+	rightFlag |= int(right);
+
+	const int INT_FLAG = int(VarType::VT_INT);
+	const int FLOAT_FLAG = int(VarType::VT_FLOAT);
+	const int STRING_FLAG = int(VarType::VT_STRING);
+
+	if (leftFlag & STRING_FLAG && rightFlag & STRING_FLAG) {
+		return true;
+	}
+	else if (leftFlag & FLOAT_FLAG && (rightFlag & FLOAT_FLAG || rightFlag & INT_FLAG)) {
+		return true;
+	}
+	else if (leftFlag & INT_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG)) {
+		return true;
+	}
+
+	return false;
+
 }

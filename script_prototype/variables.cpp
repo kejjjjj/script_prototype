@@ -43,7 +43,7 @@ void DeclareVariable(const std::string_view& type, const std::string_view& name)
 {
 	std::cout << "pushing \"" << name << "\" of type '" << type << "' to stack!\n";
 
-	auto itype = (VarType)GetDataType(type);
+	const auto itype = (VarType)GetDataType(type);
 
 	if ((int)itype < 1) {
 		throw std::exception("DeclareVariable(): impossible scenario!");
@@ -53,7 +53,6 @@ void DeclareVariable(const std::string_view& type, const std::string_view& name)
 		throw std::exception(std::format("the variable \"{}\" is already defined", name).c_str());
 	}
 
-	Variable var(name, itype);
-	stack_variables.insert(std::make_pair(name, var));
+	stack_variables.insert(std::make_pair(name, Variable(name, itype)));
 }
 
