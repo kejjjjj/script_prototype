@@ -66,14 +66,17 @@ private:
 	VariableValue value;
 
 public:
-	int get_int(int index) const {
+	int get_int() const {
 		return *reinterpret_cast<int*>(value.buffer);
 	}
-	float get_float(int index) const {
+	float get_float() const {
 		return *reinterpret_cast<float*>(value.buffer);
 	}
-	double get_double(int index) const {
+	double get_double() const {
 		return *reinterpret_cast<double*>(value.buffer);
+	}
+	char* get_string() const {
+		return reinterpret_cast<char*>(value.buffer);
 	}
 	template <typename T>
 	void set_value(const T v) {
@@ -110,6 +113,39 @@ namespace expr
 			return lval.get() != nullptr;
 		}
 
+
+		int get_int() const {
+			if(is_rvalue())
+				return (rval->get_int());
+			else if(is_lvalue())
+				return (lval->ref->get_int(0));
+
+			throw std::exception("not an lvalue nor rvalue");
+		}
+		float get_float() const {
+			if (is_rvalue())
+				return (rval->get_float());
+			else if (is_lvalue())
+				return (lval->ref->get_float(0));
+
+			throw std::exception("not an lvalue nor rvalue");
+		}
+		double get_double() const {
+			if (is_rvalue())
+				return (rval->get_double());
+			else if (is_lvalue())
+				return (lval->ref->get_double(0));
+
+			throw std::exception("not an lvalue nor rvalue");
+		}
+		char* get_string() const {
+			if (is_rvalue())
+				return (rval->get_string());
+			else if (is_lvalue())
+				return (lval->ref->get_string(0));
+
+			throw std::exception("not an lvalue nor rvalue");
+		}
 	};
 
 	std::string EvaluateEntireExpression(const std::string& str);
@@ -136,19 +172,43 @@ namespace expr
 		bool operator_allowed = false;
 	}inline rules;
 
-	inline std::unordered_map <std::string_view, std::function<void(expression_token&, expression_token&)>> eval_funcs = 
+	inline std::any ExpressionGetTokenValue(const expression_token& token) {
+		using type = VarType;
+
+		switch (token.tokentype) {
+		case (type::VT_INT):	return token.get_int();
+		case (type::VT_FLOAT):	return token.get_float();
+		case (type::VT_STRING):	return token.get_string();
+		default:
+			throw std::exception("unsupported type");
+
+		}
+
+		return std::any();
+	}
+
+	inline std::unordered_map <std::string_view, std::function<std::string(expression_token&, expression_token&)>> eval_funcs = 
 	{  
-		{"+", [](expression_token& left, expression_token& right) -> void
+		{"+", [](const expression_token& left, const expression_token& right) -> std::string
 		{
+			const auto vleft = ExpressionGetTokenValue(left);
+			const auto vright = ExpressionGetTokenValue(right);
 
 
+			//FIX ME - exception thrown if both operands aren't the same type due to bad any_cast
 
-			if (left.is_lvalue()) {
-
+			switch (left.tokentype) {
+				case VarType::VT_INT:
+					return std::to_string(std::any_cast<int>(vleft) + std::any_cast<int>(vright));
+				case VarType::VT_FLOAT:
+					return std::to_string(std::any_cast<float>(vleft) + std::any_cast<float>(vright));
+				case VarType::VT_STRING:
+#pragma warning( suppress : 4996)
+					return strcat(std::any_cast<char*>(vleft), std::any_cast<char*>(vright));
 			}
-
-			return;
+			return "";
 		}}
+
 	};
 
 }

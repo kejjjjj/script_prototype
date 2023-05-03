@@ -468,7 +468,13 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 			throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(itr1->tokentype)], VarTypes[int(itr2->tokentype)]).c_str());
 		}
 
-		const std::string result = Eval(lval, rval, Operator);
+		const auto function = eval_funcs.find(Operator);
+		
+		if (function == eval_funcs.end())
+			throw std::exception(std::format("unknown operator {}", Operator).c_str());
+
+		const std::string result = function->second(*itr1, *itr2);
+
 		std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
 
 		tokens.erase(itr1, itr2);

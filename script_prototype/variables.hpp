@@ -61,7 +61,9 @@ public:
 	double get_double(int index) const {
 		return *reinterpret_cast<double*>(get_value(index).buffer);
 	}
-
+	char* get_string(int index) const {
+		return reinterpret_cast<char*>(get_value(index).buffer);
+	}
 	auto get_type() const { return type; }
 private:
 	std::string name;
