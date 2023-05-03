@@ -218,7 +218,7 @@ void expr::SetTokenValueCategory(expression_token& token)
 	}
 	token.lval = std::shared_ptr<lvalue>(new lvalue);
 	token.lval->ref = &v->second;
-
+	token.tokentype = v->second.get_type();
 
 }
 void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
@@ -352,7 +352,7 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 	if (type != VarType::VT_INT && type != VarType::VT_FLOAT)
 		throw std::exception("expected an int or float");
 	
-	auto& value = token.lval->ref->get_value(0);
+	auto& value = token.lval->ref->get_value();
 
 	if (type == VarType::VT_FLOAT) {
 

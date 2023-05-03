@@ -40,35 +40,47 @@ class Variable
 public:
 	Variable(const std::string_view& _name, VarType _type);
 	Variable() = delete;
-	~Variable() = default;
+	~Variable();
 
-	const VariableValue& get_value(int index) const
+	const VariableValue& get_value() const
 	{
-		if (index >= values.size() || index < 0) {
-			throw std::exception("attempting to access array out of bounds");
-		}
-
-		return values[index];
+		return value;
 	}
 
-	int get_int(int index) const {
-		return *reinterpret_cast<int*>(get_value(index).buffer);
+	int get_int() const {
+		return *reinterpret_cast<int*>(get_value().buffer);
 
 	}
-	float get_float(int index) const {
-		return *reinterpret_cast<float*>(get_value(index).buffer);
+	float get_float() const {
+		return *reinterpret_cast<float*>(get_value().buffer);
 	}
-	double get_double(int index) const {
-		return *reinterpret_cast<double*>(get_value(index).buffer);
+	double get_double() const {
+		return *reinterpret_cast<double*>(get_value().buffer);
 	}
-	char* get_string(int index) const {
-		return reinterpret_cast<char*>(get_value(index).buffer);
+	char* get_string() const {
+		return reinterpret_cast<char*>(get_value().buffer);
 	}
+
+	void set_int(int value) {
+		*reinterpret_cast<int*>(get_value().buffer) = value;
+	}
+	void set_float(float value) {
+		*reinterpret_cast<float*>(get_value().buffer) = value;
+	}
+	void set_double(double value) {
+		*reinterpret_cast<double*>(get_value().buffer) = value;
+	}
+	void set_string(char* value) {
+#pragma warning(suppress : 4996);
+		strcpy(reinterpret_cast<char*>(get_value().buffer), value);
+	}
+
 	auto get_type() const { return type; }
-private:
 	std::string name;
+private:
+	
 	VarType type = VarType::VT_INVALID;
-	std::vector<VariableValue> values;
+	VariableValue value;
 };
 struct ScriptBlock : Variable
 {

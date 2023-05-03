@@ -1,9 +1,29 @@
 #include "pch.h"
 
 
-Variable::Variable(const std::string_view& _name, VarType _type) : name(_name), type(_type)
-{
+Variable::Variable(const std::string_view& _name, VarType _type) : name(_name), type(_type){
+	switch (type) {
+		case VarType::VT_INT:
+			value.buffer = new int;
+			value.buf_size = sizeof(int);
 
+			break;
+		case VarType::VT_FLOAT:
+			value.buffer = new float;
+			value.buf_size = sizeof(float);
+			break;
+		case VarType::VT_STRING:
+			throw std::exception("rvalue(VarType type): VT_STRING case not supported");
+			break;
+		}
+
+}
+Variable::~Variable()
+{
+	//delete value.buffer;
+	//value.buf_size = 0;
+
+	//lol try to remember to delete it :p
 }
 
 bool IsDataType(const std::string_view& str)

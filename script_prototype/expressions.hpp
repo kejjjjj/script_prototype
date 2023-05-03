@@ -118,7 +118,7 @@ namespace expr
 			if(is_rvalue())
 				return (rval->get_int());
 			else if(is_lvalue())
-				return (lval->ref->get_int(0));
+				return (lval->ref->get_int());
 
 			throw std::exception("not an lvalue nor rvalue");
 		}
@@ -126,7 +126,7 @@ namespace expr
 			if (is_rvalue())
 				return (rval->get_float());
 			else if (is_lvalue())
-				return (lval->ref->get_float(0));
+				return (lval->ref->get_float());
 
 			throw std::exception("not an lvalue nor rvalue");
 		}
@@ -134,7 +134,7 @@ namespace expr
 			if (is_rvalue())
 				return (rval->get_double());
 			else if (is_lvalue())
-				return (lval->ref->get_double(0));
+				return (lval->ref->get_double());
 
 			throw std::exception("not an lvalue nor rvalue");
 		}
@@ -142,7 +142,7 @@ namespace expr
 			if (is_rvalue())
 				return (rval->get_string());
 			else if (is_lvalue())
-				return (lval->ref->get_string(0));
+				return (lval->ref->get_string());
 
 			throw std::exception("not an lvalue nor rvalue");
 		}
@@ -194,17 +194,148 @@ namespace expr
 			const auto vleft = ExpressionGetTokenValue(left);
 			const auto vright = ExpressionGetTokenValue(right);
 
-
-			//FIX ME - exception thrown if both operands aren't the same type due to bad any_cast
-
+			float fright{};
 			switch (left.tokentype) {
 				case VarType::VT_INT:
-					return std::to_string(std::any_cast<int>(vleft) + std::any_cast<int>(vright));
+
+					if (right.tokentype == VarType::VT_FLOAT)	
+						 fright = (int)std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					return std::to_string(int(std::any_cast<int>(vleft) + fright));
 				case VarType::VT_FLOAT:
-					return std::to_string(std::any_cast<float>(vleft) + std::any_cast<float>(vright));
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					return std::to_string(std::any_cast<float>(vleft) + fright);
 				case VarType::VT_STRING:
-#pragma warning( suppress : 4996)
+					#pragma warning( suppress : 4996)
 					return strcat(std::any_cast<char*>(vleft), std::any_cast<char*>(vright));
+			}
+			return "";
+		}},		
+		{"-", [](const expression_token& left, const expression_token& right) -> std::string
+		{
+			const auto vleft = ExpressionGetTokenValue(left);
+			const auto vright = ExpressionGetTokenValue(right);
+
+			float fright{};
+			switch (left.tokentype) {
+				case VarType::VT_INT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = (int)std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					return std::to_string(int(std::any_cast<int>(vleft) - fright));
+				case VarType::VT_FLOAT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					return std::to_string(std::any_cast<float>(vleft) - fright);
+				case VarType::VT_STRING:
+					throw std::exception("invalid expression");
+			}
+			return "";
+		}},
+		{"*", [](const expression_token& left, const expression_token& right) -> std::string
+		{
+			const auto vleft = ExpressionGetTokenValue(left);
+			const auto vright = ExpressionGetTokenValue(right);
+
+			float fright{};
+			switch (left.tokentype) {
+				case VarType::VT_INT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = (int)std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					return std::to_string(int(std::any_cast<int>(vleft) * fright));
+				case VarType::VT_FLOAT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					return std::to_string(std::any_cast<float>(vleft) * fright);
+				case VarType::VT_STRING:
+					throw std::exception("invalid expression");
+			}
+			return "";
+		}},
+		{"/", [](const expression_token& left, const expression_token& right) -> std::string
+		{
+			const auto vleft = ExpressionGetTokenValue(left);
+			const auto vright = ExpressionGetTokenValue(right);
+
+			float fright{};
+			switch (left.tokentype) {
+				case VarType::VT_INT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = (int)std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					if (fright == 0.f)
+						throw std::exception("division by zero");
+
+					return std::to_string(int(std::any_cast<int>(vleft) / fright));
+				case VarType::VT_FLOAT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					if (fright == 0.f)
+						throw std::exception("division by zero");
+
+					return std::to_string(std::any_cast<float>(vleft) / fright);
+				case VarType::VT_STRING:
+					throw std::exception("invalid expression");
+			}
+			return "";
+		}},
+		{ "=", [](const expression_token& left, const expression_token& right) -> std::string
+		{
+			if (!left.is_lvalue())
+				throw std::exception("left operand must be a modifiable lvalue");
+
+			const auto vright = ExpressionGetTokenValue(right);
+
+			auto var = left.lval->ref;
+
+			float fright{};
+			switch (var->get_type()) {
+				case VarType::VT_INT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = (int)std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					var->set_int(fright);
+
+					std::cout << std::format("the value of \"{}\" changed to \"{}\"\n", var->name, var->get_int());
+
+					return std::to_string(var->get_int());
+				case VarType::VT_FLOAT:
+
+					if (right.tokentype == VarType::VT_FLOAT)
+						 fright = std::any_cast<float>(vright);
+					else fright = std::any_cast<int>(vright);
+
+					var->set_float(fright);
+
+					std::cout << std::format("the value of \"{}\" changed to \"{}\"\n", var->name, var->get_float());
+
+					return std::to_string(var->get_float());
+				case VarType::VT_STRING:
+					var->set_string(std::any_cast<char*>(vright));
+					return var->get_string();
 			}
 			return "";
 		}}
