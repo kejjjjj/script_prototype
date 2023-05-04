@@ -195,6 +195,8 @@ namespace expr
 	{  
 		{"+", [](const expression_token& left, expression_token& right) -> std::string
 		{
+			ExpressionMakeRvalue(right);
+
 			float fright{};
 			switch (left.tokentype) {
 				case VarType::VT_INT:
@@ -205,7 +207,7 @@ namespace expr
 
 					right.set_value(int(left.get_int() + fright));
 
-					return std::to_string(int(left.get_int() + fright));
+					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
 					if (right.tokentype == VarType::VT_FLOAT)
@@ -213,9 +215,8 @@ namespace expr
 					else fright = right.get_int();
 
 					right.set_value((left.get_float() + fright));
+					return std::to_string(right.get_float());
 
-
-					return std::to_string(left.get_float() + fright);
 				case VarType::VT_STRING:
 					#pragma warning( suppress : 4996)
 					return strcat(left.get_string(), right.get_string());
@@ -224,6 +225,8 @@ namespace expr
 		}},		
 		{"-", [](const expression_token& left, expression_token& right) -> std::string
 		{
+			ExpressionMakeRvalue(right);
+
 			float fright{};
 			switch (left.tokentype) {
 				case VarType::VT_INT:
@@ -232,16 +235,20 @@ namespace expr
 						fright = (int)right.get_float();
 					else fright = right.get_int();
 
-					return std::to_string(int(left.get_float() - fright));
+					right.set_value<int>(left.get_int() - fright);
+
+
+					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
 					if (right.tokentype == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
+					right.set_value<float>(left.get_float() - fright);
 
+					return std::to_string(right.get_float());
 
-					return std::to_string(left.get_float() - fright);
 				case VarType::VT_STRING:
 					throw std::exception("invalid expression");
 			}
@@ -249,7 +256,7 @@ namespace expr
 		}},
 		{"*", [](const expression_token& left, expression_token& right) -> std::string
 		{
-
+			ExpressionMakeRvalue(right);
 			float fright{};
 			switch (left.tokentype) {
 				case VarType::VT_INT:
@@ -258,14 +265,18 @@ namespace expr
 						fright = (int)right.get_float();
 					else fright = right.get_int();
 
-					return std::to_string(int(left.get_int() * fright));
+					right.set_value<int>(left.get_int() * fright);
+
+					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
 					if (right.tokentype == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
-					return std::to_string(left.get_float() * fright);
+					right.set_value<float>(left.get_float() * fright);
+
+					return std::to_string(right.get_float());
 				case VarType::VT_STRING:
 					throw std::exception("invalid expression");
 			}
@@ -273,7 +284,7 @@ namespace expr
 		}},
 		{"/", [](const expression_token& left, expression_token& right) -> std::string
 		{
-
+			ExpressionMakeRvalue(right);
 			float fright{};
 			switch (left.tokentype) {
 				case VarType::VT_INT:
@@ -285,9 +296,10 @@ namespace expr
 					if (fright == 0.f)
 						throw std::exception("division by zero");
 
+					right.set_value<int>(left.get_int() / fright);
 
 
-					return std::to_string(int(left.get_int() / fright));
+					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
 					if (right.tokentype == VarType::VT_FLOAT)
@@ -297,7 +309,10 @@ namespace expr
 					if (fright == 0.f)
 						throw std::exception("division by zero");
 
-					return std::to_string(left.get_float() / fright);
+					right.set_value<float>(left.get_float() / fright);
+
+
+					return std::to_string(right.get_float());
 				case VarType::VT_STRING:
 					throw std::exception("invalid expression");
 			}
@@ -308,6 +323,8 @@ namespace expr
 			if (!left.is_lvalue())
 				throw std::exception("left operand must be a modifiable lvalue");
 
+			ExpressionMakeRvalue(right);
+
 			auto var = left.lval->ref;
 
 			float fright{};
@@ -317,10 +334,10 @@ namespace expr
 					if (right.tokentype == VarType::VT_FLOAT)
 						fright = (int)right.get_float();
 					else fright = right.get_int();
-					std::cout << "int operands: { " << var->get_int() << ", " << int(fright) << " }\n";
+					//std::cout << "int operands: { " << var->get_int() << ", " << int(fright) << " }\n";
 					var->set_int(fright);
 
-					std::cout << std::format("the value of \"{}\" changed to \"{}\"\n", var->name, var->get_int());
+					//std::cout << std::format("the value of \"{}\" changed to \"{}\"\n", var->name, var->get_int());
 					
 					right.set_value<int>(fright);
 
@@ -333,8 +350,8 @@ namespace expr
 
 					var->set_float(fright);
 
-					std::cout << std::format("the value of \"{}\" changed to \"{}\"\n", var->name, var->get_float());
-					std::cout << "float operands: { " << var->get_float() << ", " << (fright) << " }\n";
+					//std::cout << std::format("the value of \"{}\" changed to \"{}\"\n", var->name, var->get_float());
+					//std::cout << "float operands: { " << var->get_float() << ", " << (fright) << " }\n";
 					right.set_value<float>(fright);
 
 					return std::to_string(var->get_float());

@@ -33,6 +33,8 @@ bool Script::Compile()
 {
 	std::cout << "compiling project!\n";
 
+	std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
+
 	auto begin = f_str.begin();
 	try {
 
@@ -42,7 +44,7 @@ bool Script::Compile()
 			std::cout << "code: " << code.code << '\n';
 
 			if (code.type != code.DECLARATION)
-				expr::EvaluateEntireExpression(code.code.substr(0, code.code.size() - 1));
+				expr::EvaluateEntireExpression(code.code.substr(0, code.code.size()));
 
 			srules.reset();
 			syntax.ClearFlags();
@@ -57,13 +59,31 @@ bool Script::Compile()
 
 	//std::cout << "\ncode: " << code.code << '\n';
 
-	//std::chrono::time_point<std::chrono::system_clock> old = std::chrono::system_clock::now();
+	
 
+	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-	//std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	std::chrono::duration<float> difference = now - old;
+	printf("time taken: %.6f\n", difference.count());
 
-	//std::chrono::duration<float> difference = now - old;
-	//printf("time taken: %.6f\n", difference.count());
+	std::cout << "\nscript stack: \n";
+
+	for (auto& i : stack_variables) {
+		std::cout << i.second.name << '<' << VarTypes[int(i.second.get_type())] << "> (";
+
+		switch (i.second.get_type()) {
+		case VarType::VT_INT:
+			std::cout << i.second.get_int() << ")\n";
+			break;
+		case VarType::VT_FLOAT:
+			std::cout << i.second.get_float() << ")\n";
+			break;
+		case VarType::VT_STRING:
+			std::cout << i.second.get_string() << ")\n";
+			break;
+		}
+
+	}
 
 	return true;
 }

@@ -4,7 +4,6 @@
 //assumes that there are no syntax errors
 std::string expr::EvaluateEntireExpression(const std::string& str)
 {
-
 	Parenthesis_s par = GetStringWithinParentheses(str);
 
 	if (par.result_string == "empty") {
@@ -39,7 +38,7 @@ std::string expr::EvaluateExpression(const std::string& str)
 		return std::string(str);
 	}
 	
-	std::cout << "EvaluateExpression(" << str << ")\n";
+	//std::cout << "EvaluateExpression(" << str << ")\n";
 	std::string s_str = std::string(str);
 	auto it = s_str.begin(); auto end = s_str.end();
 	std::list<expression_token> tokens;
@@ -50,25 +49,25 @@ std::string expr::EvaluateExpression(const std::string& str)
 	syntax.ClearFlag(S_END_OF_NUMBER);
 	EvaluatePrefix(tbegin, tend);
 
-	std::cout << "made this token: " << '\n';
+	//std::cout << "made this token: " << '\n';
 
-	for (auto& i : tokens) {
+	//for (auto& i : tokens) {
 
-		std::cout << '(';
-		if (!i.op) {
-			for (auto& prefix : i.prefix) {
-				std::cout << prefix;
-			}
-			std::cout << i.content;
-			for (auto& postfix : i.postfix) {
-				std::cout << postfix;
-			}
-		}
-		else
-			std::cout << i.content;
+	//	std::cout << '(';
+	//	if (!i.op) {
+	//		for (auto& prefix : i.prefix) {
+	//			std::cout << prefix;
+	//		}
+	//		std::cout << i.content;
+	//		for (auto& postfix : i.postfix) {
+	//			std::cout << postfix;
+	//		}
+	//	}
+	//	else
+	//		std::cout << i.content;
 
-		std::cout << ")\n";
-	}
+	//	std::cout << ")\n";
+	//}
 	
 	return EvaluateExpressionTokens(tokens);
 
@@ -94,14 +93,13 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 	while (!kill_loop && it != end) {
 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
-		std::cout << "token: " << token.value << '\n';
+		//std::cout << "token: " << token.value << '\n';
 		
 		switch (token.t_type) {
 		case token_t::tokentype::STRING:
 		case token_t::tokentype::DIGIT:
 
 			if (expr_token.tokentype == VarType::VT_INVALID) {
-
 				if(token.t_type == token_t::tokentype::STRING)
 					expr_token.tokentype = VarType::VT_STRING;
 				else
@@ -372,8 +370,7 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 		token.content = std::to_string(*reinterpret_cast<int*>(value.buffer));
 	}
 
-	delete token.lval.get();
-	
+	ExpressionMakeRvalue(token);
 
 }
 bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
@@ -462,7 +459,7 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 		const auto& lval = (--itr1)->content;
 		const auto& rval = (++itr2)->content;
 
-		std::cout << itr1->content << " is " << VarTypes[(int)itr1->tokentype] << '\n';
+		//std::cout << itr1->content << " is " << VarTypes[(int)itr1->tokentype] << '\n';
 
 		if (!ExpressionCompatibleOperands(itr1->tokentype, itr2->tokentype)) {
 			throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(itr1->tokentype)], VarTypes[int(itr2->tokentype)]).c_str());
@@ -477,12 +474,12 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 
 		ExpressionMakeRvalue(*itr2);
 
-		std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
+		//std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
 
 		tokens.erase(itr1, itr2);
 		itr2->content = result;
 	}
-	std::cout << "success!\n";
+	//std::cout << "success!\n";
 	return itr2->content;
 }
 
@@ -501,7 +498,8 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 			token.rval->set_value<char*>(token.lval->ref->get_string());
 			break;
 		}
-		delete token.lval.get();
+		token.lval.reset();
+		//std::cout << "deleting lvalue\n";
 		return;
 	}
 

@@ -146,7 +146,7 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 	auto end = f_str.end();
 	token = Compiler_ReadToken(it, ';', end);
 	code.code += token.value;
-	std::cout << "token: " << token.value << '\n';
+	//std::cout << "token: " << token.value << '\n';
 
 	while (token.t_type == token_t::WHITESPACE) {
 		token = Compiler_ReadToken(it, ';', end);
@@ -253,7 +253,7 @@ std::string cec::Compiler_ParseExpression(CHAR end_token, std::string::iterator&
 	token_t token = Compiler_ReadToken(it, end_token, end);
 	auto keyword = token.GetKeywordtype();
 	std::string full_expression;
-	std::cout << "token: " << token.value << '\n';
+	//std::cout << "token: " << token.value << '\n';
 
 	if (keyword == token_t::keywordtype::STATEMENT) {
 		throw std::exception("a statement within an expression is not allowed");
