@@ -36,16 +36,19 @@ bool Script::Compile()
 	auto begin = f_str.begin();
 	try {
 
-		code_type code = cec::Compiler_ReadNextCode3(begin);
-		std::cout << "code: " << code.code << '\n';
-		//if (code.type == code.STATEMENT) {
-		//	code_type code = cec::Compiler_ReadNextCode3(begin);
-		//	std::cout << "code: " << code.code << '\n';
+		while (begin != f_str.end()) {
 
-		//	
-		//}
-		if(code.type != code.DECLARATION)
-			expr::EvaluateEntireExpression(code.code.substr(0, code.code.size() - 1));
+			code_type code = cec::Compiler_ReadNextCode3(begin);
+			std::cout << "code: " << code.code << '\n';
+
+			if (code.type != code.DECLARATION)
+				expr::EvaluateEntireExpression(code.code.substr(0, code.code.size() - 1));
+
+			srules.reset();
+			syntax.ClearFlags();
+			expr::rules.reset();
+			++begin;
+		}
 	}
 	catch (std::exception& ex) {
 		std::cout << "exception caught: " << ex.what() << '\n';

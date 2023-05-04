@@ -12,6 +12,12 @@ inline struct srules_s
 	bool expecting_identifier = false;
 	bool expected_end_of_number = false;
 
+	void reset() {
+		typename_allowed = true;
+		expecting_identifier = false;
+		expected_end_of_number = false;
+	}
+
 }srules;
 
 enum SYNTAX_FLAGS : size_t

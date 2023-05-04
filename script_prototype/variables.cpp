@@ -69,7 +69,7 @@ void DeclareVariable(const std::string_view& type, const std::string_view& name)
 		throw std::exception("DeclareVariable(): impossible scenario!");
 	}
 
-	if (stack_variables.find(name) != stack_variables.end()) {
+	if (stack_variables.find(std::string(name)) != stack_variables.end()) {
 		throw std::exception(std::format("the variable \"{}\" is already defined", name).c_str());
 	}
 

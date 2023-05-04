@@ -37,7 +37,17 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 		return token;
 	}
 
+	
+
 	ch = *it;
+	
+	if (ch == expected_eof) {
+		token.eof_character = ch;
+		token.t_type = token_t::tokentype::OTHER;
+
+		return token;
+	}
+
 	//std::cout << "first char: [" << ch << "]\n";
 	isspace = std::isspace(ch);
 	isalnum = std::isalnum(ch);
@@ -138,6 +148,11 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 	code.code += token.value;
 	std::cout << "token: " << token.value << '\n';
 
+	while (token.t_type == token_t::WHITESPACE) {
+		token = Compiler_ReadToken(it, ';', end);
+		code.code += token.value;
+	}
+
 	auto keyword = token.GetKeywordtype();
 
 	if (keyword) {
@@ -149,6 +164,7 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 			code.code = token.value;
 			return code;
 		case token_t::keywordtype::DECLARATION:
+			code.type = code_type::DECLARATION;
 			decl::EvaluateDeclaration(token.value, it);
 			return code;
 		default:

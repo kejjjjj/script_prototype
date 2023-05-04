@@ -74,7 +74,10 @@ public:
 #pragma warning(suppress : 4996);
 		strcpy(reinterpret_cast<char*>(get_value().buffer), value);
 	}
-
+	template <typename T>
+	void set_value(const T v) {
+		*reinterpret_cast<T*>(get_value().buffer) = v;
+	}
 	auto get_type() const { return type; }
 	std::string name;
 private:
@@ -103,7 +106,7 @@ struct hasher
 	}
 };
 
-inline std::unordered_map<std::string_view, Variable> stack_variables;
+inline std::unordered_map<std::string, Variable> stack_variables;
 
 bool IsDataType(const std::string_view& str);
 size_t GetDataType(const std::string_view& str);

@@ -468,12 +468,14 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 			throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(itr1->tokentype)], VarTypes[int(itr2->tokentype)]).c_str());
 		}
 
-		const auto function = eval_funcs.find(Operator);
+		const auto& function = eval_funcs.find(Operator);
 		
 		if (function == eval_funcs.end())
 			throw std::exception(std::format("unknown operator {}", Operator).c_str());
 
 		const std::string result = function->second(*itr1, *itr2);
+
+		ExpressionMakeRvalue(*itr2);
 
 		std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
 
@@ -484,7 +486,28 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 	return itr2->content;
 }
 
+void expr::ExpressionMakeRvalue(expression_token& token)
+{
+	if (token.is_lvalue()) {
+		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype));
+		switch (token.tokentype) {
+		case VarType::VT_INT:
+			token.rval->set_value<int>(token.lval->ref->get_int());
+			break;
+		case VarType::VT_FLOAT:
+			token.rval->set_value<float>(token.lval->ref->get_float());
+			break;
+		case VarType::VT_STRING:
+			token.rval->set_value<char*>(token.lval->ref->get_string());
+			break;
+		}
+		delete token.lval.get();
+		return;
+	}
 
+
+
+}
 bool expr::ExpressionCompatibleOperands(const VarType left, const VarType right)
 {
 	if (left < VarType::VT_VOID || right < VarType::VT_VOID)
