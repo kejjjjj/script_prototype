@@ -96,13 +96,23 @@ struct lvalue
 	//~lvalue() = default;
 	Variable* ref = 0;
 };
-
+struct temp_value_s
+{
+	Variable* ref = 0;
+	VariableValue value;
+};
 
 namespace expr
 {
 
 	struct expression_token
 	{
+		~expression_token()
+		{
+			if (temp_value())
+				delete temp.value.buffer;
+		}
+
 		std::string content;
 		std::list<std::string> prefix;
 		std::list<std::string> postfix;
@@ -111,6 +121,7 @@ namespace expr
 		VarType tokentype = VarType::VT_INVALID;
 		std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
+		temp_value_s temp;
 
 		bool is_rvalue() const {
 			return rval.get() != nullptr;
@@ -179,6 +190,9 @@ namespace expr
 		bool is_integral() const {
 			return get_type() == VarType::VT_INT;
 		}
+		bool temp_value() const {
+			return temp.ref;
+		}
 	};
 
 	std::string EvaluateEntireExpression(const std::string& str);
@@ -188,11 +202,13 @@ namespace expr
 	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
 	void EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
 	bool EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
+	void EvaluatePostfixArithmetic(expression_token& token, bool increment);
 	bool EvaluatePeriodPrefix(std::list<expression_token>::iterator& it);
 	void EvaluatePrefixArithmetic(expression_token& token, bool increment);
 	bool ExpressionCompatibleOperands(const VarType left, const VarType right);
 	void ExpressionMakeRvalue(expression_token& token);
 	void ExpressionCastWeakerOperand(expression_token& left, expression_token& right);
+	void ExpressionSetTempValue(expression_token& token);
 
 	std::string EvaluateExpressionTokens(std::list<expression_token>& tokens);
 
@@ -225,10 +241,10 @@ namespace expr
 			ExpressionMakeRvalue(left);
 			ExpressionCastWeakerOperand(left, right);
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)	
+					if (right.get_type() == VarType::VT_FLOAT)	
 						 fright = (int)right.get_float();
 					else fright = right.get_int();
 
@@ -237,7 +253,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						 fright = right.get_float();
 					else fright = right.get_int();
 
@@ -255,10 +271,10 @@ namespace expr
 			ExpressionMakeRvalue(left);
 			ExpressionCastWeakerOperand(left, right);
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = (int)right.get_float();
 					else fright = right.get_int();
 
@@ -268,7 +284,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -286,10 +302,10 @@ namespace expr
 			ExpressionMakeRvalue(left);
 			ExpressionCastWeakerOperand(left, right);
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = (int)right.get_float();
 					else fright = right.get_int();
 
@@ -298,7 +314,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -317,10 +333,10 @@ namespace expr
 			
 
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -334,7 +350,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -391,10 +407,10 @@ namespace expr
 		{ "==", [](const expression_token& left, expression_token& right) -> std::string
 		{
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -404,7 +420,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -420,10 +436,10 @@ namespace expr
 		{ "!=", [](const expression_token& left, expression_token& right) -> std::string
 		{
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -433,7 +449,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -449,10 +465,10 @@ namespace expr
 		{ "<", [](const expression_token& left, expression_token& right) -> std::string
 		{
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = (int)right.get_float();
 					else fright = right.get_int();
 
@@ -462,7 +478,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -479,10 +495,10 @@ namespace expr
 		{ ">", [](const expression_token& left, expression_token& right) -> std::string
 		{
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -492,7 +508,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -509,10 +525,10 @@ namespace expr
 		{ "<=", [](const expression_token& left, expression_token& right) -> std::string
 		{
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -522,7 +538,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -539,10 +555,10 @@ namespace expr
 		{ ">=", [](const expression_token& left, expression_token& right) -> std::string
 		{
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -552,7 +568,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 					right.set_type(VarType::VT_INT);
@@ -603,10 +619,10 @@ namespace expr
 		{ "&&", [](const expression_token& left, expression_token& right) -> std::string
 		{
 			float fright{};
-			switch (left.tokentype) {
+			switch (left.get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 
@@ -616,7 +632,7 @@ namespace expr
 					return std::to_string(right.get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 					right.set_type(VarType::VT_INT);
@@ -634,10 +650,10 @@ namespace expr
 		{ "&&", [](const expression_token& left, expression_token& right) -> std::string
 		{
 		float fright{};
-		switch (left.tokentype) {
+		switch (left.get_type()) {
 			case VarType::VT_INT:
 
-				if (right.tokentype == VarType::VT_FLOAT)
+				if (right.get_type() == VarType::VT_FLOAT)
 					fright = right.get_float();
 				else fright = right.get_int();
 
@@ -647,7 +663,7 @@ namespace expr
 				return std::to_string(right.get_int());
 			case VarType::VT_FLOAT:
 
-				if (right.tokentype == VarType::VT_FLOAT)
+				if (right.get_type() == VarType::VT_FLOAT)
 					fright = right.get_float();
 				else fright = right.get_int();
 				right.set_type(VarType::VT_INT);
@@ -673,7 +689,7 @@ namespace expr
 			switch (var->get_type()) {
 				case VarType::VT_INT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = (int)right.get_float();
 					else fright = right.get_int();
 					//std::cout << "int operands: { " << var->get_int() << ", " << int(fright) << " }\n";
@@ -686,7 +702,7 @@ namespace expr
 					return std::to_string(var->get_int());
 				case VarType::VT_FLOAT:
 
-					if (right.tokentype == VarType::VT_FLOAT)
+					if (right.get_type() == VarType::VT_FLOAT)
 						fright = right.get_float();
 					else fright = right.get_int();
 

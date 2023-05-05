@@ -487,7 +487,7 @@ OperatorPriority GetOperandPriority(const std::string_view& ops)
 }
 bool ValidNumber(const std::string_view& expr)
 {
-    size_t dot_count{0}, dot_idx, index{ 0 }, sub_count{0}, sub_idx;
+    size_t dot_count{0}, dot_idx, index{ 0 }, sub_count{0};
 
     if (expr.size() == 1) {
         if (!std::isalnum(expr[0]) && expr[0] != '_')

@@ -15,7 +15,7 @@ Variable::Variable(const std::string_view& _name, VarType _type) : name(_name), 
 		case VarType::VT_STRING:
 			throw std::exception("rvalue(VarType type): VT_STRING case not supported");
 			break;
-		}
+	}
 
 }
 Variable::~Variable()

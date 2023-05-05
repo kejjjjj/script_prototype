@@ -30,7 +30,7 @@ enum class VarType : char
 
 struct VariableValue
 {
-	void* buffer;
+	void* buffer = 0;
 	unsigned int buf_size = 0; 
 };
 

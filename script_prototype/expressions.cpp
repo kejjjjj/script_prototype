@@ -1,7 +1,5 @@
 #include "pch.h"
 
-//an expression like: 101 * (100 + ((2 + 3) & 3 ^ 4)) * (2 | 4 * -(-2 + 3 / (30 - 2 | 3)) ^ 2) can be used here
-//assumes that there are no syntax errors
 std::string expr::EvaluateEntireExpression(const std::string& str)
 {
 	Parenthesis_s par = GetStringWithinParentheses(str);
@@ -239,11 +237,14 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 	if (token.postfix.empty())
 		return EvaluatePostfix(++it, end, tokens);
 
-	if (!ValidNumber(token.content))
-		throw std::exception("EvaluatePostfix(): variables are not supported yet");
+	if (UnaryArithmeticOp(token.postfix.front())) {
+		if (token.is_rvalue())
+			throw std::exception("increment/decrement operand must be an lvalue");
 
-	if (token.is_rvalue() && UnaryArithmeticOp(token.postfix.front()))
-		throw std::exception("expression must be an lvalue");
+		EvaluatePostfixArithmetic(token, token.postfix.front() == "++");
+		token.postfix.pop_front();
+		return EvaluatePrefix(it, end);
+	}
 
 	if(EvaluatePeriodPostfix(it, end, tokens))
 		return EvaluatePostfix(it, end, tokens);
@@ -281,35 +282,47 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 
 	if (UnaryArithmeticOp(token.prefix.back())) {
 		if (token.is_rvalue())
-			throw std::exception("expression must be an lvalue");
+			throw std::exception("increment/decrement operand must be an lvalue");
 
 		EvaluatePrefixArithmetic(token, token.prefix.back() == "++");
-
+		token.prefix.pop_back();
+		return EvaluatePrefix(it, end);
 	}
+
+	expression_token r_operand;
+	r_operand.rval = std::shared_ptr<rvalue>(new rvalue(VarType::VT_INT));
+	
+	ExpressionMakeRvalue(token);
 
 	switch (token.prefix.back().front())
 	{
 		case '-':
-			token.content = Eval(token.content, "-1", "*");
+			r_operand.rval->set_value<int>(-1);
+			token.content = eval_funcs.find("*")->second(token, r_operand);
 			break;
 		case '+':
-			token.content = Eval(token.content, "1", "*");
+			r_operand.rval->set_value<int>(1);
+			token.content = eval_funcs.find("*")->second(token, r_operand);
 			break;
 		case '~':
-			
-			token.content = Eval(token.content, "0", "~");
+			if (!token.is_integral())
+				throw std::exception("bitwise complement expects an integral operand");
+
+			token.set_value(~token.get_int());
+			token.content = std::to_string(token.get_int());
+
 			break;
 		case '!':
-			integer = (IsInteger(token.content));
-			token.content = Eval(token.content, "0", "==");
-
-			if (!integer)
-				token.content += ".0";
+			r_operand.rval->set_value<int>(0);
+			token.content = eval_funcs.find("==")->second(token, r_operand);
 
 			break;
 		default:
 			break;
 	}
+
+	token.set_type(r_operand.get_type());
+	token.set_value<int>(r_operand.get_int());
 
 	token.prefix.pop_back();
 
@@ -338,6 +351,31 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 
 	return false;
 
+}
+void expr::EvaluatePostfixArithmetic(expression_token& token, bool increment)
+{
+	if (token.is_rvalue())
+		throw std::exception("expression must be an lvalue");
+
+	const auto type = token.lval->ref->get_type();
+
+	if (type != VarType::VT_INT && type != VarType::VT_FLOAT)
+		throw std::exception("expected an int or float");
+
+	token.temp.ref = token.lval->ref;
+	token.temp.value.buffer = new void*;
+
+	if (token.is_integral()) {
+		//std::cout << "new temp: " << token.get_int() + increment == true ? 1 : -1 << '\n';
+		*reinterpret_cast<int*>(token.temp.value.buffer) = token.get_int() + (increment == true ? 1 : -1);
+		token.temp.value.buf_size = sizeof(int);
+	}
+	else {
+		*reinterpret_cast<float*>(token.temp.value.buffer) = token.get_float() + (increment == true ? 1 : -1);
+		token.temp.value.buf_size = sizeof(float);
+
+	}
+	ExpressionMakeRvalue(token);
 }
 void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 {
@@ -368,7 +406,7 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 		*reinterpret_cast<int*>(value.buffer) += increment == true ? 1 : -1;
 		token.content = std::to_string(*reinterpret_cast<int*>(value.buffer));
 	}
-
+	std::cout << "it's now " << token.content << '\n';
 	ExpressionMakeRvalue(token);
 
 }
@@ -471,6 +509,9 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 
 		ExpressionMakeRvalue(*itr2);
 
+		ExpressionSetTempValue(*itr1);
+		ExpressionSetTempValue(*itr2);
+
 		const std::string result = function->second(*itr1, *itr2);
 
 		//std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
@@ -507,7 +548,7 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 }
 bool expr::ExpressionCompatibleOperands(const VarType left, const VarType right)
 {
-	if (left < VarType::VT_VOID || right < VarType::VT_VOID)
+	if (left <= VarType::VT_VOID || right <= VarType::VT_VOID)
 		return false;
 
 	int leftFlag = 0;
@@ -568,4 +609,24 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 
 	}
 	 
+}
+void expr::ExpressionSetTempValue(expression_token& token) {
+
+	if (!token.temp_value())
+		return;
+
+	std::cout << token.temp.ref->name << " is a temp value!\n";
+
+	switch (token.get_type()) {
+	case VarType::VT_INT:
+		token.temp.ref->set_value<int>(*reinterpret_cast<int*>(token.temp.value.buffer));
+		break;
+	case VarType::VT_FLOAT:
+		token.temp.ref->set_value<float>(*reinterpret_cast<float*>(token.temp.value.buffer));
+		break;
+	}
+
+	delete token.temp.value.buffer;
+	token.temp.ref = 0;
+
 }
