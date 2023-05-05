@@ -1,2 +1,20 @@
-int a = (3+4);
-int b = a = 2;
+int a = 10;
+int b = 5;
+float c = 2.5;
+float d = 1.5;
+
+int sum = a + b;
+float quotient = a / c;
+int product = b * sum;
+float difference = d - quotient;
+int remainder = sum % b;
+float power = c * c * c;
+int negation = a;
+
+float expression = (a + b) * (c - d) / (a * b) + power - negation;
+
+int bitwiseAnd = a & b;
+int bitwiseOr = a | b;
+int bitwiseXor = a ^ b;
+int leftShift = a << 2;
+int rightShift = a >> 2;

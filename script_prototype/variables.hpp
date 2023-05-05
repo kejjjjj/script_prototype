@@ -78,6 +78,9 @@ public:
 	void set_value(const T v) {
 		*reinterpret_cast<T*>(get_value().buffer) = v;
 	}
+	void set_type(const VarType atype) {
+		type = atype;
+	}
 	auto get_type() const { return type; }
 	std::string name;
 private:

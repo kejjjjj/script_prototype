@@ -38,7 +38,7 @@ std::string expr::EvaluateExpression(const std::string& str)
 		return std::string(str);
 	}
 	
-	//std::cout << "EvaluateExpression(" << str << ")\n";
+	std::cout << "EvaluateExpression(" << str << ")\n";
 	std::string s_str = std::string(str);
 	auto it = s_str.begin(); auto end = s_str.end();
 	std::list<expression_token> tokens;
@@ -216,8 +216,7 @@ void expr::SetTokenValueCategory(expression_token& token)
 	}
 	token.lval = std::shared_ptr<lvalue>(new lvalue);
 	token.lval->ref = &v->second;
-	token.tokentype = v->second.get_type();
-
+	token.set_type(v->second.get_type());
 }
 void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
 {
@@ -327,7 +326,7 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 		syntax.AddFlag(S_END_OF_NUMBER);
 
 		it->content = "0." + it->content;
-		it->tokentype = VarType::VT_FLOAT;
+		it->set_type(VarType::VT_FLOAT);
 		it->rval->set_value<float>(std::stof(it->content));
 
 		it->prefix.pop_back();
@@ -355,18 +354,18 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 	if (type == VarType::VT_FLOAT) {
 
 		if (value.buf_size < 8) {
-			*reinterpret_cast<float*>(value.buffer) += 1;
+			*reinterpret_cast<float*>(value.buffer) += increment == true ? 1 : -1;
 			token.content = std::to_string(*reinterpret_cast<float*>(value.buffer));
 
 		}
 		else {
-			*reinterpret_cast<double*>(value.buffer) += 1;
+			*reinterpret_cast<double*>(value.buffer) += increment == true ? 1 : -1;
 			token.content = std::to_string(*reinterpret_cast<double*>(value.buffer));
 
 		}
 	}
 	else {
-		*reinterpret_cast<int*>(value.buffer) += 1;
+		*reinterpret_cast<int*>(value.buffer) += increment == true ? 1 : -1;
 		token.content = std::to_string(*reinterpret_cast<int*>(value.buffer));
 	}
 
@@ -393,7 +392,7 @@ bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std:
 
 			it->content += ".0"; //create a floating point value
 			it->postfix.pop_front();
-			it->tokentype = VarType::VT_FLOAT;
+			it->set_type(VarType::VT_FLOAT);
 			it->rval->set_value<float>(std::stof(it->content));
 
 			return true;
@@ -408,7 +407,7 @@ bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std:
 
 				it->content += "." + (it2->content.empty() ? "0" : it2->content); //create a floating point value
 				it->postfix.pop_front();
-				it->tokentype = VarType::VT_FLOAT;
+				it->set_type(VarType::VT_FLOAT);
 				it->rval->set_value<float>(std::stof(it->content));
 				tokens.erase(it2);
 
@@ -470,9 +469,9 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 		if (function == eval_funcs.end())
 			throw std::exception(std::format("unknown operator {}", Operator).c_str());
 
-		const std::string result = function->second(*itr1, *itr2);
-
 		ExpressionMakeRvalue(*itr2);
+
+		const std::string result = function->second(*itr1, *itr2);
 
 		//std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
 
@@ -533,4 +532,40 @@ bool expr::ExpressionCompatibleOperands(const VarType left, const VarType right)
 
 	return false;
 
+}
+void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token& right)
+{
+	expression_token* stronger, *weaker;
+
+	if (left.get_type() > right.get_type()) {
+		stronger = &left;
+		weaker = &right;
+	}else if (left.get_type() < right.get_type()) {
+		stronger = &right;
+		weaker = &left;
+	}
+	else
+		return;
+
+	switch (stronger->get_type()) {
+
+	case VarType::VT_INT:
+		break;
+	case VarType::VT_FLOAT:
+		auto old_type = weaker->get_type();
+
+		weaker->set_type(stronger->get_type());
+
+		switch (old_type) {
+		case VarType::VT_INT:
+			std::cout << "an int gets promoted to a float\n";
+			weaker->set_value<float>(weaker->get_int());
+			break;
+		default:
+			break;
+		}
+		break;
+
+	}
+	 
 }
