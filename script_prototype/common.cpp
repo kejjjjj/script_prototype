@@ -827,12 +827,14 @@ bool SatisfiesOperator(const std::string_view& op)
         return IsOperator(op.front());
     }
 
-    return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
+    return IsAnOperator2(op);
+
+    //return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
 
 }
 bool IsAnOperator2(const std::string_view& op)
 {
-    return IsAnOperator(op) || (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=" || op == "++" ||op == "--");
+    return IsAnOperator(op) || (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=" || op == "<=>" || op == "++" || op == "--");
 }
 bool EndOfOperator(const std::string_view& op)
 {

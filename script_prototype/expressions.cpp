@@ -117,7 +117,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			rules.next_unary = false;
 			rules.next_postfix = true;
 			expr_token.content = token.value;
-			break_on_whitespace = true;
+			//break_on_whitespace = true;
 			if (rules.ignore_postfix) {
 				kill_loop = true;
 				break;
@@ -243,7 +243,7 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 
 		EvaluatePostfixArithmetic(token, token.postfix.front() == "++");
 		token.postfix.pop_front();
-		return EvaluatePrefix(it, end);
+		return EvaluatePostfix(it, end, tokens);
 	}
 
 	if(EvaluatePeriodPostfix(it, end, tokens))
@@ -298,11 +298,11 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	{
 		case '-':
 			r_operand.rval->set_value<int>(-1);
-			token.content = eval_funcs.find("*")->second(token, r_operand);
+			token.content = eval_funcs.find("*")->second(token, r_operand).content;
 			break;
 		case '+':
 			r_operand.rval->set_value<int>(1);
-			token.content = eval_funcs.find("*")->second(token, r_operand);
+			token.content = eval_funcs.find("*")->second(token, r_operand).content;
 			break;
 		case '~':
 			if (!token.is_integral())
@@ -314,7 +314,7 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 			break;
 		case '!':
 			r_operand.rval->set_value<int>(0);
-			token.content = eval_funcs.find("==")->second(token, r_operand);
+			token.content = eval_funcs.find("==")->second(token, r_operand).content;
 
 			break;
 		default:
@@ -362,19 +362,20 @@ void expr::EvaluatePostfixArithmetic(expression_token& token, bool increment)
 	if (type != VarType::VT_INT && type != VarType::VT_FLOAT)
 		throw std::exception("expected an int or float");
 
-	token.temp.ref = token.lval->ref;
-	token.temp.value.buffer = new void*;
+	expression_postfixes.push_back({ token.lval->ref , increment });
 
-	if (token.is_integral()) {
-		//std::cout << "new temp: " << token.get_int() + increment == true ? 1 : -1 << '\n';
-		*reinterpret_cast<int*>(token.temp.value.buffer) = token.get_int() + (increment == true ? 1 : -1);
-		token.temp.value.buf_size = sizeof(int);
-	}
-	else {
-		*reinterpret_cast<float*>(token.temp.value.buffer) = token.get_float() + (increment == true ? 1 : -1);
-		token.temp.value.buf_size = sizeof(float);
+	//token.temp.value.buffer = new void*;
 
-	}
+	//if (token.is_integral()) {
+	//	//std::cout << "new temp: " << token.get_int() + increment == true ? 1 : -1 << '\n';
+	//	*reinterpret_cast<int*>(token.temp.value.buffer) = token.get_int() + (increment == true ? 1 : -1);
+	//	token.temp.value.buf_size = sizeof(int);
+	//}
+	//else {
+	//	*reinterpret_cast<float*>(token.temp.value.buffer) = token.get_float() + (increment == true ? 1 : -1);
+	//	token.temp.value.buf_size = sizeof(float);
+
+	//}
 	ExpressionMakeRvalue(token);
 }
 void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
@@ -467,9 +468,9 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 	std::list<expression_token>::iterator itr1, itr2;
 	const auto& op_end = --tokens.end();
 	OperatorPriority op, next_op;
+	
 
 	while (tokens.size() > 2) {
-
 		itr1 = ++tokens.begin(); 
 		itr2 = itr1;
 		std::advance(itr2, 2);
@@ -496,8 +497,6 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 		const auto& lval = (--itr1)->content;
 		const auto& rval = (++itr2)->content;
 
-		//std::cout << itr1->content << " is " << VarTypes[(int)itr1->tokentype] << '\n';
-
 		if (!ExpressionCompatibleOperands(itr1->tokentype, itr2->tokentype)) {
 			throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(itr1->tokentype)], VarTypes[int(itr2->tokentype)]).c_str());
 		}
@@ -507,19 +506,17 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 		if (function == eval_funcs.end())
 			throw std::exception(std::format("unknown operator {}", Operator).c_str());
 
-		ExpressionMakeRvalue(*itr2);
+		//ExpressionMakeRvalue(*itr2);
+		
+		auto result = function->second(*itr1, *itr2);
 
-		ExpressionSetTempValue(*itr1);
-		ExpressionSetTempValue(*itr2);
-
-		const std::string result = function->second(*itr1, *itr2);
-
-		//std::cout << std::format("{} {} {} = {}\n", lval, Operator, rval, result);
+		*itr2 = result;
 
 		tokens.erase(itr1, itr2);
-		itr2->content = result;
 	}
-	//std::cout << "success!\n";
+
+	std::for_each(expression_postfixes.begin(), expression_postfixes.end(), ExpressionSetTempValue);
+	expression_postfixes.clear();
 	return itr2->content;
 }
 
@@ -610,23 +607,22 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 	}
 	 
 }
-void expr::ExpressionSetTempValue(expression_token& token) {
+void expr::ExpressionSetTempValue(temp_value_s& token) {
 
-	if (!token.temp_value())
+	if (!token.ref)
 		return;
 
-	std::cout << token.temp.ref->name << " is a temp value!\n";
-
-	switch (token.get_type()) {
+	switch (token.ref->get_type()) {
 	case VarType::VT_INT:
-		token.temp.ref->set_value<int>(*reinterpret_cast<int*>(token.temp.value.buffer));
+		
+		std::cout << token.ref->name << " gets the value " << token.ref->get_int() + (token.increment ? 1 : -1) << '\n';
+		token.ref->set_value<int>(token.ref->get_int() + (token.increment ? 1 : -1));
 		break;
 	case VarType::VT_FLOAT:
-		token.temp.ref->set_value<float>(*reinterpret_cast<float*>(token.temp.value.buffer));
+		token.ref->set_value<float>(token.ref->get_int() + (token.increment ? 1 : -1));
 		break;
 	}
 
-	delete token.temp.value.buffer;
-	token.temp.ref = 0;
+	token.ref = 0;
 
 }

@@ -35,7 +35,12 @@ struct VariableValue
 };
 
 
-class Variable
+class Array
+{
+
+};
+
+class Variable : public Array
 {
 public:
 	Variable(const std::string_view& _name, VarType _type);

@@ -41,7 +41,7 @@ bool Script::Compile()
 		while (begin != f_str.end()) {
 
 			code_type code = cec::Compiler_ReadNextCode3(begin);
-			std::cout << "code: " << code.code << '\n';
+			//std::cout << "code: " << code.code << '\n';
 
 			if (code.type != code.DECLARATION)
 				expr::EvaluateEntireExpression(code.code.substr(0, code.code.size()));
