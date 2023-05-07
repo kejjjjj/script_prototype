@@ -28,22 +28,54 @@ enum class VarType : char
 	
 };
 
+unsigned int GetVarTypeSize(const VarType t)
+{
+	switch (t) {
+	case VarType::VT_VOID:
+		return 0;
+	case VarType::VT_INT:
+	case VarType::VT_FLOAT:
+		return 4;
+	}
+
+	return 1;
+}
+
 struct VariableValue
 {
-	void* buffer = 0;
+	std::shared_ptr<void*> buffer = 0;
 	unsigned int buf_size = 0; 
 };
 
-
 class Array
 {
+public:
+	Array(int initial_size, VarType t) {
+
+		if (initial_size < 0 || initial_size >= INT_MAX)
+			throw std::exception("invalid size for an array");
+
+		if (initial_size == NULL)
+			return;
+
+		for (int i = 0; i < initial_size; i++) {
+			value.push_back( {
+				std::shared_ptr<void*>(new void*)
+				, GetVarTypeSize(t)});
+		}
+
+	}
+
+private:
+	std::vector<VariableValue> value;
+	VarType type;
 
 };
 
 class Variable : public Array
 {
 public:
-	Variable(const std::string_view& _name, VarType _type);
+	Variable(const std::string_view& _name, VarType _type, bool bArray = false);
 	Variable() = delete;
 	~Variable();
 
@@ -53,35 +85,29 @@ public:
 	}
 
 	int get_int() const {
-		return *reinterpret_cast<int*>(get_value().buffer);
+		return *reinterpret_cast<int*>(get_value().buffer.get());
 
 	}
 	float get_float() const {
-		return *reinterpret_cast<float*>(get_value().buffer);
-	}
-	double get_double() const {
-		return *reinterpret_cast<double*>(get_value().buffer);
+		return *reinterpret_cast<float*>(get_value().buffer.get());
 	}
 	char* get_string() const {
-		return reinterpret_cast<char*>(get_value().buffer);
+		return reinterpret_cast<char*>(get_value().buffer.get());
 	}
 
 	void set_int(int value) {
-		*reinterpret_cast<int*>(get_value().buffer) = value;
+		*reinterpret_cast<int*>(get_value().buffer.get()) = value;
 	}
 	void set_float(float value) {
-		*reinterpret_cast<float*>(get_value().buffer) = value;
-	}
-	void set_double(double value) {
-		*reinterpret_cast<double*>(get_value().buffer) = value;
+		*reinterpret_cast<float*>(get_value().buffer.get()) = value;
 	}
 	void set_string(char* value) {
 #pragma warning(suppress : 4996);
-		strcpy(reinterpret_cast<char*>(get_value().buffer), value);
+		strcpy(reinterpret_cast<char*>(get_value().buffer.get()), value);
 	}
 	template <typename T>
 	void set_value(const T v) {
-		*reinterpret_cast<T*>(get_value().buffer) = v;
+		*reinterpret_cast<T*>(get_value().buffer.get()) = v;
 	}
 	void set_type(const VarType atype) {
 		type = atype;

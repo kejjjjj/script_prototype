@@ -1,15 +1,15 @@
 #include "pch.h"
 
 
-Variable::Variable(const std::string_view& _name, VarType _type) : name(_name), type(_type){
+Variable::Variable(const std::string_view& _name, VarType _type, bool bArray) : name(_name), type(_type), Array(1){
 	switch (type) {
 		case VarType::VT_INT:
-			value.buffer = new int;
+			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
 			value.buf_size = sizeof(int);
 
 			break;
 		case VarType::VT_FLOAT:
-			value.buffer = new float;
+			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
 			value.buf_size = sizeof(float);
 			break;
 		case VarType::VT_STRING:

@@ -265,7 +265,6 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 		return;
 
 	auto& token = *it;
-	bool integer = false;
 
 	if (token.op)
 		syntax.ClearFlag(S_END_OF_NUMBER);
@@ -364,18 +363,6 @@ void expr::EvaluatePostfixArithmetic(expression_token& token, bool increment)
 
 	expression_postfixes.push_back({ token.lval->ref , increment });
 
-	//token.temp.value.buffer = new void*;
-
-	//if (token.is_integral()) {
-	//	//std::cout << "new temp: " << token.get_int() + increment == true ? 1 : -1 << '\n';
-	//	*reinterpret_cast<int*>(token.temp.value.buffer) = token.get_int() + (increment == true ? 1 : -1);
-	//	token.temp.value.buf_size = sizeof(int);
-	//}
-	//else {
-	//	*reinterpret_cast<float*>(token.temp.value.buffer) = token.get_float() + (increment == true ? 1 : -1);
-	//	token.temp.value.buf_size = sizeof(float);
-
-	//}
 	ExpressionMakeRvalue(token);
 }
 void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
@@ -392,20 +379,14 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 
 	if (type == VarType::VT_FLOAT) {
 
-		if (value.buf_size < 8) {
-			*reinterpret_cast<float*>(value.buffer) += increment == true ? 1 : -1;
-			token.content = std::to_string(*reinterpret_cast<float*>(value.buffer));
 
-		}
-		else {
-			*reinterpret_cast<double*>(value.buffer) += increment == true ? 1 : -1;
-			token.content = std::to_string(*reinterpret_cast<double*>(value.buffer));
+		*reinterpret_cast<float*>(*value.buffer) += increment == true ? 1 : -1;
+		token.content = std::to_string(*reinterpret_cast<float*>(*value.buffer));
 
-		}
 	}
 	else {
-		*reinterpret_cast<int*>(value.buffer) += increment == true ? 1 : -1;
-		token.content = std::to_string(*reinterpret_cast<int*>(value.buffer));
+		*reinterpret_cast<int*>(*value.buffer) += increment == true ? 1 : -1;
+		token.content = std::to_string(*reinterpret_cast<int*>(*value.buffer));
 	}
 	std::cout << "it's now " << token.content << '\n';
 	ExpressionMakeRvalue(token);

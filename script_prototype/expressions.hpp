@@ -43,12 +43,12 @@ struct rvalue
 	rvalue(const VarType _type) : type(_type){
 		switch (_type) {
 		case VarType::VT_INT:
-			value.buffer = new int;
+			value.buffer = std::shared_ptr<void*>(new void*);
 			value.buf_size = sizeof(int);
 
 			break;
 		case VarType::VT_FLOAT:
-			value.buffer = new float;
+			value.buffer = std::shared_ptr<void*>(new void*);
 			value.buf_size = sizeof(float);
 			break;
 		case VarType::VT_STRING:
@@ -58,7 +58,7 @@ struct rvalue
 	}
 	~rvalue()
 	{
-		delete value.buffer;
+		value.buffer.reset();
 	}
 	rvalue() = delete;
 
@@ -67,20 +67,20 @@ private:
 	VarType type;
 public:
 	int get_int() const {
-		return *reinterpret_cast<int*>(value.buffer);
+		return *reinterpret_cast<int*>(value.buffer.get());
 	}
 	float get_float() const {
-		return *reinterpret_cast<float*>(value.buffer);
+		return *reinterpret_cast<float*>(value.buffer.get());
 	}
 	double get_double() const {
-		return *reinterpret_cast<double*>(value.buffer);
+		return *reinterpret_cast<double*>(value.buffer.get());
 	}
 	char* get_string() const {
-		return reinterpret_cast<char*>(value.buffer);
+		return reinterpret_cast<char*>(value.buffer.get());
 	}
 	template <typename T>
 	void set_value(const T v) {
-		*reinterpret_cast<T*>(value.buffer) = v;
+		*reinterpret_cast<T*>(value.buffer.get()) = v;
 	}
 	auto get_type() const {
 		return type;
@@ -141,14 +141,6 @@ namespace expr
 				return (rval->get_float());
 			else if (is_lvalue())
 				return (lval->ref->get_float());
-
-			throw std::exception("not an lvalue nor rvalue");
-		}
-		double get_double() const {
-			if (is_rvalue())
-				return (rval->get_double());
-			else if (is_lvalue())
-				return (lval->ref->get_double());
 
 			throw std::exception("not an lvalue nor rvalue");
 		}
