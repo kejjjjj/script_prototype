@@ -185,10 +185,13 @@ enum class declr_type : char
 
 struct var_declr_data
 {
+	std::shared_ptr<array_declr_data> arr;
 	declr_type declaration_type;
 	std::string variable_name;
 	std::string variable_type;
 };
+
+declr_type DeclarationUnaryToType(char op);
 
 void DeclareVariable(const var_declr_data& data);
 #endif

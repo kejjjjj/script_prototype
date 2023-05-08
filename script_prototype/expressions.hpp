@@ -26,7 +26,8 @@ struct expression_stack
 	std::string Operator;
 };
 
-#define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.' || x == '?')
+#define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' \
+							|| x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.' || x == '?' || x == '[' || x == ']')
 
 #define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%')
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=')
@@ -183,8 +184,8 @@ namespace expr
 		}
 	};
 
-	std::string EvaluateEntireExpression(const std::string& str);
-	std::string EvaluateExpression(const std::string& str);
+	expression_token EvaluateEntireExpression(const std::string& str);
+	expression_token EvaluateExpression(const std::string& str);
 	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens);
 	void SetTokenValueCategory(expression_token& token);
 	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
@@ -198,7 +199,7 @@ namespace expr
 	void ExpressionCastWeakerOperand(expression_token& left, expression_token& right);
 	void ExpressionSetTempValue(temp_value_s& token);
 
-	std::string EvaluateExpressionTokens(std::list<expression_token>& tokens);
+	expression_token EvaluateExpressionTokens(std::list<expression_token>& tokens);
 
 	//void Eval(expression_token& left, expression_token& right, std::function<void(expression_token&, expression_token&)>& eval_fc);
 

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-std::string expr::EvaluateEntireExpression(const std::string& str)
+expr::expression_token expr::EvaluateEntireExpression(const std::string& str)
 {
 	Parenthesis_s par = GetStringWithinParentheses(str);
 
@@ -15,7 +15,7 @@ std::string expr::EvaluateEntireExpression(const std::string& str)
 		auto result = EvaluateExpression(par.result_string);
 
 		copy.erase((size_t)par.opening, (size_t)par.strlength + 2ull);
-		copy.insert((size_t)par.opening, ' ' + result + ' '); //spacebar fixes cases like (500+200)0 (without the space this would turn into 7000)
+		copy.insert((size_t)par.opening, ' ' + result.content + ' '); //spacebar fixes cases like (500+200)0 (without the space this would turn into 7000)
 		
 
 		result = EvaluateEntireExpression(copy);
@@ -24,7 +24,7 @@ std::string expr::EvaluateEntireExpression(const std::string& str)
 	auto result = expr::EvaluateExpression(str);
 	return result;
 }
-std::string expr::EvaluateExpression(const std::string& str)
+expr::expression_token expr::EvaluateExpression(const std::string& str)
 {
 	rules.next_postfix = false;
 	rules.next_unary = true;
@@ -32,9 +32,6 @@ std::string expr::EvaluateExpression(const std::string& str)
 	srules.expecting_identifier = false;
 
 	syntax.ClearFlag(S_END_OF_NUMBER);
-	if (ValidNumber(str)) {
-		return std::string(str);
-	}
 	
 	std::cout << "EvaluateExpression(" << str << ")\n";
 	std::string s_str = std::string(str);
@@ -440,13 +437,11 @@ bool expr::EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std:
 	return true;
 
 }
-std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
+expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 {
-	if (tokens.size() == 1)
-		return tokens.front().content;
 
 	std::string result;
-	std::list<expression_token>::iterator itr1, itr2;
+	std::list<expression_token>::iterator itr1, itr2 = tokens.begin();
 	const auto& op_end = --tokens.end();
 	OperatorPriority op, next_op;
 	
@@ -498,7 +493,7 @@ std::string expr::EvaluateExpressionTokens(std::list<expression_token>& tokens)
 
 	std::for_each(expression_postfixes.begin(), expression_postfixes.end(), ExpressionSetTempValue);
 	expression_postfixes.clear();
-	return itr2->content;
+	return *itr2;
 }
 
 void expr::ExpressionMakeRvalue(expression_token& token)

@@ -260,7 +260,7 @@ std::string cec::Compiler_ParseExpression(CHAR end_token, std::string::iterator&
 	}
 	char front;
 	switch (token.t_type) {
-		case token_t::tokentype::STRING:
+		/*case token_t::tokentype::STRING:
 			Compiler_SetIdentifierFlags();
 			break;
 		case token_t::tokentype::DIGIT:
@@ -268,7 +268,7 @@ std::string cec::Compiler_ParseExpression(CHAR end_token, std::string::iterator&
 			break;
 		case token_t::tokentype::OPERATOR:
 			Compiler_SetOperatorFlags();
-			break;
+			break;*/
 		case token_t::tokentype::PARENTHESIS:
 			front = token.value.front();
 			if (front == end_token) {

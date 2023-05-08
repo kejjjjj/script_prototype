@@ -77,3 +77,15 @@ void DeclareVariable(const var_declr_data& data)
 	stack_variables.insert(std::make_pair(data.variable_name, Variable(data.variable_name, itype)));
 }
 
+declr_type DeclarationUnaryToType(char op)
+{
+	std::cout << "testing " << op << '\n';
+
+	if (op == '?') {
+		throw std::exception("references are not supported yet");
+		return declr_type::REFERENCE;
+	}
+	if (op == '[')
+		return declr_type::ARRAY;
+
+}
