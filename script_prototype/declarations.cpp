@@ -29,7 +29,12 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 		}
 	}
 
-	DeclareVariable(type, tokens.front().content);
+	var_declr_data data;
+
+	data.variable_type = type;
+	data.variable_name = tokens.front().content;
+
+	DeclareVariable(data);
 
 	expr::EvaluateEntireExpression(expression); //now it can be evaluated since it's been pushed to the stack
 

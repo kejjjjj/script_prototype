@@ -1,7 +1,7 @@
 #include "pch.h"
 
 
-Variable::Variable(const std::string_view& _name, VarType _type, bool bArray) : name(_name), type(_type), Array(1){
+Variable::Variable(const std::string_view& _name, VarType _type, bool bArray) : name(_name), type(_type), Array(0){
 	switch (type) {
 		case VarType::VT_INT:
 			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
@@ -59,20 +59,21 @@ bool IsConst(const std::string_view& v)
 	
 	return false;
 }
-void DeclareVariable(const std::string_view& type, const std::string_view& name)
-{
-	std::cout << "pushing \"" << name << "\" of type '" << type << "' to stack!\n";
 
-	const auto itype = (VarType)GetDataType(type);
+void DeclareVariable(const var_declr_data& data)
+{
+	std::cout << "pushing \"" << data.variable_name<< "\" of type '" << data.variable_type << "' to stack!\n";
+
+	const auto itype = (VarType)GetDataType(data.variable_type);
 
 	if ((int)itype < 1) {
 		throw std::exception("DeclareVariable(): impossible scenario!");
 	}
 
-	if (stack_variables.find(std::string(name)) != stack_variables.end()) {
-		throw std::exception(std::format("the variable \"{}\" is already defined", name).c_str());
+	if (stack_variables.find(std::string(data.variable_name)) != stack_variables.end()) {
+		throw std::exception(std::format("the variable \"{}\" is already defined", data.variable_name).c_str());
 	}
 
-	stack_variables.insert(std::make_pair(name, Variable(name, itype)));
+	stack_variables.insert(std::make_pair(data.variable_name, Variable(data.variable_name, itype)));
 }
 

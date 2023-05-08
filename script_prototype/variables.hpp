@@ -28,7 +28,7 @@ enum class VarType : char
 	
 };
 
-unsigned int GetVarTypeSize(const VarType t)
+inline unsigned int GetVarTypeSize(const VarType t)
 {
 	switch (t) {
 	case VarType::VT_VOID:
@@ -47,29 +47,38 @@ struct VariableValue
 	unsigned int buf_size = 0; 
 };
 
+
+struct array_declr_data
+{
+	int numElements = 0;
+	VarType type = VarType::VT_INVALID;
+};
+
 class Array
 {
 public:
-	Array(int initial_size, VarType t) {
+	Array(array_declr_data* initializer_data) {
 
-		if (initial_size < 0 || initial_size >= INT_MAX)
-			throw std::exception("invalid size for an array");
-
-		if (initial_size == NULL)
+		if (!initializer_data)
 			return;
 
-		for (int i = 0; i < initial_size; i++) {
-			value.push_back( {
-				std::shared_ptr<void*>(new void*)
-				, GetVarTypeSize(t)});
+		if (initializer_data->type == VarType::VT_INVALID)
+			return;
+
+		if (initializer_data->numElements < 1 || initializer_data->numElements >= INT_MAX)
+			throw std::exception("invalid size for an array");
+
+		type = initializer_data->type;
+
+		for (int i = 0; i < initializer_data->numElements; i++) {
+			value.push_back({ std::make_shared<void*>(new char[GetVarTypeSize(initializer_data->type)]), GetVarTypeSize(initializer_data->type) });
 		}
 
 	}
 
 private:
 	std::vector<VariableValue> value;
-	VarType type;
-
+	VarType type = VarType::VT_INVALID;
 };
 
 class Variable : public Array
@@ -146,6 +155,7 @@ bool IsDataType(const std::string_view& str);
 size_t GetDataType(const std::string_view& str);
 size_t GetTypeQualifier(const std::string_view& str);
 
+
 bool VariableInStack(const std::string_view& var);
 
 Variable* FindVariableFromStack(const std::string_view& var);
@@ -155,5 +165,30 @@ bool CompatibleDataTypes(const VarType a, const VarType b);
 
 bool IsConst(const std::string_view& v);
 
-void DeclareVariable(const std::string_view& type, const std::string_view& name);
+inline bool ValidDeclarationOperator(const std::string_view& op)
+{
+	if (op.empty()) //should never be true
+		return false;
+
+	auto& o = op.front();
+
+	return o == '?' || o == '[' || o == ']';
+
+}
+
+enum class declr_type : char
+{
+	DEFAULT,
+	REFERENCE,
+	ARRAY
+};
+
+struct var_declr_data
+{
+	declr_type declaration_type;
+	std::string variable_name;
+	std::string variable_type;
+};
+
+void DeclareVariable(const var_declr_data& data);
 #endif
