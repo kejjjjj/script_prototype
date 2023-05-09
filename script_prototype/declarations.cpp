@@ -66,14 +66,8 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 int decl::EvaluateArrayInitialSize(const std::string& expression)
 {
-	auto begin = expression.find('[');
-	auto end = expression.find(']');
 
-	if (end == std::string::npos) {
-		throw std::exception("expected a \"]\"");
-	}
-
-	auto result = expr::EvaluateEntireExpression(expression.substr(begin+1, end-1));
+	auto result = expr::EvaluateEntireExpression(expression);
 
 	if (!result.is_integral()) {
 		throw std::exception("expression must be convertible to an integral type");
@@ -86,4 +80,54 @@ int decl::EvaluateArrayInitialSize(const std::string& expression)
 	return result.get_int();
 
 
+}
+void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::iterator& end)
+{
+
+	const token_t token = cec::Compiler_ReadToken(it, ';', end);
+
+	if (token.eof_character) {
+		throw std::exception("EvaluateDeclarationOperators(): check this out!!!!");
+	}
+
+	auto t = token.t_type;
+
+	if (t == token_t::tokentype::DIGIT || t == token_t::tokentype::STRING)
+		return;
+
+	if(t == token_t::WHITESPACE)
+		return EvaluateDeclarationOperators(it, end);
+
+	if (t != token_t::OPERATOR) {
+		throw std::exception("expected an identifier or operator");
+	}
+
+	if (token.value == "[") {
+		std::string array_expression = ParseArrayExpression(it, end);
+		int arrsize = EvaluateArrayInitialSize(array_expression);
+		return EvaluateDeclarationOperators(it, end);
+	}
+
+
+
+}
+
+std::string ParseArrayExpression(std::string::iterator& it, std::string::iterator& end)
+{
+	std::string array_expression;
+	bool found = false;
+	while (it != end) {
+		if (*it == ']') {
+			found = true;
+			break;
+		}
+
+		array_expression.push_back(*++it);
+	}
+
+	if (!found) {
+		throw std::exception("expected \"]\"");
+	}
+
+	return array_expression;
 }
