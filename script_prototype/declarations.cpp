@@ -13,28 +13,13 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 	auto expression = cec::Compiler_ParseExpression(';', it_);
 	 
-	var_declr_data data;
+	std::list<var_declr_data> data;
 
 	auto it = expression.begin();
 	auto end = expression.end();
 
-	while (std::isspace(*it))
-		if (++it == end)
-			throw std::exception("expected an expression");
+	EvaluateDeclarationOperators(it, end, data);
 
-	data.declaration_type = DeclarationUnaryToType(*it);
-	const bool bArray = data.declaration_type == declr_type::ARRAY;
-
-
-	if (bArray) {
-		data.arr = std::shared_ptr<array_declr_data>(new array_declr_data);
-		data.arr->numElements = EvaluateArrayInitialSize(expression);
-		data.arr->type = (VarType)GetDataType(data.variable_type);
-
-		std::cout << "creating an array of size " << data.arr->numElements << '\n';
-
-	}
-	
 	std::list<expr::expression_token> tokens;
 	TokenizeExpression(it, end, tokens);
 	auto t_it = tokens.begin();
@@ -51,14 +36,12 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 	}
 
 	
+	const std::string vname = tokens.front().content;
+	const VarType vtype = GetDataType(type);
 
-	data.variable_type = type;
-	data.variable_name = tokens.front().content;
+	DeclareVariable(vname, vtype);
 
 
-
-
-	DeclareVariable(data);
 
 	expr::EvaluateEntireExpression(expression); //now it can be evaluated since it's been pushed to the stack
 
@@ -66,6 +49,9 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 int decl::EvaluateArrayInitialSize(const std::string& expression)
 {
+
+	if (expression.empty())
+		return 1;
 
 	auto result = expr::EvaluateEntireExpression(expression);
 
@@ -81,10 +67,13 @@ int decl::EvaluateArrayInitialSize(const std::string& expression)
 
 
 }
-void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::iterator& end)
+void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::iterator& end, std::list<var_declr_data>& datalist)
 {
 
 	const token_t token = cec::Compiler_ReadToken(it, ';', end);
+	var_declr_data data;
+
+
 
 	if (token.eof_character) {
 		throw std::exception("EvaluateDeclarationOperators(): check this out!!!!");
@@ -96,23 +85,26 @@ void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::
 		return;
 
 	if(t == token_t::WHITESPACE)
-		return EvaluateDeclarationOperators(it, end);
+		return EvaluateDeclarationOperators(it, end, datalist);
 
 	if (t != token_t::OPERATOR) {
 		throw std::exception("expected an identifier or operator");
 	}
-
 	if (token.value == "[") {
+		data.declaration_type = declr_type::ARRAY;
+		data.arr = std::shared_ptr<array_declr_data>(new array_declr_data);
 		std::string array_expression = ParseArrayExpression(it, end);
-		int arrsize = EvaluateArrayInitialSize(array_expression);
-		return EvaluateDeclarationOperators(it, end);
+		data.arr->numElements = EvaluateArrayInitialSize(array_expression);
+		datalist.push_front(data); // to the front because the evaluation is from right to left
+		return EvaluateDeclarationOperators(it, end, datalist);
 	}
 
+	throw std::exception("unsupported type operator");
 
 
 }
 
-std::string ParseArrayExpression(std::string::iterator& it, std::string::iterator& end)
+std::string decl::ParseArrayExpression(std::string::iterator& it, std::string::iterator& end)
 {
 	std::string array_expression;
 	bool found = false;
@@ -130,4 +122,35 @@ std::string ParseArrayExpression(std::string::iterator& it, std::string::iterato
 	}
 
 	return array_expression;
+}
+
+void decl::SetVariableModifier(const var_declr_data& data, Variable* target)
+{
+	if (!target) {
+		throw std::exception("SetVariableModifier(): impossible scenario");
+	}
+
+	std::function<Variable*(Variable*)> FindDeepestVariable = [&](Variable* var)
+	{
+		if (!var->reference && !var->arr.get())
+			return var;
+
+		if(var->reference){
+			return FindDeepestVariable(var->reference);
+		}
+
+		return FindDeepestVariable(var->arr.get());
+			
+	};
+
+	auto deepest = FindDeepestVariable(target);
+
+	switch (data.declaration_type) {
+
+	case declr_type::ARRAY:
+		deepest->arr = std::shared_ptr<Variable[]>(new Variable[data.arr->numElements]);
+		break;
+
+
+	}
 }

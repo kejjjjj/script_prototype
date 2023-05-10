@@ -51,7 +51,7 @@ struct VariableValue
 struct array_declr_data
 {
 	int numElements = 0;
-	VarType type = VarType::VT_INVALID;
+	VarType type;
 };
 
 class Array
@@ -76,15 +76,17 @@ public:
 
 	}
 
+	std::shared_ptr<Array> child;
+
 private:
 	std::vector<VariableValue> value;
 	VarType type = VarType::VT_INVALID;
 };
 
-class Variable : public Array
+class Variable
 {
 public:
-	Variable(const std::string_view& _name, VarType _type, bool bArray = false);
+	Variable(const std::string_view& _name, VarType _type);
 	Variable() = delete;
 	~Variable();
 
@@ -123,6 +125,12 @@ public:
 	}
 	auto get_type() const { return type; }
 	std::string name;
+
+	friend class Array;
+
+	Variable* reference = 0;
+	std::shared_ptr<Variable[]> arr;
+
 private:
 	
 	VarType type = VarType::VT_INVALID;
@@ -152,7 +160,7 @@ struct hasher
 inline std::unordered_map<std::string, Variable> stack_variables;
 
 bool IsDataType(const std::string_view& str);
-size_t GetDataType(const std::string_view& str);
+VarType GetDataType(const std::string_view& str);
 size_t GetTypeQualifier(const std::string_view& str);
 
 
@@ -187,11 +195,9 @@ struct var_declr_data
 {
 	std::shared_ptr<array_declr_data> arr;
 	declr_type declaration_type;
-	std::string variable_name;
-	std::string variable_type;
 };
 
 declr_type DeclarationUnaryToType(char op);
 
-void DeclareVariable(const var_declr_data& data);
+Variable* DeclareVariable(const std::string& name, const VarType type);
 #endif

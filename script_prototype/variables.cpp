@@ -1,7 +1,7 @@
 #include "pch.h"
 
 
-Variable::Variable(const std::string_view& _name, VarType _type, bool bArray) : name(_name), type(_type), Array(0){
+Variable::Variable(const std::string_view& _name, VarType _type) : name(_name), type(_type){
 	switch (type) {
 		case VarType::VT_INT:
 			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
@@ -34,14 +34,14 @@ bool IsDataType(const std::string_view& str)
 
 	return false;
 }
-size_t GetDataType(const std::string_view& str)
+VarType GetDataType(const std::string_view& str)
 {
 	for (size_t i = 0; i < VarTypes.size(); i++){
 		if (!str.compare(VarTypes[i]))
-			return i;
+			return (VarType)i;
 	}
 
-	return 0u;
+	return VarType::VT_INVALID;
 }
 size_t GetTypeQualifier(const std::string_view& str)
 {
@@ -60,21 +60,19 @@ bool IsConst(const std::string_view& v)
 	return false;
 }
 
-void DeclareVariable(const var_declr_data& data)
+Variable* DeclareVariable(const std::string& name, const VarType type)
 {
-	std::cout << "pushing \"" << data.variable_name<< "\" of type '" << data.variable_type << "' to stack!\n";
+	std::cout << "pushing \"" << name<< "\" of type '" << VarTypes[int(type)] << "' to stack!\n";
 
-	const auto itype = (VarType)GetDataType(data.variable_type);
-
-	if ((int)itype < 1) {
+	if (type == VarType::VT_FLOAT) {
 		throw std::exception("DeclareVariable(): impossible scenario!");
 	}
 
-	if (stack_variables.find(std::string(data.variable_name)) != stack_variables.end()) {
-		throw std::exception(std::format("the variable \"{}\" is already defined", data.variable_name).c_str());
+	if (stack_variables.find(std::string(name)) != stack_variables.end()) {
+		throw std::exception(std::format("the variable \"{}\" is already defined", name).c_str());
 	}
 
-	stack_variables.insert(std::make_pair(data.variable_name, Variable(data.variable_name, itype)));
+	return &stack_variables.insert(std::make_pair(name, Variable(name, type))).first->second;
 }
 
 declr_type DeclarationUnaryToType(char op)
