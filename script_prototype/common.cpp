@@ -851,7 +851,7 @@ bool IsUnaryOperator(const std::string_view& op)
 }
 bool IsPostfixOperator(const std::string_view& op)
 {
-    return UnaryArithmeticOp(op); //++ or --
+    return UnaryArithmeticOp(op) || op == "["; //++ or --
 }
 bool NextOperatorCanBeAnOperator(const std::string_view& op)
 {

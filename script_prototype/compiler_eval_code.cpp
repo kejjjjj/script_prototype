@@ -127,8 +127,8 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 		}
 	}
 
-	if(token.value.front() != expected_eof && expected_eof)
-		throw std::exception(std::format("Compiler_ReadToken(): unexpected end of file\nexpected {} instead of {}", expected_eof, token.value).c_str());
+	//if(token.value.front() != expected_eof && expected_eof)
+	//	throw std::exception(std::format("Compiler_ReadToken(): unexpected end of file\nexpected {} instead of {}", expected_eof, token.value).c_str());
 
 	return token;
 }

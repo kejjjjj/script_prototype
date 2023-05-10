@@ -2,6 +2,9 @@
 
 expr::expression_token expr::EvaluateEntireExpression(const std::string& str)
 {
+	if (str.empty())
+		return {};
+
 	Parenthesis_s par = GetStringWithinParentheses(str);
 
 	if (par.result_string == "empty") {
@@ -129,11 +132,9 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			if (!rules.operator_allowed) {
 				throw std::exception("expected an integral type instead of operator");
 			}
-
+			
 			rules.ignore_postfix = false;
 			if (rules.next_operator) {
-
-
 				expr_token.op = true;
 				if(!SatisfiesOperator(token.value))
 					throw std::exception("expected an expression");
@@ -145,15 +146,38 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			if ((IsUnaryOperator(token.value) || token.value == ".") && (rules.next_unary)) {
 				expr_token.prefix.push_back(token.value);
 
-				if (token.value == ".") {
+				if (token.value == ".") { // a decimal number that begins with .
 					rules.ignore_postfix = true;
 					rules.operator_allowed = false;
 				}
 
 			}
-			else if (IsPostfixOperator(token.value) && rules.next_postfix) {
+			else if (IsPostfixOperator(token.value)) {
 
-				expr_token.postfix.push_back(token.value);
+				if(!rules.next_postfix)
+					throw std::exception(std::format("unexpected operator {}", token.value).c_str());
+
+				if (token.value == "[") {
+					std::cout << "array expression poggies :3\n";
+					auto full_expr = std::string(it, end);
+					auto iend = full_expr.find_last_of(']');
+
+					if (iend == std::string::npos) {
+						throw std::exception("expected a \"]\"");
+					}
+
+					expr_token.postfix.push_back('[' + full_expr.substr(0, iend + 1));
+
+					it += iend+1;
+
+				}
+
+				else if (rules.next_postfix && !UnaryArithmeticOp(token.value)) {
+					expr_token.postfix.push_back(token.value); //just a postfix
+				}
+
+
+
 			}else if (token.value.front() == '.' && rules.next_postfix) {
 
 				expr_token.postfix.push_back(token.value);
@@ -161,6 +185,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 				rules.next_operator = true;
 				break;
 			}
+
 			else {
 				it -= token.value.length();
 				kill_loop = true;
@@ -247,10 +272,6 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 		return EvaluatePostfix(it, end, tokens);
 
 	//this will NOT execute until variable support
-
-	std::string op;
-	op.push_back(token.postfix.front().front());
-	token.content = Eval(token.content, "1", op);
 	token.postfix.pop_front();
 	syntax.ClearFlag(S_END_OF_NUMBER);
 	

@@ -87,7 +87,8 @@ class Variable
 {
 public:
 	Variable(const std::string_view& _name, VarType _type);
-	Variable() = delete;
+	Variable(VarType _type) : type(_type) {}
+	Variable() {};
 	~Variable();
 
 	const VariableValue& get_value() const

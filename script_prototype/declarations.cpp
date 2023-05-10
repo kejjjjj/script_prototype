@@ -39,11 +39,16 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 	const std::string vname = tokens.front().content;
 	const VarType vtype = GetDataType(type);
 
-	DeclareVariable(vname, vtype);
+	auto var = DeclareVariable(vname, vtype);
+
+	for (const auto& i : data) {
+		if (i.arr)
+			i.arr->type = vtype;
+		SetVariableModifier(i, var);
+	}
 
 
-
-	expr::EvaluateEntireExpression(expression); //now it can be evaluated since it's been pushed to the stack
+	expr::EvaluateEntireExpression(std::string(it, end)); //now it can be evaluated since it's been pushed to the stack
 
 }
 
@@ -81,8 +86,10 @@ void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::
 
 	auto t = token.t_type;
 
-	if (t == token_t::tokentype::DIGIT || t == token_t::tokentype::STRING)
+	if (t == token_t::tokentype::DIGIT || t == token_t::tokentype::STRING) {
+		it -= token.value.size();
 		return;
+	}
 
 	if(t == token_t::WHITESPACE)
 		return EvaluateDeclarationOperators(it, end, datalist);
@@ -114,13 +121,13 @@ std::string decl::ParseArrayExpression(std::string::iterator& it, std::string::i
 			break;
 		}
 
-		array_expression.push_back(*++it);
+		array_expression.push_back(*it++);
 	}
 
 	if (!found) {
 		throw std::exception("expected \"]\"");
 	}
-
+	++it; //skip the ]
 	return array_expression;
 }
 
@@ -149,6 +156,11 @@ void decl::SetVariableModifier(const var_declr_data& data, Variable* target)
 
 	case declr_type::ARRAY:
 		deepest->arr = std::shared_ptr<Variable[]>(new Variable[data.arr->numElements]);
+			
+		for (int i = 0; i < data.arr->numElements; i++)
+			deepest->arr[i].set_type(target->get_type());
+
+		std::cout << "allocating an array of size " << data.arr->numElements << '\n';
 		break;
 
 
