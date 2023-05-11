@@ -20,6 +20,8 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 	EvaluateDeclarationOperators(it, end, data);
 
+	auto expr_it = it;
+
 	std::list<expr::expression_token> tokens;
 	TokenizeExpression(it, end, tokens);
 	auto t_it = tokens.begin();
@@ -48,7 +50,7 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 	}
 
 
-	expr::EvaluateEntireExpression(std::string(it, end)); //now it can be evaluated since it's been pushed to the stack
+	expr::EvaluateEntireExpression(std::string(expr_it, end)); //now it can be evaluated since it's been pushed to the stack
 
 }
 
@@ -156,10 +158,11 @@ void decl::SetVariableModifier(const var_declr_data& data, Variable* target)
 
 	case declr_type::ARRAY:
 		deepest->arr = std::shared_ptr<Variable[]>(new Variable[data.arr->numElements]);
-			
-		for (int i = 0; i < data.arr->numElements; i++)
+		deepest->numElements = data.arr->numElements;
+		for (int i = 0; i < data.arr->numElements; i++) {
 			deepest->arr[i].set_type(target->get_type());
-
+			deepest->arr[i].AllocateValues();
+		}
 		std::cout << "allocating an array of size " << data.arr->numElements << '\n';
 		break;
 

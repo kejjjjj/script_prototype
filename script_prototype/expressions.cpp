@@ -2,8 +2,10 @@
 
 expr::expression_token expr::EvaluateEntireExpression(const std::string& str)
 {
-	if (str.empty())
+	if (str.empty()) {
+		std::cout << "EvaluateEntireExpression(): empty expression\n";
 		return {};
+	}
 
 	Parenthesis_s par = GetStringWithinParentheses(str);
 
@@ -160,7 +162,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 				if (token.value == "[") {
 					std::cout << "array expression poggies :3\n";
 					auto full_expr = std::string(it, end);
-					auto iend = full_expr.find_last_of(']');
+					auto iend = full_expr.find_first_of(']');
 
 					if (iend == std::string::npos) {
 						throw std::exception("expected a \"]\"");
@@ -258,6 +260,11 @@ void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<
 
 	if (token.postfix.empty())
 		return EvaluatePostfix(++it, end, tokens);
+
+	if (EvaluateSubscript(*it)) {
+		token.postfix.pop_front();
+		return EvaluatePostfix(it, end, tokens);
+	}
 
 	if (UnaryArithmeticOp(token.postfix.front())) {
 		if (token.is_rvalue())
@@ -368,6 +375,37 @@ bool expr::EvaluatePeriodPrefix(std::list<expression_token>::iterator& it)
 
 	return false;
 
+}
+bool expr::EvaluateSubscript(expression_token& token)
+{
+	const auto& postfix = token.postfix.front();
+
+	if (postfix.front() != '[')
+		return false;
+
+	if (!token.is_lvalue())
+		throw std::exception("[] operand must be an lvalue");
+
+	if(!token.lval->ref->arr.get())
+		throw std::exception("[] operand must be have array type");
+
+	const auto result = expr::EvaluateEntireExpression(postfix.substr(1, postfix.size() - 2)); //remove the brackets
+	const auto arrSize = token.lval->ref->numElements;
+
+	if (!result.is_integral()) {
+		throw std::exception("expression must be convertible to an integral type");
+	}
+
+	const int numElements = result.get_int();
+
+	if (numElements < 0 || numElements >= arrSize)
+		throw std::exception("accessing an array out of bounds");
+
+	token.lval->ref = &token.lval->ref->arr[numElements];
+
+	std::cout << "array lvalue -> " << token.lval->ref << '\n';
+
+	return true;
 }
 void expr::EvaluatePostfixArithmetic(expression_token& token, bool increment)
 {

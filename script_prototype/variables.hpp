@@ -125,12 +125,31 @@ public:
 		type = atype;
 	}
 	auto get_type() const { return type; }
+	
+	void AllocateValues() {
+		switch (type) {
+		case VarType::VT_INT:
+			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
+			value.buf_size = sizeof(int);
+
+			break;
+		case VarType::VT_FLOAT:
+			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
+			value.buf_size = sizeof(float);
+			break;
+		case VarType::VT_STRING:
+			throw std::exception("rvalue(VarType type): VT_STRING case not supported");
+			break;
+		}
+	}
+
 	std::string name;
 
 	friend class Array;
 
 	Variable* reference = 0;
 	std::shared_ptr<Variable[]> arr;
+	unsigned __int16 numElements = 0;
 
 private:
 	

@@ -2,21 +2,7 @@
 
 
 Variable::Variable(const std::string_view& _name, VarType _type) : name(_name), type(_type){
-	switch (type) {
-		case VarType::VT_INT:
-			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
-			value.buf_size = sizeof(int);
-
-			break;
-		case VarType::VT_FLOAT:
-			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
-			value.buf_size = sizeof(float);
-			break;
-		case VarType::VT_STRING:
-			throw std::exception("rvalue(VarType type): VT_STRING case not supported");
-			break;
-	}
-
+	AllocateValues();
 }
 Variable::~Variable()
 {
