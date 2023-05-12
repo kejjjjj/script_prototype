@@ -151,6 +151,8 @@ public:
 	std::shared_ptr<Variable[]> arr;
 	unsigned __int16 numElements = 0;
 
+
+
 private:
 	
 	VarType type = VarType::VT_INVALID;
@@ -220,4 +222,5 @@ struct var_declr_data
 declr_type DeclarationUnaryToType(char op);
 
 Variable* DeclareVariable(const std::string& name, const VarType type);
+unsigned __int16 GetArrayDepth(const Variable* var);
 #endif

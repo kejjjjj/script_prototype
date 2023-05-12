@@ -160,7 +160,6 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 					throw std::exception(std::format("unexpected operator {}", token.value).c_str());
 
 				if (token.value == "[") {
-					std::cout << "array expression poggies :3\n";
 					auto full_expr = std::string(it, end);
 					auto iend = full_expr.find_first_of(']');
 
@@ -205,7 +204,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		}
 	}
 	rules.next_operator = !rules.next_operator;
-	if (!expr_token.content.empty()) {
+	if (!expr_token.content.empty()) { //ignore empty tokens
 		expr_token.whitespace = false;
 		tokens.push_back(expr_token);
 	}
@@ -532,7 +531,7 @@ expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token
 		const auto& lval = (--itr1)->content;
 		const auto& rval = (++itr2)->content;
 
-		if (!ExpressionCompatibleOperands(itr1->tokentype, itr2->tokentype)) {
+		if (!ExpressionCompatibleOperands(*itr1, *itr2)) {
 			throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(itr1->tokentype)], VarTypes[int(itr2->tokentype)]).c_str());
 		}
 
@@ -578,16 +577,26 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 
 
 }
-bool expr::ExpressionCompatibleOperands(const VarType left, const VarType right)
+bool expr::ExpressionCompatibleOperands(const expression_token& left, const expression_token& right)
 {
-	if (left <= VarType::VT_VOID || right <= VarType::VT_VOID)
+	const auto ltype = left.get_type();
+	const auto rtype = right.get_type();
+
+	if (ltype <= VarType::VT_VOID || rtype <= VarType::VT_VOID)
 		return false;
+
+
+	unsigned __int16 lengthA = left.is_lvalue()	 ? GetArrayDepth(left.lval->ref)  : 0;
+	unsigned __int16 lengthB = right.is_lvalue() ? GetArrayDepth(right.lval->ref) : 0;
+
+	if (lengthA != lengthB)
+		throw std::exception(std::format("expected a {}D array as the right operand", lengthA).c_str());
 
 	int leftFlag = 0;
 	int rightFlag = 0;
 
-	leftFlag |= int(left);
-	rightFlag |= int(right);
+	leftFlag |= int(ltype);
+	rightFlag |= int(rtype);
 
 	const int INT_FLAG = int(VarType::VT_INT);
 	const int FLOAT_FLAG = int(VarType::VT_FLOAT);
@@ -602,6 +611,7 @@ bool expr::ExpressionCompatibleOperands(const VarType left, const VarType right)
 	else if (leftFlag & INT_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG)) {
 		return true;
 	}
+	
 
 	return false;
 

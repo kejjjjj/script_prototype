@@ -60,7 +60,18 @@ Variable* DeclareVariable(const std::string& name, const VarType type)
 
 	return &stack_variables.insert(std::make_pair(name, Variable(name, type))).first->second;
 }
+unsigned __int16 GetArrayDepth(const Variable* var)
+{
+	unsigned __int16 size = 0;
+	auto ref = var;
+	while (ref) {
+		size += 1;
+		ref = var->arr.get();
+	}
 
+	return size;
+
+}
 declr_type DeclarationUnaryToType(char op)
 {
 	std::cout << "testing " << op << '\n';

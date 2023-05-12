@@ -195,7 +195,7 @@ namespace expr
 	bool EvaluateSubscript(expression_token& token);
 	bool EvaluatePeriodPrefix(std::list<expression_token>::iterator& it);
 	void EvaluatePrefixArithmetic(expression_token& token, bool increment);
-	bool ExpressionCompatibleOperands(const VarType left, const VarType right);
+	bool ExpressionCompatibleOperands(const expression_token& left, const expression_token& right);
 	void ExpressionMakeRvalue(expression_token& token);
 	void ExpressionCastWeakerOperand(expression_token& left, expression_token& right);
 	void ExpressionSetTempValue(temp_value_s& token);
