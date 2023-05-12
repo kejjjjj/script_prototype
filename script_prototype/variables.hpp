@@ -91,72 +91,43 @@ public:
 	Variable() {};
 	~Variable();
 
-	const VariableValue& get_value() const
-	{
-		return value;
-	}
+	int get_int() const		 { return *reinterpret_cast<int*>(value.buffer.get());	}
+	float get_float() const  { return *reinterpret_cast<float*>(value.buffer.get());}
+	char* get_string() const { return reinterpret_cast<char*>(value.buffer.get());	}
 
-	int get_int() const {
-		return *reinterpret_cast<int*>(get_value().buffer.get());
+	void set_int(int _value)		{*reinterpret_cast<int*>(value.buffer.get()) = _value; }
+	void set_float(float _value)	{*reinterpret_cast<float*>(value.buffer.get()) = _value; }
+	void set_string(char* _value) {
+#pragma warning(suppress : 4996) 
+		strcpy(reinterpret_cast<char*>(value.buffer.get()), _value); }
 
-	}
-	float get_float() const {
-		return *reinterpret_cast<float*>(get_value().buffer.get());
-	}
-	char* get_string() const {
-		return reinterpret_cast<char*>(get_value().buffer.get());
-	}
-
-	void set_int(int value) {
-		*reinterpret_cast<int*>(get_value().buffer.get()) = value;
-	}
-	void set_float(float value) {
-		*reinterpret_cast<float*>(get_value().buffer.get()) = value;
-	}
-	void set_string(char* value) {
-#pragma warning(suppress : 4996);
-		strcpy(reinterpret_cast<char*>(get_value().buffer.get()), value);
-	}
 	template <typename T>
-	void set_value(const T v) {
-		*reinterpret_cast<T*>(get_value().buffer.get()) = v;
-	}
-	void set_type(const VarType atype) {
-		type = atype;
-	}
+	void set_value(const T v) { *reinterpret_cast<T*>(value.buffer.get()) = v; }
+	void set_type(const VarType atype) { type = atype; }
 	auto get_type() const { return type; }
 	
-	void AllocateValues() {
-		switch (type) {
-		case VarType::VT_INT:
-			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
-			value.buf_size = sizeof(int);
-
-			break;
-		case VarType::VT_FLOAT:
-			value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
-			value.buf_size = sizeof(float);
-			break;
-		case VarType::VT_STRING:
-			throw std::exception("rvalue(VarType type): VT_STRING case not supported");
-			break;
-		}
-	}
-
+	void AllocateValues();
 	std::string name;
-
+	VariableValue value;
 	friend class Array;
 
+	//references
 	Variable* reference = 0;
+
+	//arrays
 	std::shared_ptr<Variable[]> arr;
 	unsigned __int16 numElements = 0;
 
+	//array methods
+	bool is_array() const { return arr.get(); }
+	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const unsigned __int16 length);
 
+	void print(unsigned __int16 spaces = 0) const;
 
 private:
 	
 	VarType type = VarType::VT_INVALID;
-	VariableValue value;
+	
 };
 struct ScriptBlock : Variable
 {
@@ -183,28 +154,6 @@ inline std::unordered_map<std::string, Variable> stack_variables;
 
 bool IsDataType(const std::string_view& str);
 VarType GetDataType(const std::string_view& str);
-size_t GetTypeQualifier(const std::string_view& str);
-
-
-bool VariableInStack(const std::string_view& var);
-
-Variable* FindVariableFromStack(const std::string_view& var);
-
-
-bool CompatibleDataTypes(const VarType a, const VarType b);
-
-bool IsConst(const std::string_view& v);
-
-inline bool ValidDeclarationOperator(const std::string_view& op)
-{
-	if (op.empty()) //should never be true
-		return false;
-
-	auto& o = op.front();
-
-	return o == '?' || o == '[' || o == ']';
-
-}
 
 enum class declr_type : char
 {
@@ -223,4 +172,7 @@ declr_type DeclarationUnaryToType(char op);
 
 Variable* DeclareVariable(const std::string& name, const VarType type);
 unsigned __int16 GetArrayDepth(const Variable* var);
+
+
+
 #endif

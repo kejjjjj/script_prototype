@@ -199,7 +199,6 @@ namespace expr
 	void ExpressionMakeRvalue(expression_token& token);
 	void ExpressionCastWeakerOperand(expression_token& left, expression_token& right);
 	void ExpressionSetTempValue(temp_value_s& token);
-
 	expression_token EvaluateExpressionTokens(std::list<expression_token>& tokens);
 
 	//void Eval(expression_token& left, expression_token& right, std::function<void(expression_token&, expression_token&)>& eval_fc);
@@ -241,7 +240,6 @@ namespace expr
 			float fright{};
 			switch (left.get_type()) {
 				case VarType::VT_INT:
-					
 
 					if (right.get_type() == VarType::VT_FLOAT)	
 						 fright = (int)right.get_float();
@@ -687,11 +685,20 @@ namespace expr
 
 			auto var = left.lval->ref;
 
-			float fright{};
 			expression_token result;
+
 
 			result.lval = left.lval;
 			result.set_type(left.get_type());
+
+			if (var->is_array()) {
+				result.content = var->name;
+				var->replace_array(right.lval->ref->arr, right.lval->ref->numElements);
+				return result;
+			}
+
+			float fright{};
+			
 
 			switch (var->get_type()) {
 				case VarType::VT_INT:
@@ -733,7 +740,7 @@ namespace expr
 			float left_float = left.get_int();
 			char left_str[32];
 
-			memcpy(left_str, left.get_string(), left_op->get_value().buf_size);
+			memcpy(left_str, left.get_string(), left_op->value.buf_size);
 
 
 

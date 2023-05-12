@@ -12,6 +12,73 @@ Variable::~Variable()
 	//lol try to remember to delete it :p
 }
 
+void Variable::AllocateValues() {
+	switch (type) {
+	case VarType::VT_INT:
+		value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
+		value.buf_size = sizeof(int);
+		*reinterpret_cast<int*>(value.buffer.get()) = 0;
+		break;
+	case VarType::VT_FLOAT:
+		value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
+		value.buf_size = sizeof(float);
+		*reinterpret_cast<float*>(value.buffer.get()) = 0;
+
+		break;
+	case VarType::VT_STRING:
+		throw std::exception("rvalue(VarType type): VT_STRING case not supported");
+		break;
+	}
+}
+void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const unsigned __int16 length) 
+{ 
+	if (length != numElements)
+		std::cout << "resizing the array from " << numElements << " to " << length << '\n';
+
+	arr = a_arr; 
+	numElements = length;
+}
+
+void Variable::print(unsigned __int16 spaces) const
+{
+	if (!spaces++)
+		std::cout << std::format("{}:\n", name);
+
+	const auto ValueToString = [](const Variable& var) -> std::string
+	{
+		switch (var.type) {
+		case VarType::VT_INT:
+			return std::to_string(var.get_int());
+			break;
+		case VarType::VT_FLOAT:
+			return std::to_string(var.get_float());
+			break;
+		case VarType::VT_STRING:
+			return var.get_string();
+			break;
+		}
+
+		return "";
+	};
+
+	std::string prefix;
+
+	for (unsigned __int16 i = 0; i < spaces; i++) {
+		prefix.push_back(' ');
+		prefix.push_back(' ');
+
+	}
+
+	for (int i = 0; i < numElements; i++) {
+		std::cout << std::format("{}[{}]: <{}>\n", prefix, i, VarTypes[int(get_type())]);
+		arr[i].print(spaces + 1);
+	}
+	if(!numElements && !name.empty())
+		std::cout << std::format("{}: <{}> ({})\n", prefix, VarTypes[int(get_type())], ValueToString(*this));
+
+
+}
+
 bool IsDataType(const std::string_view& str)
 {
 	for (const auto& i : VarTypes)
@@ -38,14 +105,6 @@ size_t GetTypeQualifier(const std::string_view& str)
 
 	return 0u;
 }
-bool IsConst(const std::string_view& v)
-{
-	if (ValidNumber(v))
-		return true;
-	
-	return false;
-}
-
 Variable* DeclareVariable(const std::string& name, const VarType type)
 {
 	std::cout << "pushing \"" << name<< "\" of type '" << VarTypes[int(type)] << "' to stack!\n";
@@ -63,10 +122,10 @@ Variable* DeclareVariable(const std::string& name, const VarType type)
 unsigned __int16 GetArrayDepth(const Variable* var)
 {
 	unsigned __int16 size = 0;
-	auto ref = var;
+	auto ref = var->arr.get();
 	while (ref) {
 		size += 1;
-		ref = var->arr.get();
+		ref = ref->arr.get();
 	}
 
 	return size;

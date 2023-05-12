@@ -69,19 +69,7 @@ bool Script::Compile()
 	std::cout << "\nscript stack: \n";
 
 	for (auto& i : stack_variables) {
-		std::cout << i.second.name << '<' << VarTypes[int(i.second.get_type())] << "> (";
-
-		switch (i.second.get_type()) {
-		case VarType::VT_INT:
-			std::cout << i.second.get_int() << ")\n";
-			break;
-		case VarType::VT_FLOAT:
-			std::cout << i.second.get_float() << ")\n";
-			break;
-		case VarType::VT_STRING:
-			std::cout << i.second.get_string() << ")\n";
-			break;
-		}
+		i.second.print();
 
 	}
 

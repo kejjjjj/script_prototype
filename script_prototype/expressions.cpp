@@ -398,7 +398,7 @@ bool expr::EvaluateSubscript(expression_token& token)
 	const int numElements = result.get_int();
 
 	if (numElements < 0 || numElements >= arrSize)
-		throw std::exception("accessing an array out of bounds");
+		throw std::exception(std::format("accessing an array out of bounds [{}, {}]", numElements, arrSize).c_str());
 
 	token.lval->ref = &token.lval->ref->arr[numElements];
 
@@ -430,7 +430,7 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 	if (type != VarType::VT_INT && type != VarType::VT_FLOAT)
 		throw std::exception("expected an int or float");
 	
-	auto& value = token.lval->ref->get_value();
+	auto& value = token.lval->ref->value;
 
 	if (type == VarType::VT_FLOAT) {
 
@@ -591,6 +591,8 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 
 	if (lengthA != lengthB)
 		throw std::exception(std::format("expected a {}D array as the right operand", lengthA).c_str());
+	else if(lengthA && lengthB && ltype != rtype)
+		throw std::exception(std::format("array operands must have the same type").c_str());
 
 	int leftFlag = 0;
 	int rightFlag = 0;
@@ -618,6 +620,13 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 }
 void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token& right)
 {
+	unsigned __int16 lengthA = left.is_lvalue() ? GetArrayDepth(left.lval->ref) : 0;
+	unsigned __int16 lengthB = right.is_lvalue() ? GetArrayDepth(right.lval->ref) : 0;
+
+	if (lengthA > 0 || lengthB > 0) { //array operands are only allowed for assignments
+		throw std::exception("this is not a valid operation for the operands");
+	}
+
 	expression_token* stronger, *weaker;
 
 	if (left.get_type() > right.get_type()) {

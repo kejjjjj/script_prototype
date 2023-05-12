@@ -71,8 +71,7 @@ int decl::EvaluateArrayInitialSize(const std::string& expression)
 	expr::rules.reset();
 
 	return result.get_int();
-
-
+	
 }
 void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::iterator& end, std::list<var_declr_data>& datalist)
 {
@@ -104,7 +103,7 @@ void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::
 		data.arr = std::shared_ptr<array_declr_data>(new array_declr_data);
 		std::string array_expression = ParseArrayExpression(it, end);
 		data.arr->numElements = EvaluateArrayInitialSize(array_expression);
-		datalist.push_front(data); // to the front because the evaluation is from right to left
+		datalist.push_back(data); // to the back because the evaluation is from left to right
 		return EvaluateDeclarationOperators(it, end, datalist);
 	}
 
@@ -139,29 +138,56 @@ void decl::SetVariableModifier(const var_declr_data& data, Variable* target)
 		throw std::exception("SetVariableModifier(): impossible scenario");
 	}
 
-	std::function<Variable*(Variable*)> FindDeepestVariable = [&](Variable* var)
+	std::function<std::pair<Variable*, Variable*>(Variable*, Variable*)> FindDeepestVariable = [&](Variable* var, Variable* parent) -> std::pair<Variable*, Variable*>
 	{
 		if (!var->reference && !var->arr.get())
-			return var;
+			return { var, parent};
 
 		if(var->reference){
-			return FindDeepestVariable(var->reference);
+			parent = var;
+			return { FindDeepestVariable(var->reference, parent) };
 		}
-
-		return FindDeepestVariable(var->arr.get());
+		parent = var;
+		return { FindDeepestVariable(var->arr.get(), parent) };
 			
 	};
+	Variable* parent = 0;
+	auto v = FindDeepestVariable(target, parent);
+	auto deepest = v.first;
+	parent = v.second;
+	std::cout << "parent: " << parent << '\n';
+	std::cout << "source: " << target << '\n';
 
-	auto deepest = FindDeepestVariable(target);
-
+	unsigned __int16 current_size = 0;
 	switch (data.declaration_type) {
-
 	case declr_type::ARRAY:
+		
+		if (parent) {
+			current_size = parent->numElements;
+			for (int i = 0; i < parent->numElements; i++) {
+				auto child = &parent->arr[i];
+
+				child->arr = std::shared_ptr<Variable[]>(new Variable[data.arr->numElements]);
+				child->numElements = data.arr->numElements;
+
+				for (int j = 0; j < data.arr->numElements; j++) {
+					child->arr[j].set_type(target->get_type());
+					child->arr[j].AllocateValues();
+					++current_size;
+				}
+			}
+			std::cout << "resizing the array to size " << current_size << '\n';
+			break;
+		}
+
+		//if this is a 1d array declaration
 		deepest->arr = std::shared_ptr<Variable[]>(new Variable[data.arr->numElements]);
 		deepest->numElements = data.arr->numElements;
+		
 		for (int i = 0; i < data.arr->numElements; i++) {
 			deepest->arr[i].set_type(target->get_type());
 			deepest->arr[i].AllocateValues();
+			
 		}
 		std::cout << "allocating an array of size " << data.arr->numElements << '\n';
 		break;
