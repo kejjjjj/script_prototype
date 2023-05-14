@@ -122,7 +122,9 @@ public:
 	bool is_array() const { return arr.get(); }
 	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const unsigned __int16 length);
 
+	//utility functions
 	void print(unsigned __int16 spaces = 0) const;
+	std::string s_getvariabletype() const;
 
 private:
 	
@@ -172,7 +174,7 @@ declr_type DeclarationUnaryToType(char op);
 
 Variable* DeclareVariable(const std::string& name, const VarType type);
 unsigned __int16 GetArrayDepth(const Variable* var);
-
+std::string S_GetVariableType(const Variable& var);
 
 
 #endif

@@ -43,12 +43,17 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 	auto var = DeclareVariable(vname, vtype);
 
+	std::list<int> numChildren;
+
 	for (const auto& i : data) {
-		if (i.arr)
+		if (i.arr) {
 			i.arr->type = vtype;
-		SetVariableModifier(i, var);
+			numChildren.push_back(i.arr->numElements);
+		}
+		//SetVariableModifier(i, var);
 	}
 
+	PopulateArrayTree(var, numChildren);
 
 	expr::EvaluateEntireExpression(std::string(expr_it, end)); //now it can be evaluated since it's been pushed to the stack
 
@@ -57,8 +62,10 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 int decl::EvaluateArrayInitialSize(const std::string& expression)
 {
 
-	if (expression.empty())
-		return 1;
+	if (expression.empty()) {
+		throw std::exception("an empty array declaration is not allowed");
+		//return 1;
+	}
 
 	auto result = expr::EvaluateEntireExpression(expression);
 
@@ -193,5 +200,25 @@ void decl::SetVariableModifier(const var_declr_data& data, Variable* target)
 		break;
 
 
+	}
+}
+
+//children cannot be a copy
+void decl::PopulateArrayTree(Variable* parent, std::list<int> children)
+{
+	if (children.empty())
+		return;
+
+	const auto numChildren = children.front();
+
+	children.erase(children.begin());
+
+	parent->arr = std::shared_ptr<Variable[]>(new Variable[numChildren]);
+	parent->numElements = numChildren;
+
+	for (int i = 0; i < numChildren; i++) {
+		parent->arr[i].set_type(parent->get_type());
+		parent->arr[i].AllocateValues();
+		PopulateArrayTree(&parent->arr[i], children);
 	}
 }

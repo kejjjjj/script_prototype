@@ -41,7 +41,9 @@ struct expression_stack
 
 struct rvalue
 {
-	rvalue(const VarType _type) : type(_type){
+	//FIXME - make rvalue constructor require an expression_token instead of just a type :)
+	rvalue(const VarType _type, const unsigned __int16 size = 0) : type(_type){
+		
 		switch (_type) {
 		case VarType::VT_INT:
 			value.buffer = std::shared_ptr<void*>(new void*);
@@ -53,7 +55,11 @@ struct rvalue
 			value.buf_size = sizeof(float);
 			break;
 		case VarType::VT_STRING:
-			throw std::exception("rvalue(VarType type): VT_STRING case not supported");
+			if(!size)
+				throw std::exception("empty string literal is not allowed");
+
+			value.buffer = std::make_shared<void*>(new char[size]);
+			value.buf_size = size;
 			break;
 		}
 	}
@@ -82,6 +88,9 @@ public:
 	template <typename T>
 	void set_value(const T v) {
 		*reinterpret_cast<T*>(value.buffer.get()) = v;
+	}
+	void set_string(char* str) {
+		memcpy(value.buffer.get(), str, value.buf_size);
 	}
 	auto get_type() const {
 		return type;
@@ -118,6 +127,7 @@ namespace expr
 		std::list<std::string> postfix;
 		bool op = false;
 		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
+		bool string_literal = false;
 		VarType tokentype = VarType::VT_INVALID;
 		std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
@@ -261,7 +271,7 @@ namespace expr
 				case VarType::VT_STRING:
 					#pragma warning( suppress : 4996)
 					result.set_value<char*>(strcat(left.get_string(), right.get_string()));
-					result.content = result.get_string();
+					result.content = "\"" + std::string(result.get_string()) + "\"";
 					return result;
 			}
 			return result;

@@ -12,6 +12,9 @@ namespace decl
 	std::string ParseArrayExpression(std::string::iterator& it, std::string::iterator& end);
 
 	void SetVariableModifier(const var_declr_data& data, Variable* target);
+	void PopulateArrayTree(Variable* parent, std::list<int> children);
+
+
 }
 
 #endif

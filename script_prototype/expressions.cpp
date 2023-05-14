@@ -96,11 +96,13 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		//std::cout << "token: " << token.value << '\n';
 		
 		switch (token.t_type) {
+		case token_t::tokentype::STRING_LITERAL:
+			expr_token.string_literal = true;
 		case token_t::tokentype::STRING:
 		case token_t::tokentype::DIGIT:
 
 			if (expr_token.tokentype == VarType::VT_INVALID) {
-				if(token.t_type == token_t::tokentype::STRING)
+				if(token.t_type == token_t::tokentype::STRING || token.t_type == token_t::tokentype::STRING_LITERAL)
 					expr_token.tokentype = VarType::VT_STRING;
 				else
 					expr_token.tokentype = VarType::VT_INT;
@@ -224,10 +226,25 @@ void expr::SetTokenValueCategory(expression_token& token)
 
 
 
-	if (token.tokentype != VarType::VT_STRING) {
+	if (token.tokentype != VarType::VT_STRING || token.string_literal) {
 		
-		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype));
-		token.rval->set_value<int>(std::stoi(token.content));
+		//if (token.string_literal)
+		//	token.content = token.content.substr(1, token.content.size() - 2);
+
+		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype, token.string_literal ? token.content.size() : 0));
+		switch (token.get_type()) {
+		case VarType::VT_INT:
+			token.rval->set_value<int>(std::stoi(token.content));
+			break;
+		case VarType::VT_FLOAT:
+			token.rval->set_value<float>(std::stof(token.content));
+			break;
+		case VarType::VT_STRING:
+			token.rval->set_string((char*)token.content.c_str());
+			std::cout << "the str: " << token.rval->get_string() << '\n';
+			break;
+		}
+		//token.rval->set_value<int>(std::stoi(token.content));
 		return;
 	}
 
@@ -385,7 +402,7 @@ bool expr::EvaluateSubscript(expression_token& token)
 	if (!token.is_lvalue())
 		throw std::exception("[] operand must be an lvalue");
 
-	if(!token.lval->ref->arr.get())
+	if(!token.lval->ref->is_array())
 		throw std::exception("[] operand must be have array type");
 
 	const auto result = expr::EvaluateEntireExpression(postfix.substr(1, postfix.size() - 2)); //remove the brackets
@@ -398,7 +415,7 @@ bool expr::EvaluateSubscript(expression_token& token)
 	const int numElements = result.get_int();
 
 	if (numElements < 0 || numElements >= arrSize)
-		throw std::exception(std::format("accessing an array out of bounds [{}, {}]", numElements, arrSize).c_str());
+		throw std::exception(std::format("accessing an array out of bounds [tried {} when size was {}]", numElements, arrSize).c_str());
 
 	token.lval->ref = &token.lval->ref->arr[numElements];
 
@@ -556,7 +573,10 @@ expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token
 
 void expr::ExpressionMakeRvalue(expression_token& token)
 {
+	
 	if (token.is_lvalue()) {
+		if (token.lval->ref->is_array())
+			return;
 		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype));
 		switch (token.tokentype) {
 		case VarType::VT_INT:
@@ -566,7 +586,8 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 			token.rval->set_value<float>(token.lval->ref->get_float());
 			break;
 		case VarType::VT_STRING:
-			token.rval->set_value<char*>(token.lval->ref->get_string());
+			//token.rval->set_value<char*>(token.lval->ref->get_string());
+			token.rval->set_string(token.lval->ref->get_string());
 			break;
 		}
 		token.lval.reset();
@@ -574,7 +595,10 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 		return;
 	}
 
-
+	if (token.get_type() == VarType::VT_STRING) {
+		std::string str = token.rval->get_string();
+		token.rval->set_string((char*)str.substr(1, str.size() - 2).c_str());
+	}
 
 }
 bool expr::ExpressionCompatibleOperands(const expression_token& left, const expression_token& right)
@@ -585,14 +609,15 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 	if (ltype <= VarType::VT_VOID || rtype <= VarType::VT_VOID)
 		return false;
 
-
 	unsigned __int16 lengthA = left.is_lvalue()	 ? GetArrayDepth(left.lval->ref)  : 0;
 	unsigned __int16 lengthB = right.is_lvalue() ? GetArrayDepth(right.lval->ref) : 0;
 
-	if (lengthA != lengthB)
-		throw std::exception(std::format("expected a {}D array as the right operand", lengthA).c_str());
-	else if(lengthA && lengthB && ltype != rtype)
-		throw std::exception(std::format("array operands must have the same type").c_str());
+	if (lengthA != lengthB || lengthA && lengthB && ltype != rtype) {
+		auto left_type = left.is_lvalue() ? left.lval->ref->s_getvariabletype() : VarTypes[int(left.rval->get_type())];
+		auto right_type = right.is_lvalue() ? right.lval->ref->s_getvariabletype() : VarTypes[int(right.rval->get_type())];
+
+		throw std::exception(std::format("an operand of type \"{}\" is incompatible with \"{}\"", left_type, right_type).c_str());
+	}
 
 	int leftFlag = 0;
 	int rightFlag = 0;

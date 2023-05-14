@@ -119,6 +119,7 @@ struct token_t
 		STRING,
 		WHITESPACE,
 		PARENTHESIS,
+		STRING_LITERAL,
 		OTHER
 
 	}t_type = tokentype::INVALID;

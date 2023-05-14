@@ -75,6 +75,10 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 		token.value.push_back(ch);
 		return token;
 	}
+	else if (ch == '"') {
+		token.t_type = token_t::tokentype::STRING_LITERAL;
+
+	}
 	else {
 		++it;
 		token.t_type = token_t::tokentype::OTHER;
@@ -104,6 +108,13 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 			break;
 		case token_t::tokentype::STRING:
 			if (!std::isalnum(ch)) {
+				return token;
+			}
+			break;
+		case token_t::tokentype::STRING_LITERAL:
+			if (ch == '"') {
+				token.value.push_back(ch);
+				++it;
 				return token;
 			}
 			break;

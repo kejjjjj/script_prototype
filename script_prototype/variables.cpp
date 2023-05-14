@@ -70,7 +70,7 @@ void Variable::print(unsigned __int16 spaces) const
 	}
 
 	for (int i = 0; i < numElements; i++) {
-		std::cout << std::format("{}[{}]: <{}>\n", prefix, i, VarTypes[int(get_type())]);
+		std::cout << std::format("{}[{}]: <{}> ({})\n", prefix, i, VarTypes[int(get_type())], ValueToString(this->arr[i]));
 		arr[i].print(spaces + 1);
 	}
 	if(!numElements && !name.empty())
@@ -109,7 +109,7 @@ Variable* DeclareVariable(const std::string& name, const VarType type)
 {
 	std::cout << "pushing \"" << name<< "\" of type '" << VarTypes[int(type)] << "' to stack!\n";
 
-	if (type == VarType::VT_FLOAT) {
+	if (type == VarType::VT_INVALID) {
 		throw std::exception("DeclareVariable(): impossible scenario!");
 	}
 
@@ -129,6 +129,21 @@ unsigned __int16 GetArrayDepth(const Variable* var)
 	}
 
 	return size;
+
+}
+std::string Variable::s_getvariabletype() const
+{
+	const auto arr_as_text = [](const unsigned __int16 depth) 
+	{
+		auto copy = depth;
+		std::string r;
+		for (unsigned __int16 i = 0; i < depth; i++) {
+			r += "[]";
+		}
+		return r;
+	};
+
+	return std::format("{}{}", VarTypes[int(get_type())], arr_as_text(GetArrayDepth(this)));
 
 }
 declr_type DeclarationUnaryToType(char op)
