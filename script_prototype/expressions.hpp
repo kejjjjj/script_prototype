@@ -46,20 +46,22 @@ struct rvalue
 		
 		switch (_type) {
 		case VarType::VT_INT:
-			value.buffer = std::shared_ptr<void*>(new void*);
+			value.buffer = std::make_shared<char*>(new char[4]);
 			value.buf_size = sizeof(int);
 
 			break;
 		case VarType::VT_FLOAT:
-			value.buffer = std::shared_ptr<void*>(new void*);
+			value.buffer = std::make_shared<char*>(new char[4]);
 			value.buf_size = sizeof(float);
 			break;
 		case VarType::VT_STRING:
 			if(!size)
 				throw std::exception("empty string literal is not allowed");
 
-			value.buffer = std::make_shared<void*>(new char[size]);
-			value.buf_size = size;
+			value.buffer = std::make_shared<char*>(new char[size+1]);
+			char* buf = (char*)value.buffer.get();
+			buf[size] = '\0';
+			value.buf_size = size+1;
 			break;
 		}
 	}
@@ -68,9 +70,9 @@ struct rvalue
 		value.buffer.reset();
 	}
 	rvalue() = delete;
-
-private:
 	VariableValue value;
+private:
+	
 	VarType type;
 public:
 	int get_int() const {
@@ -90,7 +92,18 @@ public:
 		*reinterpret_cast<T*>(value.buffer.get()) = v;
 	}
 	void set_string(char* str) {
-		memcpy(value.buffer.get(), str, value.buf_size);
+		const auto len = strlen(str);
+		//str[len - 1] = '\0';
+
+		if (len != value.buf_size) {
+			value.buffer.reset();
+			value.buffer = std::make_shared<char*>(new char[len+1]);
+			char* alloc = (char*)value.buffer.get();
+			alloc[len] = '\0';
+
+		}
+		memcpy(value.buffer.get(), str, len);
+		value.buf_size = strlen(get_string()); //a bit more expensive but works surely :clueless:
 	}
 	auto get_type() const {
 		return type;
@@ -162,6 +175,13 @@ namespace expr
 				return (lval->ref->get_string());
 
 			throw std::exception("not an lvalue nor rvalue");
+		}
+		void set_string(char* str)
+		{
+			if (is_rvalue())
+				rval->set_string(str);
+			else if (is_lvalue())
+				lval->ref->set_string(str);
 		}
 		template<typename T>
 		void set_value(T value) {
@@ -243,7 +263,7 @@ namespace expr
 			ExpressionMakeRvalue(left);
 			ExpressionMakeRvalue(right);
 
-			result.rval = std::shared_ptr<rvalue>(new rvalue(right.get_type()));
+			result.rval = std::shared_ptr<rvalue>(new rvalue(right.get_type(),  (right.get_type() == VarType::VT_STRING ? (unsigned short)strlen(right.get_string()) : 0u)));
 
 			ExpressionCastWeakerOperand(left, right);
 			result.set_type(right.get_type());
@@ -270,8 +290,9 @@ namespace expr
 
 				case VarType::VT_STRING:
 					#pragma warning( suppress : 4996)
-					result.set_value<char*>(strcat(left.get_string(), right.get_string()));
-					result.content = "\"" + std::string(result.get_string()) + "\"";
+					std::string str = "\"" + std::string(strcat(left.get_string(), right.get_string())) + "\"";
+					result.set_string((char*)str.c_str());
+					result.content = (result.get_string());
 					return result;
 			}
 			return result;
@@ -732,7 +753,13 @@ namespace expr
 					return result;
 
 				case VarType::VT_STRING:
-					result.lval->ref->set_value<char*>(right.get_string());
+
+					if(right.is_lvalue())
+						result.lval->ref->set_string(right.get_string());
+					else {
+						const std::string str = right.rval->get_string();
+						result.lval->ref->set_string((char*)str.substr(1, str.size() - 2).c_str());
+					}
 					result.content = result.lval->ref->get_string();
 					return result;
 			}

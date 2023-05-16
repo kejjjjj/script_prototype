@@ -43,7 +43,7 @@ inline unsigned int GetVarTypeSize(const VarType t)
 
 struct VariableValue
 {
-	std::shared_ptr<void*> buffer = 0;
+	std::shared_ptr<char*> buffer = 0;
 	unsigned int buf_size = 0; 
 };
 
@@ -71,7 +71,7 @@ public:
 		type = initializer_data->type;
 
 		for (int i = 0; i < initializer_data->numElements; i++) {
-			value.push_back({ std::make_shared<void*>(new char[GetVarTypeSize(initializer_data->type)]), GetVarTypeSize(initializer_data->type) });
+			value.push_back({ std::make_shared<char*>(new char[GetVarTypeSize(initializer_data->type)]), GetVarTypeSize(initializer_data->type) });
 		}
 
 	}
@@ -97,9 +97,20 @@ public:
 
 	void set_int(int _value)		{*reinterpret_cast<int*>(value.buffer.get()) = _value; }
 	void set_float(float _value)	{*reinterpret_cast<float*>(value.buffer.get()) = _value; }
-	void set_string(char* _value) {
-#pragma warning(suppress : 4996) 
-		strcpy(reinterpret_cast<char*>(value.buffer.get()), _value); }
+	void set_string(char* str) {
+		const auto len = strlen(str);
+		//str[len - 1] = '\0';
+
+		if (len != value.buf_size) {
+			value.buffer.reset();
+			value.buffer = std::make_shared<char*>(new char[len + 1]);
+			char* alloc = (char*)value.buffer.get();
+			alloc[len] = '\0';
+
+		}
+		memcpy(value.buffer.get(), str, len);
+		value.buf_size = strlen(get_string()); //a bit more expensive but works surely :clueless:
+	}
 
 	template <typename T>
 	void set_value(const T v) { *reinterpret_cast<T*>(value.buffer.get()) = v; }

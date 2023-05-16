@@ -15,18 +15,19 @@ Variable::~Variable()
 void Variable::AllocateValues() {
 	switch (type) {
 	case VarType::VT_INT:
-		value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
+		value.buffer = std::make_shared<char*>(new char[4]);
 		value.buf_size = sizeof(int);
 		*reinterpret_cast<int*>(value.buffer.get()) = 0;
 		break;
 	case VarType::VT_FLOAT:
-		value.buffer = value.buffer = std::shared_ptr<void*>(new void*);
+		value.buffer = std::make_shared<char*>(new char[4]);
 		value.buf_size = sizeof(float);
 		*reinterpret_cast<float*>(value.buffer.get()) = 0;
 
 		break;
 	case VarType::VT_STRING:
-		throw std::exception("rvalue(VarType type): VT_STRING case not supported");
+		value.buffer = std::make_shared<char*>(new char[1]);
+		value.buf_size = sizeof(float);
 		break;
 	}
 }

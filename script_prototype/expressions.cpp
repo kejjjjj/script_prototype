@@ -577,7 +577,7 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 	if (token.is_lvalue()) {
 		if (token.lval->ref->is_array())
 			return;
-		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype));
+		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype, (token.get_type() == VarType::VT_STRING ? (unsigned short)strlen(token.get_string()) : 0u)));
 		switch (token.tokentype) {
 		case VarType::VT_INT:
 			token.rval->set_value<int>(token.lval->ref->get_int());
@@ -587,6 +587,9 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 			break;
 		case VarType::VT_STRING:
 			//token.rval->set_value<char*>(token.lval->ref->get_string());
+			//const std::string str = token.lval->ref->get_string();
+
+			//token.rval->set_string((char*)str.substr(1, str.size() - 2).c_str());
 			token.rval->set_string(token.lval->ref->get_string());
 			break;
 		}
@@ -596,8 +599,10 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 	}
 
 	if (token.get_type() == VarType::VT_STRING) {
-		std::string str = token.rval->get_string();
+		const std::string str = token.rval->get_string();
+		std::cout << "rval str: " << str << '\n';
 		token.rval->set_string((char*)str.substr(1, str.size() - 2).c_str());
+		std::cout << "token rval str: " << token.get_string() << '\n';
 	}
 
 }
