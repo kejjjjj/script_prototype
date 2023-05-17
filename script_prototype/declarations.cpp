@@ -73,6 +73,10 @@ int decl::EvaluateArrayInitialSize(const std::string& expression)
 		throw std::exception("expression must be convertible to an integral type");
 	}
 
+	if (result.get_int() < 1) {
+		throw std::exception("array size must be greater than 0");
+	}
+
 	srules.reset();
 	syntax.ClearFlags();
 	expr::rules.reset();
@@ -114,7 +118,7 @@ void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::
 		return EvaluateDeclarationOperators(it, end, datalist);
 	}
 
-	throw std::exception("unsupported type operator");
+	throw std::exception("expected an identifier");
 
 
 }

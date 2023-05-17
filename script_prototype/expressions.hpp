@@ -131,9 +131,18 @@ namespace expr
 
 	struct expression_token
 	{
-		~expression_token()
-		{
-		}
+		~expression_token() {
+			
+			if (is_lvalue())
+				lval.reset();
+			else if(is_rvalue()){
+
+				if (rval.use_count() < 2) {
+					rval->value.buffer.reset();
+					rval.reset();
+				}
+			}
+		};
 
 		std::string content;
 		std::list<std::string> prefix;

@@ -36,9 +36,6 @@
     <ClCompile Include="common.cpp">
       <Filter>Source Files\scripting</Filter>
     </ClCompile>
-    <ClCompile Include="allocations.cpp">
-      <Filter>Source Files\scripting</Filter>
-    </ClCompile>
     <ClCompile Include="variables.cpp">
       <Filter>Source Files\scripting</Filter>
     </ClCompile>
@@ -46,9 +43,6 @@
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
     <ClCompile Include="eval_statement.cpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClCompile>
-    <ClCompile Include="compiler_variables.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
     <ClCompile Include="compiler_eval_code.cpp">
@@ -74,9 +68,6 @@
     <ClInclude Include="common.hpp">
       <Filter>Source Files\scripting</Filter>
     </ClInclude>
-    <ClInclude Include="allocations.hpp">
-      <Filter>Source Files\scripting</Filter>
-    </ClInclude>
     <ClInclude Include="variables.hpp">
       <Filter>Source Files\scripting</Filter>
     </ClInclude>
@@ -84,9 +75,6 @@
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
     <ClInclude Include="eval_statement.hpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClInclude>
-    <ClInclude Include="compiler_variables.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
     <ClInclude Include="compiler_eval_code.hpp">

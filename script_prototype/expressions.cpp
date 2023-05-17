@@ -2,6 +2,9 @@
 
 expr::expression_token expr::EvaluateEntireExpression(const std::string& str)
 {
+
+	srules.typename_allowed = false;
+
 	if (str.empty()) {
 		std::cout << "EvaluateEntireExpression(): empty expression\n";
 		return {};
@@ -247,6 +250,9 @@ void expr::SetTokenValueCategory(expression_token& token)
 		//token.rval->set_value<int>(std::stoi(token.content));
 		return;
 	}
+
+	if (IsDataType(token.content))
+		throw std::exception("data type is not allowed");
 
 	const auto v = stack_variables.find(token.content);
 	if (v == stack_variables.end()) {

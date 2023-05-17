@@ -1,1 +1,5 @@
-int[3] a;
+string[3] src;
+src[0] = "hello, ";
+src[1] = "world!";
+src[2] = src[0] + src[1];
+string[2] dst = src;
