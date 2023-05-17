@@ -49,12 +49,19 @@ void Variable::print(unsigned __int16 spaces) const
 	{
 		switch (var.type) {
 		case VarType::VT_INT:
+			if(var.is_reference())
+				return std::to_string(var.reference->get_int());
+
 			return std::to_string(var.get_int());
 			break;
 		case VarType::VT_FLOAT:
+			if (var.is_reference())
+				return std::to_string(var.reference->get_float());
 			return std::to_string(var.get_float());
 			break;
 		case VarType::VT_STRING:
+			if (var.is_reference())
+				return var.reference->get_string();
 			return var.get_string();
 			break;
 		}

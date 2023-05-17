@@ -258,8 +258,16 @@ void expr::SetTokenValueCategory(expression_token& token)
 	if (v == stack_variables.end()) {
 		throw std::exception(std::format("identifier \"{}\" is undefined", token.content).c_str());
 	}
+
 	token.lval = std::shared_ptr<lvalue>(new lvalue);
 	token.lval->ref = &v->second;
+	if (v->second.is_reference()) {
+		if (token.lval->ref->reference->get_type() == VarType::VT_INVALID) {
+			std::cout << std::format("assigning a new reference to {} soon\n", v->second.name);
+			token.change_reference = true;
+		}
+	}
+
 	token.set_type(v->second.get_type());
 }
 void expr::EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens)
@@ -338,19 +346,24 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	expression_token r_operand;
 	r_operand.rval = std::shared_ptr<rvalue>(new rvalue(VarType::VT_INT));
 	
-	ExpressionMakeRvalue(token);
 
 	switch (token.prefix.back().front())
 	{
 		case '-':
+			ExpressionMakeRvalue(token);
+
 			r_operand.rval->set_value<int>(-1);
 			token.content = eval_funcs.find("*")->second(token, r_operand).content;
 			break;
 		case '+':
+			ExpressionMakeRvalue(token);
+
 			r_operand.rval->set_value<int>(1);
 			token.content = eval_funcs.find("*")->second(token, r_operand).content;
 			break;
 		case '~':
+			ExpressionMakeRvalue(token);
+
 			if (!token.is_integral())
 				throw std::exception("bitwise complement expects an integral operand");
 
@@ -359,10 +372,28 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 
 			break;
 		case '!':
+			ExpressionMakeRvalue(token);
+
 			r_operand.rval->set_value<int>(0);
 			token.content = eval_funcs.find("==")->second(token, r_operand).content;
 
 			break;
+		//case '?':
+
+		//	if (!token.is_lvalue())
+		//		throw std::exception("? operand must be an lvalue");
+
+		//	if(!token.lval->ref->is_reference())
+		//		throw std::exception("? operand must have reference modifier");
+
+		//	token.lval->ref->reference.reset();
+
+
+
+		//	std::cout << "changing token reference soon\n";
+
+		//	token.change_reference = true;
+		//	break;
 		default:
 			break;
 	}

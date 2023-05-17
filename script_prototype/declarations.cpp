@@ -37,23 +37,32 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 		}
 	}
 
-	
 	const std::string vname = tokens.front().content;
 	const VarType vtype = GetDataType(type);
 
 	auto var = DeclareVariable(vname, vtype);
 
-	std::list<int> numChildren;
+	std::list<std::optional<int>> numChildren;
 
 	for (const auto& i : data) {
+
 		if (i.arr) {
 			i.arr->type = vtype;
-			numChildren.push_back(i.arr->numElements);
+			numChildren.push_back(std::make_optional(i.arr->numElements));
+			continue;
 		}
-		//SetVariableModifier(i, var);
+
+		numChildren.push_back(std::nullopt);
 	}
 
-	PopulateArrayTree(var, numChildren);
+	PopulateVariableTree(var, numChildren);
+
+
+	//if (var->is_reference()) {
+	//	if (t_it->content != "=") {
+	//		throw std::exception("a reference declaration requires an initializer");
+	//	}
+	//}
 
 	expr::EvaluateEntireExpression(std::string(expr_it, end)); //now it can be evaluated since it's been pushed to the stack
 
@@ -112,8 +121,13 @@ void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::
 	if (token.value == "[") {
 		data.declaration_type = declr_type::ARRAY;
 		data.arr = std::shared_ptr<array_declr_data>(new array_declr_data);
-		std::string array_expression = ParseArrayExpression(it, end);
+		const std::string array_expression = ParseArrayExpression(it, end);
 		data.arr->numElements = EvaluateArrayInitialSize(array_expression);
+		datalist.push_back(data); // to the back because the evaluation is from left to right
+		return EvaluateDeclarationOperators(it, end, datalist);
+	}
+	else if (token.value == "?") {
+		data.reference = true;
 		datalist.push_back(data); // to the back because the evaluation is from left to right
 		return EvaluateDeclarationOperators(it, end, datalist);
 	}
@@ -143,77 +157,42 @@ std::string decl::ParseArrayExpression(std::string::iterator& it, std::string::i
 	return array_expression;
 }
 
-void decl::SetVariableModifier(const var_declr_data& data, Variable* target)
-{
-	if (!target) {
-		throw std::exception("SetVariableModifier(): impossible scenario");
-	}
-
-	std::function<std::pair<Variable*, Variable*>(Variable*, Variable*)> FindDeepestVariable = [&](Variable* var, Variable* parent) -> std::pair<Variable*, Variable*>
-	{
-		if (!var->reference && !var->arr.get())
-			return { var, parent};
-
-		if(var->reference){
-			parent = var;
-			return { FindDeepestVariable(var->reference, parent) };
-		}
-		parent = var;
-		return { FindDeepestVariable(var->arr.get(), parent) };
-			
-	};
-	Variable* parent = 0;
-	auto v = FindDeepestVariable(target, parent);
-	auto deepest = v.first;
-	parent = v.second;
-	std::cout << "parent: " << parent << '\n';
-	std::cout << "source: " << target << '\n';
-
-	unsigned __int16 current_size = 0;
-	switch (data.declaration_type) {
-	case declr_type::ARRAY:
-		
-		if (parent) {
-			current_size = parent->numElements;
-			for (int i = 0; i < parent->numElements; i++) {
-				auto child = &parent->arr[i];
-
-				child->arr = std::shared_ptr<Variable[]>(new Variable[data.arr->numElements]);
-				child->numElements = data.arr->numElements;
-
-				for (int j = 0; j < data.arr->numElements; j++) {
-					child->arr[j].set_type(target->get_type());
-					child->arr[j].AllocateValues();
-					++current_size;
-				}
-			}
-			std::cout << "resizing the array to size " << current_size << '\n';
-			break;
-		}
-
-		//if this is a 1d array declaration
-		deepest->arr = std::shared_ptr<Variable[]>(new Variable[data.arr->numElements]);
-		deepest->numElements = data.arr->numElements;
-		
-		for (int i = 0; i < data.arr->numElements; i++) {
-			deepest->arr[i].set_type(target->get_type());
-			deepest->arr[i].AllocateValues();
-			
-		}
-		std::cout << "allocating an array of size " << data.arr->numElements << '\n';
-		break;
-
-
-	}
-}
+//void decl::RearrangeModifierOrder(std::list<std::optional<int>>::iterator& it, std::list<std::optional<int>>& modifiers)
+//{
+//	if (it == modifiers.end())
+//		return;
+//
+//	const auto dist = std::distance(modifiers.begin(), it);
+//
+//	if (!it->has_value()) {
+//		modifiers.push_front
+//	}
+//}
 
 //children cannot be a copy
-void decl::PopulateArrayTree(Variable* parent, std::list<int> children)
+void decl::PopulateVariableTree(Variable* parent, std::list<std::optional<int>> children)
 {
 	if (children.empty())
 		return;
 
-	const auto numChildren = children.front();
+	if(!children.front().has_value()){ // a reference!
+
+		if (parent->is_reference()) {
+			throw std::exception("a reference to reference is not allowed");
+		}
+		children.erase(children.begin());
+
+		parent->reference = std::shared_ptr<Variable>(new Variable);
+
+		return PopulateVariableTree(parent, children);
+	}
+	//an array is assumed if this executes
+
+	//if (parent->is_reference()) {
+	//	throw std::exception("an array of references is not allowed");
+	//}
+
+	const auto numChildren = children.front().value();
 
 	children.erase(children.begin());
 
@@ -223,6 +202,6 @@ void decl::PopulateArrayTree(Variable* parent, std::list<int> children)
 	for (int i = 0; i < numChildren; i++) {
 		parent->arr[i].set_type(parent->get_type());
 		parent->arr[i].AllocateValues();
-		PopulateArrayTree(&parent->arr[i], children);
+		PopulateVariableTree(&parent->arr[i], children);
 	}
 }

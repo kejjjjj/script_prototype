@@ -123,7 +123,10 @@ public:
 	friend class Array;
 
 	//references
-	Variable* reference = 0;
+	std::shared_ptr<Variable> reference;
+
+	//reference methods
+	bool is_reference() const { return reference.get(); }
 
 	//arrays
 	std::shared_ptr<Variable[]> arr;
@@ -178,7 +181,8 @@ enum class declr_type : char
 struct var_declr_data
 {
 	std::shared_ptr<array_declr_data> arr;
-	declr_type declaration_type;
+	declr_type declaration_type = declr_type::DEFAULT;
+	bool reference = false;
 };
 
 declr_type DeclarationUnaryToType(char op);

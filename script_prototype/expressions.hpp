@@ -42,6 +42,7 @@ struct expression_stack
 struct rvalue
 {
 	//FIXME - make rvalue constructor require an expression_token instead of just a type :)
+	//edit maybe not?
 	rvalue(const VarType _type, const unsigned __int16 size = 0) : type(_type){
 		
 		switch (_type) {
@@ -150,6 +151,7 @@ namespace expr
 		bool op = false;
 		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
 		bool string_literal = false;
+		bool change_reference = false;
 		VarType tokentype = VarType::VT_INVALID;
 		std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
@@ -727,9 +729,24 @@ namespace expr
 
 			expression_token result;
 
-
 			result.lval = left.lval;
 			result.set_type(left.get_type());
+
+			if (left.change_reference) { //change variable reference
+				if (!right.is_lvalue()) {
+					throw std::exception("reference initializer must be an lvalue");
+				}
+				memcpy_s(left.lval->ref->reference.get(), sizeof(Variable), right.lval->ref, sizeof(Variable));
+				var = left.lval->ref->reference.get();
+				std::cout << "reference updated!\n";
+
+			}
+
+			if (left.lval->ref->is_reference()) {
+				//FIXME - DON'T REPLACE THE ENTIRE STRUCTURE
+				result.lval->ref->value = left.lval->ref->reference->value;
+				//memcpy_s(result.lval->ref, sizeof(Variable), left.lval->ref->reference.get(), sizeof(Variable));
+			}
 
 			if (var->is_array()) {
 				result.content = var->name;
@@ -738,7 +755,7 @@ namespace expr
 			}
 
 			float fright{};
-			
+		
 
 			switch (var->get_type()) {
 				case VarType::VT_INT:
