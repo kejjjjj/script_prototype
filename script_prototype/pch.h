@@ -26,6 +26,7 @@
 #include "compiler_eval_code.hpp"
 #include "expressions.hpp"
 #include "declarations.hpp"
+#include "initializers.hpp"
 #include "compiler.hpp"
 
 

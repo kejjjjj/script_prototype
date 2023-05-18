@@ -57,6 +57,9 @@
     <ClCompile Include="hashing.cpp">
       <Filter>Source Files\tools</Filter>
     </ClCompile>
+    <ClCompile Include="initializers.cpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -88,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="hashing.hpp">
       <Filter>Source Files\tools</Filter>
+    </ClInclude>
+    <ClInclude Include="initializers.hpp">
+      <Filter>Source Files\scripting</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
