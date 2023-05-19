@@ -39,7 +39,57 @@ void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const uns
 	arr = a_arr; 
 	numElements = length;
 }
+void Variable::set_value(const expr::expression_token* token)
+{
+	//assumes that the types are compatible
 
+	bool const rvalue = token->is_rvalue();
+	auto const rtype = token->get_type();
+
+	auto ptr = this;
+	auto token_ptr = token;
+
+	if (is_reference())
+		ptr = this->reference.get();
+
+	if (token->is_lvalue()) {
+		if (token->lval->ref->is_reference())
+			token_ptr = token->lval->ref->reference.get();
+	}
+
+	if (is_array()) {
+		ptr->replace_array(token->lval->ref->arr, token->lval->ref->numElements);
+		return;
+	}
+
+	switch (ptr->type) {
+	case VarType::VT_INT:
+
+		if (rtype == VarType::VT_FLOAT)
+			ptr->set_value<int>(token->get_float());
+		else if (rtype == VarType::VT_INT)
+			ptr->set_value<int>(token->get_int());
+
+		break;
+	case VarType::VT_FLOAT:
+
+		if (rtype == VarType::VT_FLOAT)
+			ptr->set_value<float>(token->get_float());
+		else if (rtype == VarType::VT_INT)
+			ptr->set_value<float>(token->get_int());
+
+		break;
+	case VarType::VT_STRING:
+		if (token->is_lvalue())
+			ptr->set_string(token->get_string());
+		else {
+			const std::string str = token->rval->get_string();
+			ptr->set_string((char*)str.substr(1, str.size() - 2).c_str()); //remove the quotation marks
+		}
+		break;
+	}
+
+}
 void Variable::print(unsigned __int16 spaces) const
 {
 	if (!spaces++)
@@ -86,7 +136,16 @@ void Variable::print(unsigned __int16 spaces) const
 
 
 }
+Variable::operator expr::expression_token()
+{
+	expr::expression_token token;
+	token.content = name;
+	token.lval = std::shared_ptr<lvalue>(new lvalue);
+	token.lval->ref = this;
+	token.tokentype = type;
 
+	return token;
+}
 bool IsDataType(const std::string_view& str)
 {
 	for (const auto& i : VarTypes)
@@ -141,6 +200,21 @@ unsigned __int16 GetArrayDepth(const Variable* var)
 }
 std::string Variable::s_getvariabletype() const
 {
+	std::function<std::string(const Variable*)> types_to_text = [&types_to_text](const Variable* var) -> std::string {
+
+		if (!var)
+			return "";
+
+		if (var->is_reference())
+			return "?" + types_to_text(var->reference.get());
+
+		if (var->is_array())
+			return "[]" + types_to_text(var->arr.get());
+
+		return "";
+
+	};
+
 	const auto arr_as_text = [](const unsigned __int16 depth) 
 	{
 		auto copy = depth;
@@ -151,7 +225,7 @@ std::string Variable::s_getvariabletype() const
 		return r;
 	};
 
-	return std::format("{}{}", VarTypes[int(get_type())], arr_as_text(GetArrayDepth(this)));
+	return std::format("{}{}", VarTypes[int(get_type())], types_to_text(this));
 
 }
 declr_type DeclarationUnaryToType(char op)

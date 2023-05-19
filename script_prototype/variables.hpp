@@ -82,7 +82,10 @@ private:
 	std::vector<VariableValue> value;
 	VarType type = VarType::VT_INVALID;
 };
-
+namespace expr
+{
+	struct expression_token;
+}
 class Variable
 {
 public:
@@ -114,6 +117,8 @@ public:
 
 	template <typename T>
 	void set_value(const T v) { *reinterpret_cast<T*>(value.buffer.get()) = v; }
+	
+	void set_value(const expr::expression_token* token);
 	void set_type(const VarType atype) { type = atype; }
 	auto get_type() const { return type; }
 	
@@ -139,6 +144,9 @@ public:
 	//utility functions
 	void print(unsigned __int16 spaces = 0) const;
 	std::string s_getvariabletype() const;
+
+	//operator overloads
+	operator expr::expression_token();
 
 private:
 	

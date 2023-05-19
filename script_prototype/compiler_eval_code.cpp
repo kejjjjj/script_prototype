@@ -58,7 +58,7 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 	else if (IsAnyOperator(ch)) {
 		token.t_type = token_t::tokentype::OPERATOR;
 	}
-	else if (std::isalpha(ch)) {
+	else if (std::isalpha(ch) || ch == '_') {
 		token.t_type = token_t::tokentype::STRING;
 		//token.eval_fc = std::make_unique<std::function<bool( token_t*)>>(Compiler_StringToken);
 	}
@@ -107,7 +107,7 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 			}
 			break;
 		case token_t::tokentype::STRING:
-			if (!std::isalnum(ch)) {
+			if (!std::isalnum(ch) && ch != '_') {
 				return token;
 			}
 			break;

@@ -52,26 +52,6 @@ expr::expression_token expr::EvaluateExpression(const std::string& str)
 	syntax.ClearFlag(S_END_OF_NUMBER);
 	EvaluatePrefix(tbegin, tend);
 
-	//std::cout << "made this token: " << '\n';
-
-	//for (auto& i : tokens) {
-
-	//	std::cout << '(';
-	//	if (!i.op) {
-	//		for (auto& prefix : i.prefix) {
-	//			std::cout << prefix;
-	//		}
-	//		std::cout << i.content;
-	//		for (auto& postfix : i.postfix) {
-	//			std::cout << postfix;
-	//		}
-	//	}
-	//	else
-	//		std::cout << i.content;
-
-	//	std::cout << ")\n";
-	//}
-	
 	return EvaluateExpressionTokens(tokens);
 
 }
@@ -261,12 +241,6 @@ void expr::SetTokenValueCategory(expression_token& token)
 
 	token.lval = std::shared_ptr<lvalue>(new lvalue);
 	token.lval->ref = &v->second;
-	if (v->second.is_reference()) {
-		if (token.lval->ref->reference->get_type() == VarType::VT_INVALID) {
-			std::cout << std::format("assigning a new reference to {} soon\n", v->second.name);
-			token.change_reference = true;
-		}
-	}
 
 	token.set_type(v->second.get_type());
 }

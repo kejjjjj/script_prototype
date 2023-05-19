@@ -20,7 +20,7 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 	EvaluateDeclarationOperators(it, end, data);
 
-	auto expr_it = it;
+	auto expr_it = it; //expr_it is now at the point AFTER the datatype
 
 	std::list<expr::expression_token> tokens;
 	TokenizeExpression(it, end, tokens);
@@ -57,23 +57,21 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 	PopulateVariableTree(var, numChildren);
 
+	while (expr_it != end)
+		if (cec::Compiler_ReadToken(expr_it, ';', end).value == "=")
+			break;
 
-	//if (var->is_reference()) {
-	//	if (t_it->content != "=") {
-	//		throw std::exception("a reference declaration requires an initializer");
-	//	}
-	//}
-
-	expr::EvaluateEntireExpression(std::string(expr_it, end)); //now it can be evaluated since it's been pushed to the stack
-
+	init::SetVariableInitializer(*var, std::string(expr_it, end));
+	
+	//expr::EvaluateEntireExpression(std::string(expr_it, end)); //now it can be evaluated since it's been pushed to the stack
 }
 
 int decl::EvaluateArrayInitialSize(const std::string& expression)
 {
 
 	if (expression.empty()) {
-		throw std::exception("an empty array declaration is not allowed");
-		//return 1;
+		//throw std::exception("an empty array declaration is not allowed");
+		return 1; 
 	}
 
 	auto result = expr::EvaluateEntireExpression(expression);
@@ -157,25 +155,13 @@ std::string decl::ParseArrayExpression(std::string::iterator& it, std::string::i
 	return array_expression;
 }
 
-//void decl::RearrangeModifierOrder(std::list<std::optional<int>>::iterator& it, std::list<std::optional<int>>& modifiers)
-//{
-//	if (it == modifiers.end())
-//		return;
-//
-//	const auto dist = std::distance(modifiers.begin(), it);
-//
-//	if (!it->has_value()) {
-//		modifiers.push_front
-//	}
-//}
-
 //children cannot be a copy
 void decl::PopulateVariableTree(Variable* parent, std::list<std::optional<int>> children)
 {
 	if (children.empty())
 		return;
 
-	if(!children.front().has_value()){ // a reference!
+	if(!children.front().has_value()){ // no value means a reference!
 
 		if (parent->is_reference()) {
 			throw std::exception("a reference to reference is not allowed");
@@ -187,10 +173,6 @@ void decl::PopulateVariableTree(Variable* parent, std::list<std::optional<int>> 
 		return PopulateVariableTree(parent, children);
 	}
 	//an array is assumed if this executes
-
-	//if (parent->is_reference()) {
-	//	throw std::exception("an array of references is not allowed");
-	//}
 
 	const auto numChildren = children.front().value();
 

@@ -223,6 +223,8 @@ namespace expr
 		bool is_integral() const {
 			return get_type() == VarType::VT_INT;
 		}
+
+
 	};
 
 	expression_token EvaluateEntireExpression(const std::string& str);
@@ -732,61 +734,27 @@ namespace expr
 			result.lval = left.lval;
 			result.set_type(left.get_type());
 
-			if (left.change_reference) { //change variable reference
-				if (!right.is_lvalue()) {
-					throw std::exception("reference initializer must be an lvalue");
-				}
-				memcpy_s(left.lval->ref->reference.get(), sizeof(Variable), right.lval->ref, sizeof(Variable));
-				var = left.lval->ref->reference.get();
-				std::cout << "reference updated!\n";
-
-			}
-
 			if (left.lval->ref->is_reference()) {
-				//FIXME - DON'T REPLACE THE ENTIRE STRUCTURE
-				result.lval->ref->value = left.lval->ref->reference->value;
-				//memcpy_s(result.lval->ref, sizeof(Variable), left.lval->ref->reference.get(), sizeof(Variable));
+				result.lval->ref->name = left.lval->ref->name;
 			}
 
 			if (var->is_array()) {
 				result.content = var->name;
-				var->replace_array(right.lval->ref->arr, right.lval->ref->numElements);
-				return result;
 			}
-
-			float fright{};
 		
+			result.lval->ref->set_value(&right);
 
 			switch (var->get_type()) {
 				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = (int)right.get_float();
-					else fright = right.get_int();
-					
-					result.lval->ref->set_value<int>(fright);
-					result.content = std::to_string(result.lval->ref->get_int());
+					result.content = std::to_string(result.get_int());
 					return result;
 
 				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					result.lval->ref->set_value<float>(fright);
-					result.content = std::to_string(result.lval->ref->get_float());
+					result.content = std::to_string(result.get_float());
 					return result;
 
 				case VarType::VT_STRING:
-
-					if(right.is_lvalue())
-						result.lval->ref->set_string(right.get_string());
-					else {
-						const std::string str = right.rval->get_string();
-						result.lval->ref->set_string((char*)str.substr(1, str.size() - 2).c_str());
-					}
-					result.content = result.lval->ref->get_string();
+					result.content = result.get_string();
 					return result;
 			}
 			return result;

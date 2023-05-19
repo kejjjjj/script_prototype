@@ -82,7 +82,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>D:\script_prototype\scripts\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>C:\Users\luukas230\Documents\repo\script_prototype\scripts\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -145,7 +145,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>D:\script_prototype\scripts\$(Platform)\Release\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>C:\Users\luukas230\Documents\repo\script_prototype\scripts\$(Platform)\Release\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
