@@ -23,7 +23,7 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 	auto expr_it = it; //expr_it is now at the point AFTER the datatype
 
 	std::list<expr::expression_token> tokens;
-	TokenizeExpression(it, end, tokens);
+	TokenizeExpression(it, end, tokens, 2); //only read 2 tokens
 	auto t_it = tokens.begin();
 
 	if (tokens.front().tokentype != VarType::VT_STRING) {
@@ -57,9 +57,28 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 
 	PopulateVariableTree(var, numChildren);
 
+	bool expecting_initializer = false;
+
 	while (expr_it != end)
-		if (cec::Compiler_ReadToken(expr_it, ';', end).value == "=")
+		if (expecting_initializer = cec::Compiler_ReadToken(expr_it, ';', end).value == "=")
 			break;
+
+	while (std::isspace(*expr_it) && expr_it != end)
+		++expr_it;
+
+	if (expr_it == end) { //no initializer
+		
+		if (expecting_initializer) {
+			stack_variables.erase(var->name);
+			throw std::exception("expected an initializer");
+		}
+		if (var->is_reference()) {
+			stack_variables.erase(var->name);
+			throw std::exception("a reference declaration requires an initializer");
+		}
+
+		return; 
+	}
 
 	init::SetVariableInitializer(*var, std::string(expr_it, end));
 	

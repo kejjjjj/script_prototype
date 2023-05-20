@@ -101,7 +101,7 @@ uint32_t HashString(const char* s);
 uint32_t HashString(const std::string_view& s);
 
 std::string RemoveFromString(std::string& str, char a);
-SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& tokens);
+SIZE_T TokenizeString(const std::string& expr, char delim, std::list<std::string>& tokens);
 //SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::string>& tokens);
 SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::string>& tokens);
 

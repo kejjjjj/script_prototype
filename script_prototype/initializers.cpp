@@ -5,13 +5,16 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 {
 	//NOTE: the expression argument string doesn't contain the "target = " part of the expression, only the expression after that
 
+	auto begin = expression.begin();
+
+
+	//if (IsInitializerList(begin, expression.end()))
+	//	return EvaluateEntireInitializerList(target, std::string(begin, expression.end()));
+
 	const auto result = expr::EvaluateEntireExpression(expression);
 
 	if (result.tokentype == VarType::VT_INVALID) { //this means no initializer
-		if (target.is_reference()) {
-			stack_variables.erase(target.name);
-			throw std::exception("a reference declaration requires an initializer");
-		}
+		throw std::exception("expected an initializer");
 		return;
 	}
 
@@ -38,10 +41,58 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 		std::cout << std::format("\"{}\" reference updated! (now points to \"{}\")\n", target.name, target.reference->name);
 
 	}
-
+	
 	target.set_value(&result);
 
 	expr::rules.reset();
 
 
 }
+
+bool init::IsInitializerList(std::string::const_iterator& it, std::string::const_iterator end)
+{
+	while (std::isspace(*it))
+		++it;
+
+	return *it == '{';
+
+}
+
+//void init::EvaluateEntireInitializerList(std::list<Variable&>& vars, const std::string& expression)
+//{
+//	auto endpos = expression.find('}');
+//
+//	if (endpos == std::string::npos)
+//		throw std::exception("expected a \"}\"");
+//
+//	std::string new_expr = expression.substr(1, endpos - 1);
+//
+//	std::list<std::string> tokens;
+//	const auto num_args = TokenizeString(new_expr, ',', tokens);
+//	size_t args_processed = 0;
+//
+//	for (auto& i : tokens)
+//		std::cout << i << '\n';
+//
+//	auto& var = vars.front();
+//
+//	
+//
+//	for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+//		
+//		if (var.is_array()) {
+//
+//			if (var.numElements >= args_processed) {
+//				throw std::exception("too many initializer values");
+//			}
+//
+//			var.arr[args_processed].set_value(expr::EvaluateEntireExpression(*it));
+//		}
+//
+//
+//		++args_processed;
+//	}
+//
+//
+//
+//}

@@ -16,7 +16,6 @@ namespace decl
 	void EvaluateDeclarationOperators(std::string::iterator& it, std::string::iterator& end, std::list<var_declr_data>& datalist);
 	std::string ParseArrayExpression(std::string::iterator& it, std::string::iterator& end);
 
-	void RearrangeModifierOrder(std::list<std::optional<int>>::iterator& it, std::list<std::optional<int>>& modifiers);
 	void PopulateVariableTree(Variable* parent, std::list<std::optional<int>> children);
 
 

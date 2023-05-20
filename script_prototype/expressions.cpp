@@ -55,10 +55,12 @@ expr::expression_token expr::EvaluateExpression(const std::string& str)
 	return EvaluateExpressionTokens(tokens);
 
 }
-void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens)
+void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens, int tokens_left)
 {
 	expression_token expr_token;
 
+	if (!tokens_left)
+		return;
 
 	bool kill_loop = false;
 	rules.next_unary = true;
@@ -94,7 +96,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			rules.operator_allowed = true;
 
 			if (rules.next_operator) {
-				throw std::exception("expected an expression");
+				throw std::exception("expected a \";\"");
 			}
 			if (!rules.next_unary && rules.next_postfix) {
 				it -= token.value.length();
@@ -194,7 +196,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		tokens.push_back(expr_token);
 	}
 	if(it != end)
-		TokenizeExpression(it, end, tokens);
+		TokenizeExpression(it, end, tokens, tokens_left != -1 ? --tokens_left : -1);
 
 	
 

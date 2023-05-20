@@ -94,12 +94,12 @@ public:
 	Variable() {};
 	~Variable();
 
-	int get_int() const		 { return *reinterpret_cast<int*>(value.buffer.get());	}
-	float get_float() const  { return *reinterpret_cast<float*>(value.buffer.get());}
-	char* get_string() const { return reinterpret_cast<char*>(value.buffer.get());	}
+	int get_int() const		 { return *reinterpret_cast<int*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
+	float get_float() const  { return *reinterpret_cast<float*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
+	char* get_string() const { return reinterpret_cast<char*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
 
-	void set_int(int _value)		{*reinterpret_cast<int*>(value.buffer.get()) = _value; }
-	void set_float(float _value)	{*reinterpret_cast<float*>(value.buffer.get()) = _value; }
+	void set_int(int _value)		{*reinterpret_cast<int*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get()) = _value; }
+	void set_float(float _value)	{*reinterpret_cast<float*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get()) = _value; }
 	void set_string(char* str) {
 		const auto len = strlen(str);
 		//str[len - 1] = '\0';
@@ -140,6 +140,7 @@ public:
 	//array methods
 	bool is_array() const { return arr.get(); }
 	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const unsigned __int16 length);
+	void recreate_array(const unsigned __int16 new_length);
 
 	//utility functions
 	void print(unsigned __int16 spaces = 0) const;

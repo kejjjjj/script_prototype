@@ -39,23 +39,26 @@ void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const uns
 	arr = a_arr; 
 	numElements = length;
 }
+void Variable::recreate_array(const unsigned __int16 new_length)
+{
+	if (!is_array())
+		throw std::exception("attempted to recreate a non-array type");
+
+	arr.reset();
+	arr = std::shared_ptr<Variable[]>(new Variable[new_length]);
+}
 void Variable::set_value(const expr::expression_token* token)
 {
-	//assumes that the types are compatible
+	if (!ExpressionCompatibleOperands(*this, *token)) {
+		throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(this->get_type())], VarTypes[int(token->tokentype)]).c_str());
+	}
 
-	bool const rvalue = token->is_rvalue();
 	auto const rtype = token->get_type();
 
 	auto ptr = this;
-	auto token_ptr = token;
 
 	if (is_reference())
 		ptr = this->reference.get();
-
-	if (token->is_lvalue()) {
-		if (token->lval->ref->is_reference())
-			token_ptr = token->lval->ref->reference.get();
-	}
 
 	if (is_array()) {
 		ptr->replace_array(token->lval->ref->arr, token->lval->ref->numElements);
@@ -92,9 +95,11 @@ void Variable::set_value(const expr::expression_token* token)
 }
 void Variable::print(unsigned __int16 spaces) const
 {
-	if (!spaces++)
-		std::cout << std::format("{}:\n", name);
 
+
+	if (!spaces++) {
+		std::cout << std::format("{}{}:\n", name, is_reference() ? " -> " + reference->name : "");
+	}
 	const auto ValueToString = [](const Variable& var) -> std::string
 	{
 		switch (var.type) {

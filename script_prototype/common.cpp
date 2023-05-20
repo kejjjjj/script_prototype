@@ -134,7 +134,7 @@ std::string RemoveFromString(std::string& str, char a)
 
     return string;
 }
-SIZE_T TokenizeString(std::string& expr, char delim, std::vector<std::string>& tokens)
+SIZE_T TokenizeString(const std::string& expr, char delim, std::list<std::string>& tokens)
 {
     std::stringstream ss(expr);
 

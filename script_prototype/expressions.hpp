@@ -229,7 +229,7 @@ namespace expr
 
 	expression_token EvaluateEntireExpression(const std::string& str);
 	expression_token EvaluateExpression(const std::string& str);
-	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens);
+	void TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens, int tokens_left = -1);
 	void SetTokenValueCategory(expression_token& token);
 	void EvaluatePostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
 	void EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end);
