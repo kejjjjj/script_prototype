@@ -8,8 +8,8 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 	auto begin = expression.begin();
 
 
-	//if (IsInitializerList(begin, expression.end()))
-	//	return EvaluateEntireInitializerList(target, std::string(begin, expression.end()));
+	if (IsInitializerList(begin, expression.end()))
+		return EvaluateInitializerList(&target, std::string(begin, expression.end()));
 
 	const auto result = expr::EvaluateEntireExpression(expression);
 
@@ -57,42 +57,102 @@ bool init::IsInitializerList(std::string::const_iterator& it, std::string::const
 	return *it == '{';
 
 }
+void init::EvaluateInitializerList(Variable* var, const std::string& expression)
+{
+	auto substr = FindMatchingCurlyBracket(expression); //returns the most nested one
 
-//void init::EvaluateEntireInitializerList(std::list<Variable&>& vars, const std::string& expression)
-//{
-//	auto endpos = expression.find('}');
-//
-//	if (endpos == std::string::npos)
-//		throw std::exception("expected a \"}\"");
-//
-//	std::string new_expr = expression.substr(1, endpos - 1);
-//
-//	std::list<std::string> tokens;
-//	const auto num_args = TokenizeString(new_expr, ',', tokens);
-//	size_t args_processed = 0;
-//
-//	for (auto& i : tokens)
-//		std::cout << i << '\n';
-//
-//	auto& var = vars.front();
-//
-//	
-//
-//	for (auto it = tokens.begin(); it != tokens.end(); ++it) {
-//		
-//		if (var.is_array()) {
-//
-//			if (var.numElements >= args_processed) {
-//				throw std::exception("too many initializer values");
-//			}
-//
-//			var.arr[args_processed].set_value(expr::EvaluateEntireExpression(*it));
-//		}
-//
-//
-//		++args_processed;
-//	}
-//
-//
-//
-//}
+
+	std::list<std::string> tokens;
+	const bool substr_found = substr.result_string != "empty" && !substr.result_string.empty();
+
+	TokenizeInitializerLists(substr.result_string, tokens);
+	
+	if (substr_found) {
+			
+		if (!var->is_array())
+			throw std::exception("an initializer list used on a non-array type");
+
+		if (tokens.size() >= var->numElements) {
+			throw std::exception("too many initializer values");
+		}
+
+		auto begin = tokens.begin();
+		for (int i = 0; i < var->numElements; i++) {
+
+			if (begin == tokens.end())
+				break;
+
+			EvaluateInitializerList(&var->arr[i], *begin++);
+		}
+
+	}
+
+}
+void init::TokenizeInitializerLists(std::string expr, std::list<std::string>& tokens)
+{
+	auto substr = FindMatchingCurlyBracket(expr);
+
+	bool substr_found = substr.result_string != "empty" && !substr.result_string.empty();
+
+
+	while (substr_found) {
+		tokens.push_back('{' + substr.result_string + '}');
+
+		expr.erase((size_t)substr.opening, (size_t)substr.strlength+1);
+
+		if (expr.empty())
+			break;
+
+		substr = FindMatchingCurlyBracket(expr);
+		substr_found = substr.result_string != "empty" && !substr.result_string.empty();
+	}
+	for (auto& i : tokens)
+		std::cout << i << '\n';
+
+}
+Substr_s init::FindMatchingCurlyBracket(const std::string_view& expr) 
+{
+	int32_t idx = -1;
+	int32_t opening{ 0 }, closing{ 0 }, count_opening{ 0 }, count_closing{ 0 };
+	for (const auto& i : expr) {
+		idx++;
+
+		if (i == '{') {
+			
+			if(!count_opening)
+				opening = idx;
+
+			count_opening++;
+			
+		}
+		else if (i == '}') {
+			
+
+			closing = idx;
+			count_closing++;
+			
+		}
+
+		if (count_opening > 0 && count_opening == count_closing) {
+			break;
+		}
+
+
+
+	}
+
+	if (opening && opening >= closing) {
+		throw std::exception("expected a \"}\"");
+	}
+
+	const int len = closing - opening;
+	//note: cuts out the s and e characters
+	std::string result_string = std::string(expr).substr(opening + 1ull, len-1ull);
+	//if (count_opening && count_closing && result_string.empty())
+	//	result_string = ("empty");
+
+	if (!count_opening && !count_closing)
+		result_string = "";
+
+	return { count_opening, count_closing, opening, len, result_string };
+}

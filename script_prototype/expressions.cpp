@@ -10,7 +10,7 @@ expr::expression_token expr::EvaluateEntireExpression(const std::string& str)
 		return {};
 	}
 
-	Parenthesis_s par = GetStringWithinParentheses(str);
+	Substr_s par = GetStringWithinCharacters(str, '(', ')');
 
 	if (par.result_string == "empty") {
 		par.result_string = "";

@@ -88,7 +88,7 @@ enum OperatorPriority
 };
 //inline OperatorPriority operatorHash[513];
 
-struct Parenthesis_s
+struct Substr_s
 {
 	int32_t count_opening;
 	int32_t count_closing;
@@ -106,7 +106,8 @@ SIZE_T TokenizeString(const std::string& expr, char delim, std::list<std::string
 SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::string>& tokens);
 
 SIZE_T GetCharacterCount(const std::string_view& str, char c);
-Parenthesis_s GetStringWithinParentheses(const std::string_view& expr);
+Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, const char e);
+
 float Eval(const float& a, const float& b, const std::string_view& ops);
 OperatorPriority GetOperandPriority(const std::string_view& ops);
 bool ValidNumber(const std::string_view& expr);

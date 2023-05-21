@@ -236,27 +236,22 @@ SIZE_T GetCharacterCount(const std::string_view& str, char c)
     return count;
 }
 //does not include the parantheses
-Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
+Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, const char e)
 {
     int32_t idx = -1;
     int32_t opening{0}, closing{0}, count_opening{0}, count_closing{0};
     for (const auto& i : expr) {
         idx++;
 
-        switch (i) {
-
-            case '(':
-                count_opening = 1;
-                opening = idx;
-                break;
-            case ')':
-                count_closing = 1;
-                closing = idx;
-                break;
-
-            default:
-                break;
+        if (i == s) {
+            count_opening = 1;
+            opening = idx;
         }
+        else if (i == e) {
+            count_closing = 1;
+            closing = idx;
+        }
+
         if (count_opening > 0 && count_opening == count_closing) {
             break;
         }
@@ -266,7 +261,7 @@ Parenthesis_s GetStringWithinParentheses(const std::string_view& expr)
     }
 
     const int len = closing - opening - count_opening;
-    //note: cuts out the parantheses
+    //note: cuts out the s and e characters
     std::string result_string = std::string(expr).substr(opening + 1, len);
     if (count_opening && count_closing && result_string.empty())
         result_string = ("empty");
