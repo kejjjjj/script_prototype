@@ -461,18 +461,20 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 	if (type != VarType::VT_INT && type != VarType::VT_FLOAT)
 		throw std::exception("expected an int or float");
 	
-	auto& value = token.lval->ref->value;
-
+	//auto& value = token.lval->ref->value;
+	//auto ptr = *token.lval->ref->value.buffer.get();
 	if (type == VarType::VT_FLOAT) {
 
-
-		*reinterpret_cast<float*>(*value.buffer) += increment == true ? 1 : -1;
-		token.content = std::to_string(*reinterpret_cast<float*>(*value.buffer));
+		token.set_value<float>(increment == true ? token.get_float() + 1 : token.get_float()  -1);
+		//*reinterpret_cast<float*>(ptr) += increment == true ? 1 : -1;
+		token.content = std::to_string(token.get_float());
 
 	}
 	else {
-		*reinterpret_cast<int*>(*value.buffer) += increment == true ? 1 : -1;
-		token.content = std::to_string(*reinterpret_cast<int*>(*value.buffer));
+		token.set_value<int>(increment == true ? token.get_int() + 1 : token.get_int() - 1);
+
+		//*reinterpret_cast<int*>(ptr) += increment == true ? 1 : -1;
+		token.content = std::to_string(token.get_int());
 	}
 	std::cout << "it's now " << token.content << '\n';
 	ExpressionMakeRvalue(token);
@@ -576,6 +578,9 @@ expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token
 		auto result = function->second(*itr1, *itr2);
 
 		*itr2 = result;
+
+		std::cout << "result name will be: " << result.content << '\n';
+
 
 		tokens.erase(itr1, itr2);
 	}

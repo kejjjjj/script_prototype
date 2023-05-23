@@ -733,16 +733,17 @@ namespace expr
 
 			result.lval = left.lval;
 			result.set_type(left.get_type());
+			result.content = var->name;
 
 			if (left.lval->ref->is_reference()) {
 				result.lval->ref->name = left.lval->ref->name;
 			}
 
-			if (var->is_array()) {
-				result.content = var->name;
-			}
-		
+			
 			result.lval->ref->set_expression(&right);
+
+			if (var->is_array())
+				return result;
 
 			switch (var->get_type()) {
 				case VarType::VT_INT:
