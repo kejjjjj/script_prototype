@@ -742,7 +742,7 @@ namespace expr
 				result.content = var->name;
 			}
 		
-			result.lval->ref->set_value(&right);
+			result.lval->ref->set_expression(&right);
 
 			switch (var->get_type()) {
 				case VarType::VT_INT:

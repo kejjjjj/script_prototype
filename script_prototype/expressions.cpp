@@ -46,12 +46,13 @@ expr::expression_token expr::EvaluateExpression(const std::string& str)
 	auto it = s_str.begin(); auto end = s_str.end();
 	std::list<expression_token> tokens;
 	TokenizeExpression(it, end, tokens);
+	
+
 	std::for_each(tokens.begin(), tokens.end(), SetTokenValueCategory);
 	auto tbegin = tokens.begin(); auto tend = tokens.end();
 	EvaluatePostfix(tbegin, tend, tokens); tbegin = tokens.begin();
 	syntax.ClearFlag(S_END_OF_NUMBER);
 	EvaluatePrefix(tbegin, tend);
-
 	return EvaluateExpressionTokens(tokens);
 
 }

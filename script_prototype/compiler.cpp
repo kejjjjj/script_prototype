@@ -51,9 +51,23 @@ bool Script::Compile()
 			expr::rules.reset();
 			++begin;
 		}
+
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+
+		std::chrono::duration<float> difference = now - old;
+		printf("time taken: %.6f\n", difference.count());
+
+		std::cout << "\nscript stack: \n";
+
+		for (auto& i : stack_variables) {
+			i.second.print();
+
+		}
 	}
 	catch (std::exception& ex) {
 		std::cout << "exception caught: " << ex.what() << '\n';
+
+		std::cout << "\nnot printing the script stack due to a syntax error\n";
 
 	}
 
@@ -61,17 +75,8 @@ bool Script::Compile()
 
 	
 
-	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 
-	std::chrono::duration<float> difference = now - old;
-	printf("time taken: %.6f\n", difference.count());
 
-	std::cout << "\nscript stack: \n";
-
-	for (auto& i : stack_variables) {
-		i.second.print();
-
-	}
 
 	return true;
 }

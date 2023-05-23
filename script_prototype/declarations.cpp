@@ -189,7 +189,7 @@ void decl::PopulateVariableTree(Variable* parent, std::list<std::optional<int>> 
 
 		parent->reference = std::shared_ptr<Variable>(new Variable);
 
-		return PopulateVariableTree(parent, children);
+		return PopulateVariableTree(parent->reference.get(), children);
 	}
 	//an array is assumed if this executes
 

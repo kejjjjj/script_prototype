@@ -118,9 +118,11 @@ public:
 	template <typename T>
 	void set_value(const T v) { *reinterpret_cast<T*>(value.buffer.get()) = v; }
 	
-	void set_value(const expr::expression_token* token);
+	void set_expression(const expr::expression_token* token);
+	void initialize_expression(const expr::expression_token* token);
 	void set_type(const VarType atype) { type = atype; }
 	auto get_type() const { return type; }
+	decltype(auto) this_or_ref() { return is_reference() ? reference.get() : this; }
 	
 	void AllocateValues();
 	std::string name;

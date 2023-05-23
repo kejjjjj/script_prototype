@@ -47,7 +47,7 @@ void Variable::recreate_array(const unsigned __int16 new_length)
 	arr.reset();
 	arr = std::shared_ptr<Variable[]>(new Variable[new_length]);
 }
-void Variable::set_value(const expr::expression_token* token)
+void Variable::set_expression(const expr::expression_token* token)
 {
 	if (!ExpressionCompatibleOperands(*this, *token)) {
 		throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(this->get_type())], VarTypes[int(token->tokentype)]).c_str());
@@ -73,6 +73,8 @@ void Variable::set_value(const expr::expression_token* token)
 		else if (rtype == VarType::VT_INT)
 			ptr->set_value<int>(token->get_int());
 
+		std::cout << "new value: " << ptr->get_int() << '\n';
+
 		break;
 	case VarType::VT_FLOAT:
 
@@ -80,6 +82,9 @@ void Variable::set_value(const expr::expression_token* token)
 			ptr->set_value<float>(token->get_float());
 		else if (rtype == VarType::VT_INT)
 			ptr->set_value<float>(token->get_int());
+
+		std::cout << "new value: " << ptr->get_int() << '\n';
+
 
 		break;
 	case VarType::VT_STRING:
@@ -92,6 +97,16 @@ void Variable::set_value(const expr::expression_token* token)
 		break;
 	}
 
+}
+void Variable::initialize_expression(const expr::expression_token* token)
+{
+	if (is_reference() && !token->is_lvalue())
+		throw std::exception("reference type initializer must be an lvalue");
+
+	else if (is_reference() && token->is_lvalue())
+		reference = std::shared_ptr<Variable>(token->lval->ref);
+
+	set_expression(token);
 }
 void Variable::print(unsigned __int16 spaces) const
 {
