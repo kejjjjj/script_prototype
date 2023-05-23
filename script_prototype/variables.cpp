@@ -100,11 +100,25 @@ void Variable::set_expression(const expr::expression_token* token)
 }
 void Variable::initialize_expression(const expr::expression_token* token)
 {
-	if (is_reference() && !token->is_lvalue())
+	if (is_reference() && !token->is_lvalue()) {
+		stack_variables.erase(name);
 		throw std::exception("reference type initializer must be an lvalue");
+	}
+	else if (is_reference() && token->is_lvalue()) {
 
-	else if (is_reference() && token->is_lvalue())
+		const auto left_type = s_getvariabletype();
+		const auto right_type = token->lval->ref->s_getvariabletype();
+
+		if (get_type() != token->get_type()) {
+			throw std::exception(std::format("a reference of type \"{}\" cannot be initialized with type \"{}\"", left_type, right_type).c_str());
+			stack_variables.erase(name);
+
+		}
 		reference = std::shared_ptr<Variable>(token->lval->ref);
+		std::cout << std::format("\"{}\" reference updated! (now points to \"{}\")\n", name, reference->name);
+	}
+
+
 
 	set_expression(token);
 }

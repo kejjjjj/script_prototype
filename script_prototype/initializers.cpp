@@ -26,22 +26,6 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 		throw std::exception(std::format("a variable of type \"{}\" cannot be initialized with type \"{}\"", left_type, right_type).c_str());
 	}
 
-	if (target.is_reference()) {
-		if (!result.is_lvalue()) {
-			stack_variables.erase(target.name);
-			throw std::exception("reference initializer must be an lvalue");
-		}
-
-		if (result.get_type() != target.get_type()) {
-			stack_variables.erase(target.name);
-			throw std::exception(std::format("a reference of type \"{}\" cannot be initialized with type \"{}\"", left_type, right_type).c_str());
-
-		}
-		memcpy_s(target.reference.get(), sizeof(Variable), result.lval->ref, sizeof(Variable));
-		std::cout << std::format("\"{}\" reference updated! (now points to \"{}\")\n", target.name, target.reference->name);
-
-	}
-	
 	target.initialize_expression(&result);
 
 	expr::rules.reset();
