@@ -16,7 +16,7 @@ bool cec::Compiler_WhiteSpace(const token_t* token)
 	return true;
 }
 
-token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, std::string::iterator& ref)
+token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, std::string::iterator ref)
 {
 
 
@@ -28,9 +28,6 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 		auto ch = *(it - 1);
 		if (ch != expected_eof && expected_eof)
 			throw std::exception(std::format("Compiler_ReadToken(): unexpected end of file\nexpected {} instead of {}", expected_eof, ch).c_str());
-
-		//std::cout << "last char: " << ch << '\n';
-		//token.value.push_back(ch);
 		token.t_type = token_t::tokentype::OTHER;
 		token.eof_character = ch;
 
@@ -48,7 +45,6 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 		return token;
 	}
 
-	//std::cout << "first char: [" << ch << "]\n";
 	isspace = std::isspace(ch);
 	isalnum = std::isalnum(ch);
 
@@ -60,9 +56,8 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 	}
 	else if (std::isalpha(ch) || ch == '_') {
 		token.t_type = token_t::tokentype::STRING;
-		//token.eval_fc = std::make_unique<std::function<bool( token_t*)>>(Compiler_StringToken);
 	}
-	else if (std::isspace(ch)) { //store whitespaces to maintain 1:1 to original code
+	else if (std::isspace(ch)) {
 		++it;
 		token.t_type = token_t::tokentype::WHITESPACE;
 		token.whitespace = ch;
@@ -77,6 +72,10 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 	}
 	else if (ch == '"') {
 		token.t_type = token_t::tokentype::STRING_LITERAL;
+
+	}
+	else if (ch == '\'') {
+		token.t_type = token_t::tokentype::CHARACTER_LITERAL;
 
 	}
 	else {
@@ -118,6 +117,13 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 				return token;
 			}
 			break;
+		case token_t::tokentype::CHARACTER_LITERAL:
+			if (ch == '\'') {
+				token.value.push_back(ch);
+				++it;
+				return token;
+			}
+			break;
 		default:
 			throw std::exception("Compiler_ReadToken(): default case");
 			break;
@@ -144,15 +150,11 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 	return token;
 }
 
-//only checks for syntax errors
-//ignores the stack completely, so this will happily return uninitialized variables/functions
-//this function is recursive, so stack overflows are possible if there are REALLY long expressions
-inline CHAR end_token;
 code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 {
 	code_type code;
 	token_t token;
-
+	CHAR end_token = '\0';
 	//Sleep(500);
 	auto end = f_str.end();
 	token = Compiler_ReadToken(it, ';', end);

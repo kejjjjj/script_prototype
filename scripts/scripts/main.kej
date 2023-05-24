@@ -1,1 +1,2 @@
-string og = "abc" "a";
+string[3] words = {"hello", " ", "world"};
+string result = words[0] + words[1] + words[2];

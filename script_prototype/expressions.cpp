@@ -214,8 +214,6 @@ void expr::SetTokenValueCategory(expression_token& token)
 
 	if (token.tokentype != VarType::VT_STRING || token.string_literal) {
 		
-		//if (token.string_literal)
-		//	token.content = token.content.substr(1, token.content.size() - 2);
 
 		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype, token.string_literal ? token.content.size() : 0));
 		switch (token.get_type()) {

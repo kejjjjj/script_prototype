@@ -19,6 +19,8 @@ namespace init
 
 	void FindComma(std::string::const_iterator& it, std::string::const_iterator end);
 
+	void TokenizeListArguments(std::string::iterator& begin, std::string::iterator end, std::list<std::string>& tokens);
+
 	inline bool expecting_comma = false;
 }
 

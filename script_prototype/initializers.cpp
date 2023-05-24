@@ -29,8 +29,6 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 	target.initialize_expression(&result);
 
 	expr::rules.reset();
-
-
 }
 
 std::optional<std::string> init::IsInitializerList(std::string::const_iterator& it, std::string::const_iterator end)
@@ -42,12 +40,29 @@ std::optional<std::string> init::IsInitializerList(std::string::const_iterator& 
 		return std::nullopt;
 	}
 	auto str = std::string(it, end);
-	
-	
+	auto og_end = str.end();
+	auto beg = str.begin();
+	auto start = str.begin();
 
-	const auto result = FindMatchingCurlyBracket(str);
+	token_t token;
 
-	return result.result_string;
+	std::string::iterator iend = str.end();
+
+
+	while (beg != og_end) { //find last '}'
+		token = cec::Compiler_ReadToken(beg, '\0', str.end());
+
+		if (token.t_type == token_t::OTHER) {
+			if (token.value == "}") {
+				iend = beg;
+				continue;
+			}
+		}
+	}
+
+	const auto result = (std::string(++start, --iend));
+
+	return result;
 
 }
 void init::EvaluateInitializerList(Variable* var, const std::string& expression)
@@ -75,7 +90,11 @@ void init::EvaluateInitializerList(Variable* var, const std::string& expression)
 	if (tokens.empty()) {
 		//most nested element
 		
-		TokenizeString(expression, ',', tokens);
+
+		auto new_expr = std::string(expression);
+		auto expr_begin = new_expr.begin();
+
+		TokenizeListArguments(expr_begin, new_expr.end(), tokens);
 
 		if (tokens.size() > var->numElements) {
 			throw std::exception("too many initializer values");
@@ -181,4 +200,27 @@ void init::FindComma(std::string::const_iterator& it, std::string::const_iterato
 		throw std::exception("expected a \",\"");
 	
 
+}
+void init::TokenizeListArguments(std::string::iterator& begin, std::string::iterator end, std::list<std::string>& tokens)
+{
+
+	token_t token;
+
+	std::string this_str;
+
+	while (begin != end) {
+		token = cec::Compiler_ReadToken(begin, '\0', end);
+
+		if (token.t_type == token_t::OTHER) {
+			if (token.value == ",") {
+				tokens.push_back(this_str), this_str = "";
+				continue;
+			}
+		}
+
+		this_str += token.value;
+	}
+
+	if (!this_str.empty())
+		tokens.push_back(this_str);
 }
