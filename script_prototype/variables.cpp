@@ -29,7 +29,12 @@ void Variable::AllocateValues() {
 		value.buffer = std::make_shared<char*>(new char[1]);
 		value.buf_size = sizeof(float);
 		break;
+	case VarType::VT_CHAR:
+		value.buffer = std::make_shared<char*>(new char[1]);
+		value.buf_size = sizeof(char);
+		break;
 	}
+
 }
 void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const unsigned __int16 length) 
 { 

@@ -5,15 +5,7 @@
 
 #include "pch.h"
 
-//static const char* VarTypec_str[4]
-//{
-//	"integer",
-//	"float",
-//	"string",
-//	"unknown"
-//};
-
-inline std::vector<const char*> VarTypes = {"NO_TYPE", "void", "int","float","string"},
+inline std::vector<const char*> VarTypes = {"NO_TYPE", "void", "int","float","string", "char"},
 								VarQualifiers = { "NO_QUALIFIER", "const" };
 
 
@@ -25,22 +17,9 @@ enum class VarType : char
 	VT_INT,
 	VT_FLOAT,
 	VT_STRING,
+	VT_CHAR,
 	
 };
-
-inline unsigned int GetVarTypeSize(const VarType t)
-{
-	switch (t) {
-	case VarType::VT_VOID:
-		return 0;
-	case VarType::VT_INT:
-	case VarType::VT_FLOAT:
-		return 4;
-	}
-
-	return 1;
-}
-
 struct VariableValue
 {
 	std::shared_ptr<char*> buffer = 0;
@@ -54,34 +33,6 @@ struct array_declr_data
 	VarType type;
 };
 
-class Array
-{
-public:
-	Array(array_declr_data* initializer_data) {
-
-		if (!initializer_data)
-			return;
-
-		if (initializer_data->type == VarType::VT_INVALID)
-			return;
-
-		if (initializer_data->numElements < 1 || initializer_data->numElements >= INT_MAX)
-			throw std::exception("invalid size for an array");
-
-		type = initializer_data->type;
-
-		for (int i = 0; i < initializer_data->numElements; i++) {
-			value.push_back({ std::make_shared<char*>(new char[GetVarTypeSize(initializer_data->type)]), GetVarTypeSize(initializer_data->type) });
-		}
-
-	}
-
-	std::shared_ptr<Array> child;
-
-private:
-	std::vector<VariableValue> value;
-	VarType type = VarType::VT_INVALID;
-};
 namespace expr
 {
 	struct expression_token;

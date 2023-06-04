@@ -66,13 +66,11 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 	bool kill_loop = false;
 	rules.next_unary = true;
 	rules.next_postfix = false;
-	bool break_on_whitespace = false;
 	rules.ignore_postfix = false;
 	rules.operator_allowed = true;
 	if (!tokens.empty()) {
 		if (tokens.back().postfix.front() == ".") { //for cases like 2. + 1;
 			rules.next_unary = false;
-			//rules.next_operator = true;
 		}
 	}
 
@@ -107,7 +105,6 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			rules.next_unary = false;
 			rules.next_postfix = true;
 			expr_token.content = token.value;
-			//break_on_whitespace = true;
 			if (rules.ignore_postfix) {
 				kill_loop = true;
 				break;
@@ -184,10 +181,6 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		case token_t::tokentype::WHITESPACE:
 			if (expr_token.content.empty())
 				expr_token.whitespace = true;
-			else if(break_on_whitespace) {
-				--it;
-				kill_loop = true;
-			}
 			break;
 		}
 	}
@@ -213,9 +206,6 @@ void expr::SetTokenValueCategory(expression_token& token)
 
 
 	if (token.tokentype != VarType::VT_STRING || token.string_literal) {
-		
-		//if (token.string_literal)
-		//	token.content = token.content.substr(1, token.content.size() - 2);
 
 		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype, token.string_literal ? token.content.size() : 0));
 		switch (token.get_type()) {
@@ -230,7 +220,7 @@ void expr::SetTokenValueCategory(expression_token& token)
 			std::cout << "the str: " << token.rval->get_string() << '\n';
 			break;
 		}
-		//token.rval->set_value<int>(std::stoi(token.content));
+
 		return;
 	}
 

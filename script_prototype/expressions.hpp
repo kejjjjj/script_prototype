@@ -58,11 +58,15 @@ struct rvalue
 		case VarType::VT_STRING:
 			if(!size)
 				throw std::exception("empty string literal is not allowed");
-
+			
 			value.buffer = std::make_shared<char*>(new char[size+1]);
 			char* buf = (char*)value.buffer.get();
 			buf[size] = '\0';
 			value.buf_size = size+1;
+			break;
+		case VarType::VT_CHAR:
+			value.buffer = std::make_shared<char*>(new char[1]);
+			value.buf_size = sizeof(char);
 			break;
 		}
 	}
@@ -151,7 +155,7 @@ namespace expr
 		bool op = false;
 		bool whitespace = false; //this boolean only exists if the FIRST character is a whitespace
 		bool string_literal = false;
-		bool change_reference = false;
+		bool char_literal = false;
 		VarType tokentype = VarType::VT_INVALID;
 		std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
