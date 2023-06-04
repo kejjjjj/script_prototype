@@ -17,13 +17,12 @@ void Variable::AllocateValues() {
 	case VarType::VT_INT:
 		value.buffer = std::make_shared<char*>(new char[4]);
 		value.buf_size = sizeof(int);
-		*reinterpret_cast<int*>(value.buffer.get()) = 0;
+		set_int(0);
 		break;
 	case VarType::VT_FLOAT:
 		value.buffer = std::make_shared<char*>(new char[4]);
 		value.buf_size = sizeof(float);
-		*reinterpret_cast<float*>(value.buffer.get()) = 0;
-
+		set_float(0);
 		break;
 	case VarType::VT_STRING:
 		value.buffer = std::make_shared<char*>(new char[1]);
@@ -254,28 +253,6 @@ std::string Variable::s_getvariabletype() const
 
 	};
 
-	const auto arr_as_text = [](const unsigned __int16 depth) 
-	{
-		auto copy = depth;
-		std::string r;
-		for (unsigned __int16 i = 0; i < depth; i++) {
-			r += "[]";
-		}
-		return r;
-	};
-
 	return std::format("{}{}", VarTypes[int(get_type())], types_to_text(this));
-
-}
-declr_type DeclarationUnaryToType(char op)
-{
-	std::cout << "testing " << op << '\n';
-
-	if (op == '?') {
-		throw std::exception("references are not supported yet");
-		return declr_type::REFERENCE;
-	}
-	if (op == '[')
-		return declr_type::ARRAY;
 
 }
