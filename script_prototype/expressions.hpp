@@ -44,7 +44,7 @@ struct rvalue
 	//FIXME - make rvalue constructor require an expression_token instead of just a type :)
 	//edit maybe not?
 	rvalue(const VarType _type, const unsigned __int16 size = 0) : type(_type){
-		
+		char* buf;
 		switch (_type) {
 		case VarType::VT_INT:
 			value.buffer = std::make_shared<char*>(new char[4]);
@@ -60,7 +60,7 @@ struct rvalue
 				throw std::exception("empty string literal is not allowed");
 			
 			value.buffer = std::make_shared<char*>(new char[size+1]);
-			char* buf = (char*)value.buffer.get();
+			buf = (char*)value.buffer.get();
 			buf[size] = '\0';
 			value.buf_size = size+1;
 			break;

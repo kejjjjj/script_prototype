@@ -79,9 +79,17 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
 		//std::cout << "token: " << token.value << '\n';
 		
+		if (token.t_type == token_t::tokentype::STRING_LITERAL) {
+			expr_token.string_literal = true;
+		}
+		else if (token.t_type == token_t::tokentype::CHAR_LITERAL) {
+			expr_token.char_literal = true;
+			expr_token.tokentype = VarType::VT_CHAR;
+		}
+
 		switch (token.t_type) {
 		case token_t::tokentype::STRING_LITERAL:
-			expr_token.string_literal = true;
+		case token_t::tokentype::CHAR_LITERAL:
 		case token_t::tokentype::STRING:
 		case token_t::tokentype::DIGIT:
 
@@ -112,9 +120,6 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 			break;
 		case token_t::tokentype::OPERATOR:
-
-			if (expr_token.tokentype == VarType::VT_INVALID)
-				expr_token.tokentype = VarType::VT_INVALID;
 
 			if (!rules.operator_allowed) {
 				throw std::exception("expected an integral type instead of operator");
@@ -151,6 +156,8 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 					if (iend == std::string::npos) {
 						throw std::exception("expected a \"]\"");
 					}
+					
+					
 
 					expr_token.postfix.push_back('[' + full_expr.substr(0, iend + 1));
 
@@ -218,6 +225,16 @@ void expr::SetTokenValueCategory(expression_token& token)
 		case VarType::VT_STRING:
 			token.rval->set_string((char*)token.content.c_str());
 			std::cout << "the str: " << token.rval->get_string() << '\n';
+			break;
+		case VarType::VT_CHAR:
+			const size_t str_len = std::accumulate(++token.content.begin(), --token.content.end(), 0ull);
+			
+			if (str_len >= 127) {
+				throw std::exception("char literal exceeds the value 127");
+				return;
+			}
+
+			//token.rval->set_value<char>(token.content[])
 			break;
 		}
 
@@ -313,7 +330,6 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	expression_token r_operand;
 	r_operand.rval = std::shared_ptr<rvalue>(new rvalue(VarType::VT_INT));
 	
-
 	switch (token.prefix.back().front())
 	{
 		case '-':
@@ -594,6 +610,9 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 		case VarType::VT_FLOAT:
 			token.rval->set_value<float>(token.lval->ref->get_float());
 			break;
+		case VarType::VT_CHAR:
+			token.rval->set_value<char>(token.lval->ref->get_char());
+			break;
 		case VarType::VT_STRING:
 			//token.rval->set_value<char*>(token.lval->ref->get_string());
 			//const std::string str = token.lval->ref->get_string();
@@ -626,7 +645,7 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 	unsigned __int16 lengthA = left.is_lvalue()	 ? GetArrayDepth(left.lval->ref)  : 0;
 	unsigned __int16 lengthB = right.is_lvalue() ? GetArrayDepth(right.lval->ref) : 0;
 
-	if (lengthA != lengthB || lengthA && lengthB && ltype != rtype) {
+	if (lengthA != lengthB || lengthA && lengthB && ltype != rtype) { //arrays must have same size and type
 		auto left_type = left.is_lvalue() ? left.lval->ref->s_getvariabletype() : VarTypes[int(left.rval->get_type())];
 		auto right_type = right.is_lvalue() ? right.lval->ref->s_getvariabletype() : VarTypes[int(right.rval->get_type())];
 
@@ -641,17 +660,23 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 
 	const int INT_FLAG = int(VarType::VT_INT);
 	const int FLOAT_FLAG = int(VarType::VT_FLOAT);
+	const int CHAR_FLAG = int(VarType::VT_CHAR);
 	const int STRING_FLAG = int(VarType::VT_STRING);
 
 	if (leftFlag & STRING_FLAG && rightFlag & STRING_FLAG) {
 		return true;
 	}
-	else if (leftFlag & FLOAT_FLAG && (rightFlag & FLOAT_FLAG || rightFlag & INT_FLAG)) {
+
+	else if (leftFlag & FLOAT_FLAG && (rightFlag & FLOAT_FLAG || rightFlag & INT_FLAG || rightFlag & CHAR_FLAG)) {
 		return true;
 	}
-	else if (leftFlag & INT_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG)) {
+	else if (leftFlag & INT_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG || rightFlag & CHAR_FLAG)) {
 		return true;
 	}
+	else if (leftFlag & CHAR_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG)) {
+		return true;
+	}
+
 	
 
 	return false;

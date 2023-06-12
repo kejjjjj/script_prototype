@@ -17,6 +17,7 @@
 #include <functional>
 #include <unordered_map>
 #include <any>
+#include <numeric>
 
 #include "hashing.hpp"
 #include "filetools.hpp"

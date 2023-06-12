@@ -47,6 +47,8 @@ public:
 
 	int get_int() const		 { return *reinterpret_cast<int*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
 	float get_float() const  { return *reinterpret_cast<float*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
+	char get_char() const { return *reinterpret_cast<char*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get()); }
+
 	char* get_string() const { return reinterpret_cast<char*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
 
 	void set_int(int _value)		{*reinterpret_cast<int*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get()) = _value; }

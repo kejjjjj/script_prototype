@@ -146,7 +146,7 @@ struct token_t
 };
 namespace cec
 {
-	token_t Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, std::string::iterator& ref); //doesn't require std::optional<token_t> yet
+	token_t Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, std::string::iterator ref); //doesn't require std::optional<token_t> yet
 	bool Compiler_SemiColon(const token_t* token);
 	bool Compiler_WhiteSpace(const token_t* token);
 	code_type Compiler_ReadNextCode3(std::string::iterator& it);

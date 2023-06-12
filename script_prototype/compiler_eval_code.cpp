@@ -16,7 +16,7 @@ bool cec::Compiler_WhiteSpace(const token_t* token)
 	return true;
 }
 
-token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, std::string::iterator& ref)
+token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, std::string::iterator ref)
 {
 
 
