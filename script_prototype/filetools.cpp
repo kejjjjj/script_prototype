@@ -158,9 +158,9 @@ void fs::F_FilesInThisDirectory(std::string& directory, std::vector<std::string>
 std::string fs::GetFileExtension(std::string& file)
 {
 
-	int extensionPos = file.find_last_of(".");
+	auto extensionPos = file.find_last_of(".");
 
-	if (extensionPos < 0)
+	if (extensionPos == std::string::npos)
 		return "No extension";
 
 	return file.substr(extensionPos);

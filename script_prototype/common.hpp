@@ -108,29 +108,16 @@ SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::stri
 SIZE_T GetCharacterCount(const std::string_view& str, char c);
 Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, const char e);
 
-float Eval(const float& a, const float& b, const std::string_view& ops);
 OperatorPriority GetOperandPriority(const std::string_view& ops);
 bool ValidNumber(const std::string_view& expr);
 bool IsInteger(const std::string_view& expr);
-VarType StringType(const std::string_view& expr);
 
 
 std::string RemoveBlank(const std::string_view& expr);
 std::string RemoveIrrelevantCode(const std::string_view& expr);
 
 size_t RemoveBlank(std::string_view& expr, std::string& out);
-std::string RemoveBlanksFromBeginningAndEnd(const std::string_view& in);
 std::string RemoveBlanksFromBeginning(const std::string_view& in);
-size_t FindFirstBlank(const std::string_view& in);
-
-
-std::string RemoveDuplicateBlanks(const std::string_view& in);
-void PushString(std::string* strptr, const std::string_view& str);
-
-std::string to_string(const float val, const bool integer);
-std::string HasPrefix(const std::string_view& str);
-std::string EvalPrefixes(const std::string& value, const std::string_view& prefix);
-std::string Eval(const std::string& a, const std::string& b, const std::string_view& ops);
 
 bool IsAnOperator(const std::string_view& op);
 bool SatisfiesOperator(const std::string_view& op);
@@ -138,11 +125,6 @@ bool IsAnOperator2(const std::string_view& op);
 bool IsUnaryOperator(const std::string_view& op);
 bool IsPostfixOperator(const std::string_view& op);
 
-bool NextOperatorCanBeAnOperator(const std::string_view& op);
 bool EndOfOperator(const std::string_view& op);
 
-std::string RemoveQuotes(const std::string& str);
-std::string ExtractStatementName(const std::string_view& expr);
-
-std::optional<std::list<std::string>> TokenizeOperatorSequence(const std::string_view& expr);
 #endif

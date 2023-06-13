@@ -3,6 +3,7 @@
 #ifndef PCH_H
 #define PCH_H
 
+
 #include <Windows.h>
 #include <fstream>
 #include <iostream>
@@ -19,7 +20,6 @@
 #include <any>
 #include <numeric>
 
-#include "hashing.hpp"
 #include "filetools.hpp"
 #include "variables.hpp"
 #include "common.hpp"

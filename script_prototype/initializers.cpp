@@ -13,6 +13,8 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 
 	const auto result = expr::EvaluateEntireExpression(expression);
 
+	std::cout << "result char: " << result.rval->get_char() << '\n';
+		 
 	if (result.tokentype == VarType::VT_INVALID) { //this means no initializer
 		throw std::exception("expected an initializer");
 		return;
@@ -40,7 +42,7 @@ std::optional<std::string> init::IsInitializerList(std::string::const_iterator& 
 		return std::nullopt;
 	}
 	auto str = std::string(it, end);
-	auto og_end = str.end();
+	const auto og_end = str.end();
 	auto beg = str.begin();
 	auto start = str.begin();
 

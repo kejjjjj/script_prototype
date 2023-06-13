@@ -43,7 +43,7 @@ struct rvalue
 {
 	//FIXME - make rvalue constructor require an expression_token instead of just a type :)
 	//edit maybe not?
-	rvalue(const VarType _type, const unsigned __int16 size = 0) : type(_type){
+	rvalue(const VarType _type, const size_t size = 0) : type(_type){
 		char* buf;
 		switch (_type) {
 		case VarType::VT_INT:
@@ -59,7 +59,7 @@ struct rvalue
 			if(!size)
 				throw std::exception("empty string literal is not allowed");
 			
-			value.buffer = std::make_shared<char*>(new char[size+1]);
+			value.buffer = std::make_shared<char*>(new char[size+1u]);
 			buf = (char*)value.buffer.get();
 			buf[size] = '\0';
 			value.buf_size = size+1;
@@ -91,6 +91,9 @@ public:
 	}
 	char* get_string() const {
 		return reinterpret_cast<char*>(value.buffer.get());
+	}
+	char get_char() const {
+		return *reinterpret_cast<char*>(value.buffer.get());
 	}
 	template <typename T>
 	void set_value(const T v) {
@@ -191,6 +194,14 @@ namespace expr
 
 			throw std::exception("not an lvalue nor rvalue");
 		}
+		char get_char() const {
+			if (is_rvalue())
+				return (rval->get_char());
+			else if (is_lvalue())
+				return (lval->ref->get_char());
+
+			throw std::exception("not an lvalue nor rvalue");
+		}
 		void set_string(char* str)
 		{
 			if (is_rvalue())
@@ -284,24 +295,25 @@ namespace expr
 
 			ExpressionCastWeakerOperand(left, right);
 			result.set_type(right.get_type());
+			int iright{};
 			float fright{};
 			switch (left.get_type()) {
 				case VarType::VT_INT:
 
 					if (right.get_type() == VarType::VT_FLOAT)	
-						 fright = (int)right.get_float();
-					else fright = right.get_int();
+						 iright = static_cast<int>(right.get_float());
+					else iright = right.get_int();
 
-					result.set_value(int(left.get_int() + fright));
+					result.set_value(left.get_int() + iright);
 					result.content = std::to_string(result.get_int());
 					return result;
 				case VarType::VT_FLOAT:
 
 					if (right.get_type() == VarType::VT_FLOAT)
 						 fright = right.get_float();
-					else fright = right.get_int();
+					else fright = static_cast<float>(right.get_int());
 
-					result.set_value((left.get_float() + fright));
+					result.set_value(left.get_float() + fright);
 					result.content = std::to_string(result.get_float());
 					return result;
 
@@ -314,418 +326,6 @@ namespace expr
 			}
 			return result;
 		}},		
-		/*{"-", [](expression_token& left, expression_token& right) -> std::string
-		{
-			ExpressionMakeRvalue(left);
-			ExpressionCastWeakerOperand(left, right);
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = (int)right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() - fright);
-
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<float>(left.get_float() - fright);
-
-					return std::to_string(right.get_float());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		}},
-		{"*", [](expression_token& left, expression_token& right) -> std::string
-		{
-			ExpressionMakeRvalue(left);
-			ExpressionCastWeakerOperand(left, right);
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = (int)right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() * fright);
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<float>(left.get_float() * fright);
-
-					return std::to_string(right.get_float());
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		}},
-		{"/", [](expression_token& left, expression_token& right) -> std::string
-		{
-			ExpressionMakeRvalue(left);
-			ExpressionCastWeakerOperand(left, right);
-			
-
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					if (fright == 0.f)
-						throw std::exception("division by zero");
-
-					right.set_value<int>(left.get_int() / fright);
-
-					
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					if (fright == 0.f)
-						throw std::exception("division by zero");
-
-					right.set_value<float>(left.get_float() / fright);
-
-					return std::to_string(right.get_float());
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		}},
-		{ "%", [](const expression_token& left, expression_token& right) -> std::string
-		{
-
-			if (!left.is_integral() || !right.is_integral())
-				throw std::exception("modulo operands must have an integral type");
-
-			const int fright = right.get_int();
-			if (fright == 0)
-				throw std::exception("division by zero");
-
-			right.set_value<int>(left.get_int() % fright);
-
-			return std::to_string(right.get_int());
-		
-		}},
-		{ "<<", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			if (!left.is_integral() || !right.is_integral())
-				throw std::exception("shift operands must have an integral type");
-
-			const int fright = right.get_int();
-
-			right.set_value<int>(left.get_int() << fright);
-
-			return std::to_string(right.get_int());
-
-		}},
-		{ ">>", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			if (!left.is_integral() || !right.is_integral())
-				throw std::exception("shift operands must have an integral type");
-
-			const int fright = right.get_int();
-
-			right.set_value<int>(left.get_int() >> fright);
-
-			return std::to_string(right.get_int());
-
-		}},
-		{ "==", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() == fright);
-
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_float() == fright);
-					right.set_type(VarType::VT_INT);
-					return std::to_string(right.get_int());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		} },
-		{ "!=", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() != fright);
-
-					
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_float() != fright);
-					right.set_type(VarType::VT_INT);
-					return std::to_string(right.get_int());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		} },
-		{ "<", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = (int)right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() < fright);
-
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_float() < fright);
-					right.set_type(VarType::VT_INT);
-
-					return std::to_string(right.get_int());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		} },
-		{ ">", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() > fright);
-
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_float() > fright);
-					right.set_type(VarType::VT_INT);
-
-					return std::to_string(right.get_int());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		} },
-		{ "<=", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() <= fright);
-
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_float() <= fright);
-					right.set_type(VarType::VT_INT);
-
-					return std::to_string(right.get_int());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		} },
-		{ ">=", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() >= fright);
-
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-					right.set_type(VarType::VT_INT);
-
-					right.set_value<int>(left.get_float() >= fright);
-
-					return std::to_string(right.get_int());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-		} },
-		{ "&", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			if (!left.is_integral() || !right.is_integral())
-				throw std::exception("bitwise operands must have an integral type");
-
-			const int fright = right.get_int();
-
-			right.set_value<int>(left.get_int() & fright);
-
-			return std::to_string(right.get_int());
-		} },
-		{ "^", [](const expression_token& left, expression_token& right) -> std::string
-{
-			if (!left.is_integral() || !right.is_integral())
-				throw std::exception("bitwise operands must have an integral type");
-
-			const int fright = right.get_int();
-
-			right.set_value<int>(left.get_int() ^ fright);
-
-			return std::to_string(right.get_int());
-		} },
-		{ "|", [](const expression_token& left, expression_token& right) -> std::string
-{
-			if (!left.is_integral() || !right.is_integral())
-				throw std::exception("bitwise operands must have an integral type");
-
-			const int fright = right.get_int();
-
-			right.set_value<int>(left.get_int() | fright);
-
-			return std::to_string(right.get_int());
-
-		} },
-		{ "&&", [](const expression_token& left, expression_token& right) -> std::string
-		{
-			float fright{};
-			switch (left.get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					right.set_value<int>(left.get_int() && fright);
-
-
-					return std::to_string(right.get_int());
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-					right.set_type(VarType::VT_INT);
-
-					right.set_value<int>(left.get_float() && fright);
-
-					return std::to_string(right.get_int());
-
-				case VarType::VT_STRING:
-					throw std::exception("invalid expression");
-			}
-			return "";
-
-		} },
-		{ "&&", [](const expression_token& left, expression_token& right) -> std::string
-		{
-		float fright{};
-		switch (left.get_type()) {
-			case VarType::VT_INT:
-
-				if (right.get_type() == VarType::VT_FLOAT)
-					fright = right.get_float();
-				else fright = right.get_int();
-
-				right.set_value<int>(left.get_int() || fright);
-
-
-				return std::to_string(right.get_int());
-			case VarType::VT_FLOAT:
-
-				if (right.get_type() == VarType::VT_FLOAT)
-					fright = right.get_float();
-				else fright = right.get_int();
-				right.set_type(VarType::VT_INT);
-
-				right.set_value<int>(left.get_float() || fright);
-
-				return std::to_string(right.get_int());
-
-			case VarType::VT_STRING:
-				throw std::exception("invalid expression");
-		}
-		return "";
-
-		} },*/
 		{ "=", [](const expression_token& left, const expression_token& right) -> expression_token
 		{
 			if (!left.is_lvalue())
@@ -764,82 +364,7 @@ namespace expr
 			}
 			return result;
 		}},
-		{ "<=>", [](const expression_token& left, const expression_token& right) -> expression_token
-		{
-			if (!left.is_lvalue() || !right.is_lvalue())
-				throw std::exception("both swap operands must be modifiable lvalues");
-			expression_token result;
-			auto left_op = left.lval->ref;
-			auto right_op = right.lval->ref;
-
-			int left_int = left.get_int();
-			float left_float = left.get_int();
-			char left_str[32];
-
-			memcpy(left_str, left.get_string(), left_op->value.buf_size);
-
-
-
-			float fright{};
-
-			switch (left_op->get_type()) {
-				case VarType::VT_INT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = (int)right.get_float();
-					else fright = right.get_int();
-
-					left_op->set_value<int>(fright);
-					
-					result.content = std::to_string(left_op->get_int());
-
-					break;
-
-				case VarType::VT_FLOAT:
-
-					if (right.get_type() == VarType::VT_FLOAT)
-						fright = right.get_float();
-					else fright = right.get_int();
-
-					left_op->set_value<float>(fright);
-
-					result.content = std::to_string(left_op->get_float());
-
-					break;
-
-				case VarType::VT_STRING:
-					left_op->set_value<char*>(right_op->get_string());
-					break;
-			}
-
-			switch (right_op->get_type()) {
-			case VarType::VT_INT:
-
-				fright = (int)left_int;
-
-
-				right_op->set_value<int>(fright);
-
-				break;
-
-			case VarType::VT_FLOAT:
-
-				if (left.get_type() == VarType::VT_FLOAT)
-					fright = left_float;
-				else fright = left_int;
-
-				right_op->set_value<float>(fright);
-				break;
-
-			case VarType::VT_STRING:
-				right_op->set_value<char*>(left_str);
-				break;
-			}
-			
-			result.lval = left.lval;
-
-			return left;
-		}}
+		
 
 	};
 

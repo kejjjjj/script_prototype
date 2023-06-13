@@ -17,13 +17,17 @@ enum class VarType : char
 	VT_INT,
 	VT_FLOAT,
 	VT_STRING,
-	VT_CHAR,
-	
+	VT_CHAR
 };
+
+constexpr int operator+(VarType value)
+{
+	return static_cast<int>(value);
+}
 struct VariableValue
 {
 	std::shared_ptr<char*> buffer = 0;
-	unsigned int buf_size = 0; 
+	size_t buf_size = 0; 
 };
 
 
@@ -90,15 +94,15 @@ public:
 
 	//arrays
 	std::shared_ptr<Variable[]> arr;
-	unsigned __int16 numElements = 0;
+	size_t numElements = 0;
 
 	//array methods
 	bool is_array() const { return arr.get(); }
-	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const unsigned __int16 length);
-	void recreate_array(const unsigned __int16 new_length);
+	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length);
+	void recreate_array(const size_t new_length);
 
 	//utility functions
-	void print(unsigned __int16 spaces = 0) const;
+	void print(size_t spaces = 0) const;
 	std::string s_getvariabletype() const;
 
 	//operator overloads

@@ -35,7 +35,7 @@ void Variable::AllocateValues() {
 	}
 
 }
-void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const unsigned __int16 length) 
+void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length)
 { 
 	if (length != numElements)
 		std::cout << "resizing the array from " << numElements << " to " << length << '\n';
@@ -43,7 +43,7 @@ void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const uns
 	arr = a_arr; 
 	numElements = length;
 }
-void Variable::recreate_array(const unsigned __int16 new_length)
+void Variable::recreate_array(const size_t new_length)
 {
 	if (!is_array())
 		throw std::exception("attempted to recreate a non-array type");
@@ -73,9 +73,11 @@ void Variable::set_expression(const expr::expression_token* token)
 	case VarType::VT_INT:
 
 		if (rtype == VarType::VT_FLOAT)
-			ptr->set_value<int>(token->get_float());
+			ptr->set_value<int>(static_cast<int>(token->get_float()));
 		else if (rtype == VarType::VT_INT)
 			ptr->set_value<int>(token->get_int());
+		else if (rtype == VarType::VT_CHAR)
+			ptr->set_value<int>(static_cast<int>(token->get_char()));
 
 		std::cout << "new value: " << ptr->get_int() << '\n';
 
@@ -85,7 +87,7 @@ void Variable::set_expression(const expr::expression_token* token)
 		if (rtype == VarType::VT_FLOAT)
 			ptr->set_value<float>(token->get_float());
 		else if (rtype == VarType::VT_INT)
-			ptr->set_value<float>(token->get_int());
+			ptr->set_value<float>(static_cast<float>(token->get_int()));
 
 		std::cout << "new value: " << ptr->get_int() << '\n';
 
@@ -98,6 +100,12 @@ void Variable::set_expression(const expr::expression_token* token)
 			const std::string str = token->rval->get_string();
 			ptr->set_string((char*)str.substr(1, str.size() - 2).c_str()); //remove the quotation marks
 		}
+		break;
+	case VarType::VT_CHAR:
+		if (rtype == VarType::VT_INT)
+			ptr->set_value<char>(static_cast<char>(token->get_int()));
+		else if (rtype == VarType::VT_CHAR)
+			ptr->set_value<char>(token->get_char());
 		break;
 	}
 
@@ -126,7 +134,7 @@ void Variable::initialize_expression(const expr::expression_token* token)
 
 	set_expression(token);
 }
-void Variable::print(unsigned __int16 spaces) const
+void Variable::print(size_t spaces) const
 {
 
 
@@ -141,17 +149,19 @@ void Variable::print(unsigned __int16 spaces) const
 				return std::to_string(var.reference->get_int());
 
 			return std::to_string(var.get_int());
-			break;
 		case VarType::VT_FLOAT:
 			if (var.is_reference())
 				return std::to_string(var.reference->get_float());
 			return std::to_string(var.get_float());
-			break;
 		case VarType::VT_STRING:
 			if (var.is_reference())
 				return var.reference->get_string();
 			return var.get_string();
-			break;
+		case VarType::VT_CHAR:
+			std::string s;
+			if (var.is_reference())
+				return s.push_back(var.reference->get_char()), s;
+			return s.push_back(var.get_char()), s;
 		}
 
 		return "";
@@ -159,13 +169,13 @@ void Variable::print(unsigned __int16 spaces) const
 
 	std::string prefix;
 
-	for (unsigned __int16 i = 0; i < spaces; i++) {
+	for (size_t i = 0ull; i < spaces; i++) {
 		prefix.push_back(' ');
 		prefix.push_back(' ');
 
 	}
 
-	for (int i = 0; i < numElements; i++) {
+	for (size_t i = 0; i < numElements; i++) {
 		std::cout << std::format("{}[{}]: <{}> ({})\n", prefix, i, VarTypes[int(get_type())], ValueToString(this->arr[i]));
 		arr[i].print(spaces + 1);
 	}

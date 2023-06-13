@@ -227,17 +227,17 @@ void expr::SetTokenValueCategory(expression_token& token)
 			std::cout << "the str: " << token.rval->get_string() << '\n';
 			break;
 		case VarType::VT_CHAR:
-			const size_t str_len = std::accumulate(++token.content.begin(), --token.content.end(), 0ull);
-			
-			if (str_len >= 127) {
-				throw std::exception("char literal exceeds the value 127");
-				return;
-			}
+			const int32_t str_len = std::accumulate(++token.content.begin(), --token.content.end(), 0);
 
-			//token.rval->set_value<char>(token.content[])
+			//if (str_len >= 127) {
+			//	throw std::exception("char literal exceeds the value 127");
+			//	return;
+			//}
+
+			token.rval->set_value<char>(char(str_len));
+			std::cout << "token char as int: " << int(token.rval->get_char()) << " " << str_len << '\n';
 			break;
 		}
-
 		return;
 	}
 
@@ -542,7 +542,6 @@ expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token
 	const auto& op_end = --tokens.end();
 	OperatorPriority op, next_op;
 	
-
 	while (tokens.size() > 2) {
 		itr1 = ++tokens.begin(); 
 		itr2 = itr1;
@@ -667,13 +666,13 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 		return true;
 	}
 
-	else if (leftFlag & FLOAT_FLAG && (rightFlag & FLOAT_FLAG || rightFlag & INT_FLAG || rightFlag & CHAR_FLAG)) {
+	else if (leftFlag & FLOAT_FLAG && (rightFlag & FLOAT_FLAG || rightFlag & INT_FLAG)) {
 		return true;
 	}
 	else if (leftFlag & INT_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG || rightFlag & CHAR_FLAG)) {
 		return true;
 	}
-	else if (leftFlag & CHAR_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG)) {
+	else if (leftFlag & CHAR_FLAG && (rightFlag & INT_FLAG)) {
 		return true;
 	}
 
@@ -703,6 +702,7 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 	else
 		return;
 
+
 	switch (stronger->get_type()) {
 
 	case VarType::VT_INT:
@@ -715,7 +715,8 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 		switch (old_type) {
 		case VarType::VT_INT:
 			std::cout << "an int gets promoted to a float\n";
-			weaker->set_value<float>(weaker->get_int());
+			weaker->set_value<float>(static_cast<float>(weaker->get_int()));
+			weaker->set_type(VarType::VT_FLOAT);
 			break;
 		default:
 			break;
@@ -737,7 +738,7 @@ void expr::ExpressionSetTempValue(temp_value_s& token) {
 		token.ref->set_value<int>(token.ref->get_int() + (token.increment ? 1 : -1));
 		break;
 	case VarType::VT_FLOAT:
-		token.ref->set_value<float>(token.ref->get_int() + (token.increment ? 1 : -1));
+		token.ref->set_value<float>(token.ref->get_float() + (token.increment ? 1 : -1));
 		break;
 	}
 
