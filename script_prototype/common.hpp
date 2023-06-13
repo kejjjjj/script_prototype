@@ -35,36 +35,6 @@ inline void CompilerError(const T& t, const Param& ... param)
 	CompilerError(param...);
 
 }
-inline void RuntimeError()
-{
-
-	std::string beg = std::format("Line: {}\nColumn: {}\n\nDescription:\n", fs::file.lines_read, fs::file.current_column);
-
-	compilerlog.insert(compilerlog.begin(), beg);
-
-	beg.clear();
-	for (const auto& i : compilerlog) {
-		beg += i;
-	}
-
-	MessageBoxA(NULL, beg.c_str(), "Runtime Error!", MB_ICONERROR);
-	compilerlog.clear();
-	exit(-1);
-	return;
-}
-
-template <typename T, typename ... Param>
-inline void RuntimeError(const T& t, const Param& ... param)
-{
-	std::stringstream ss;
-	ss << t;
-	compilerlog.push_back(ss.str());
-
-	//std::cout << t << '\n';
-	RuntimeError(param...);
-
-}
-//void CompilerError(std::string str, ...);
 
 //the higher the value the higher the priority
 enum OperatorPriority
@@ -97,34 +67,16 @@ struct Substr_s
 	std::string result_string;
 };
 
-uint32_t HashString(const char* s);
-uint32_t HashString(const std::string_view& s);
-
-std::string RemoveFromString(std::string& str, char a);
-SIZE_T TokenizeString(const std::string& expr, char delim, std::list<std::string>& tokens);
-//SIZE_T TokenizeStringOperands(const std::string_view& expr, std::list<std::string>& tokens);
-SIZE_T TokenizeStringOperands2(const std::string_view& expr, std::list<std::string>& tokens);
-
-SIZE_T GetCharacterCount(const std::string_view& str, char c);
 Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, const char e);
 
 OperatorPriority GetOperandPriority(const std::string_view& ops);
 bool ValidNumber(const std::string_view& expr);
 bool IsInteger(const std::string_view& expr);
 
-
-std::string RemoveBlank(const std::string_view& expr);
-std::string RemoveIrrelevantCode(const std::string_view& expr);
-
-size_t RemoveBlank(std::string_view& expr, std::string& out);
-std::string RemoveBlanksFromBeginning(const std::string_view& in);
-
 bool IsAnOperator(const std::string_view& op);
 bool SatisfiesOperator(const std::string_view& op);
 bool IsAnOperator2(const std::string_view& op);
 bool IsUnaryOperator(const std::string_view& op);
 bool IsPostfixOperator(const std::string_view& op);
-
-bool EndOfOperator(const std::string_view& op);
 
 #endif

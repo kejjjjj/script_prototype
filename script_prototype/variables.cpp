@@ -4,13 +4,6 @@
 Variable::Variable(const std::string_view& _name, VarType _type) : name(_name), type(_type){
 	AllocateValues();
 }
-Variable::~Variable()
-{
-	//delete value.buffer;
-	//value.buf_size = 0;
-
-	//lol try to remember to delete it :p
-}
 
 void Variable::AllocateValues() {
 	switch (type) {

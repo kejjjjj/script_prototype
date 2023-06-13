@@ -23,7 +23,6 @@
 #include "filetools.hpp"
 #include "variables.hpp"
 #include "common.hpp"
-#include "eval_statement.hpp"
 #include "compiler_eval_code.hpp"
 #include "expressions.hpp"
 #include "declarations.hpp"

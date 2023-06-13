@@ -1,20 +1,4 @@
 #include "pch.h"
-bool cec::Compiler_SemiColon(const token_t* token)
-{
-	if (token->value == ";") {
-		syntax.CheckRules(S_EXPRESSION);
-		return true;
-	}
-	return false;
-}
-bool cec::Compiler_WhiteSpace(const token_t* token)
-{
-
-	if (!std::isspace(token->whitespace))
-		return false;
-
-	return true;
-}
 
 token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, std::string::iterator ref)
 {
@@ -148,21 +132,15 @@ token_t cec::Compiler_ReadToken(std::string::iterator& it, CHAR expected_eof, st
 
 	return token;
 }
-
-//only checks for syntax errors
-//ignores the stack completely, so this will happily return uninitialized variables/functions
-//this function is recursive, so stack overflows are possible if there are REALLY long expressions
 inline CHAR end_token;
 code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 {
 	code_type code;
 	token_t token;
 
-	//Sleep(500);
 	auto end = f_str.end();
 	token = Compiler_ReadToken(it, ';', end);
 	code.code += token.value;
-	//std::cout << "token: " << token.value << '\n';
 
 	while (token.t_type == token_t::WHITESPACE) {
 		token = Compiler_ReadToken(it, ';', end);
@@ -174,7 +152,6 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 	if (keyword) {
 		switch (keyword) {
 		case token_t::keywordtype::STATEMENT:
-			Compiler_SetStatementFlags();
 			end_token = ')';
 			code.type = code_type::code_type_e::STATEMENT;
 			code.code = token.value;
@@ -189,115 +166,40 @@ code_type cec::Compiler_ReadNextCode3(std::string::iterator& it)
 	}
 	else {
 		end_token = ';';
-		switch (token.t_type) {
-		case token_t::tokentype::STRING:
-			Compiler_SetIdentifierFlags();
-			break;
-		case token_t::tokentype::DIGIT:
-			Compiler_SetNumberFlags();
-			break;
-		case token_t::tokentype::OPERATOR:
-			Compiler_SetOperatorFlags();
-			break;
-		case token_t::tokentype::PARENTHESIS:
-			if (token.value.front() == '(') {
-				if (syntax.FlagActive(S_OPENING_PARENTHESIS)) {
-					end_token = ')';
-				}
-				syntax.ClearFlag(S_OPENING_PARENTHESIS);
-			}
-			break;
-		}
-		
 		code.type = code_type::code_type_e::EXPRESSION;
 	}
 
 	code.code = token.value + Compiler_ParseExpression(end_token, it);
 	
-	std::cout << "final code: " << code.code << '\n';
+	//std::cout << "final code: " << code.code << '\n';
 
 	return code;
 
 }
 
-void cec::Compiler_SetIdentifierFlags()
-{
-	syntax.CheckRules(S_OPENING_PARENTHESIS);
-	syntax.CheckRules(S_SEMICOLON);
-
-	syntax.ClearFlag(S_EXPRESSION);
-
-	syntax.AddFlag(S_SEMICOLON);
-}
-void cec::Compiler_SetStatementFlags()
-{
-	syntax.CheckRules(S_OPENING_PARENTHESIS);
-	syntax.CheckRules(S_EXPRESSION);
-
-	syntax.ClearFlag(S_SEMICOLON);
-
-	syntax.AddFlag(S_OPENING_PARENTHESIS);
-}
-void cec::Compiler_SetOperatorFlags()
-{
-	syntax.CheckRules(S_OPENING_PARENTHESIS);
-	//syntax.CheckRules(S_EXPRESSION);
-
-	syntax.ClearFlag(S_SEMICOLON);
-
-	//syntax.AddFlag(S_EXPRESSION);
-}
-void cec::Compiler_SetNumberFlags()
-{
-	syntax.CheckRules(S_OPENING_PARENTHESIS);
-	syntax.CheckRules(S_SEMICOLON);
-
-	syntax.ClearFlag(S_EXPRESSION);
-
-	syntax.AddFlag(S_SEMICOLON);
-}
-void cec::Compiler_SemiColonFlags()
-{
-	syntax.CheckRules(S_EXPRESSION);
-	
-	syntax.ClearFlag(S_SEMICOLON);
-
-}
 std::string cec::Compiler_ParseExpression(CHAR end_token, std::string::iterator& it)
 {
 	auto end = f_str.end();
 	token_t token = Compiler_ReadToken(it, end_token, end);
 	auto keyword = token.GetKeywordtype();
 	std::string full_expression;
-	//std::cout << "token: " << token.value << '\n';
 
 	if (keyword == token_t::keywordtype::STATEMENT) {
 		throw std::exception("a statement within an expression is not allowed");
 	}
 	char front;
 	switch (token.t_type) {
-		/*case token_t::tokentype::STRING:
-			Compiler_SetIdentifierFlags();
-			break;
-		case token_t::tokentype::DIGIT:
-			Compiler_SetNumberFlags();
-			break;
-		case token_t::tokentype::OPERATOR:
-			Compiler_SetOperatorFlags();
-			break;*/
+
 		case token_t::tokentype::PARENTHESIS:
 			front = token.value.front();
 			if (front == end_token) {
 
 				return token.value;
 			}
-			Compiler_SetOperatorFlags();
 			break;
 		case token_t::tokentype::OTHER:
 			front = token.eof_character;
 			if (front == end_token) {
-				if (front == ';')
-					Compiler_SemiColonFlags();
 				return token.value;
 			}
 			break;

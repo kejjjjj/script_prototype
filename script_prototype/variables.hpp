@@ -46,8 +46,8 @@ class Variable
 public:
 	Variable(const std::string_view& _name, VarType _type);
 	Variable(VarType _type) : type(_type) {}
-	Variable() {};
-	~Variable();
+	Variable() = default;
+	~Variable() = default;
 
 	int get_int() const		 { return *reinterpret_cast<int*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
 	float get_float() const  { return *reinterpret_cast<float*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}

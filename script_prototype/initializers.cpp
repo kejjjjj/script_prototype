@@ -8,12 +8,10 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 	auto begin = expression.begin();
 
 
-	if (auto str = IsInitializerList(begin, expression.end()))
+	if (const auto str = IsInitializerList(begin, expression.end()))
 		return EvaluateInitializerList(&target, std::string(str.value()));
 
 	const auto result = expr::EvaluateEntireExpression(expression);
-
-	std::cout << "result char: " << result.rval->get_char() << '\n';
 		 
 	if (result.tokentype == VarType::VT_INVALID) { //this means no initializer
 		throw std::exception("expected an initializer");
@@ -136,8 +134,6 @@ void init::TokenizeInitializerLists(std::string expr, std::list<std::string>& to
 		substr = FindMatchingCurlyBracket(expr);
 		substr_found = substr.result_string != "empty" && !substr.result_string.empty();
 	}
-	for (auto& i : tokens)
-		std::cout << i << '\n';
 
 }
 Substr_s init::FindMatchingCurlyBracket(const std::string_view& expr) 

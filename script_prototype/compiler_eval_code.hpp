@@ -128,13 +128,9 @@ struct token_t
 	char whitespace = false;
 	char eof_character = '\0';
 	std::string value; //does not include whitespaces
-	std::unique_ptr<std::function<bool(token_t*)>> eval_fc = 0;
 	keywordtype GetKeywordtype() const {
 		if (t_type != tokentype::STRING)
 			return keywordtype::DEFAULT;
-		
-		if (Compile_EvaluateStatement2(this->value) != StatementType::NO_STATEMENT)
-			return keywordtype::STATEMENT;
 
 		for (const auto& i : VarTypes)
 			if (this->value == i)
@@ -152,11 +148,6 @@ namespace cec
 	code_type Compiler_ReadNextCode3(std::string::iterator& it);
 	std::string Compiler_ParseExpression(CHAR end_token, std::string::iterator& it);
 
-	void Compiler_SetIdentifierFlags();
-	void Compiler_SetStatementFlags();
-	void Compiler_SetOperatorFlags();
-	void Compiler_SetNumberFlags();
-	void Compiler_SemiColonFlags();
 
 }
 

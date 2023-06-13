@@ -122,7 +122,7 @@ void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::
 		throw std::exception("EvaluateDeclarationOperators(): check this out!!!!");
 	}
 
-	auto t = token.t_type;
+	const auto t = token.t_type;
 
 	if (t == token_t::tokentype::DIGIT || t == token_t::tokentype::STRING) {
 		it -= token.value.size();

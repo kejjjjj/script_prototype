@@ -5,11 +5,6 @@
 
 namespace decl
 {
-	//struct var_tree_declr
-	//{
-	//	std::optional<int> 
-	//};
-
 	void EvaluateDeclaration(const std::string_view& type, std::string::iterator& it);
 	int EvaluateArrayInitialSize(const std::string& expression);
 

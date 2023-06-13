@@ -5,21 +5,6 @@
 
 #include "pch.h"
 
-enum class ExpressionType
-{
-	EXPR_ASSIGNMENT, // a = 1; 
-	EXPR_ASSIGNMENT2, // the += like operators
-	EXPR_CALCULATION //100 + 100 / 3
-};
-
-struct expression_s
-{
-	std::string preOP;
-	std::string Operator;
-	std::string postOP;
-	ExpressionType type = ExpressionType::EXPR_ASSIGNMENT;
-};
-
 struct expression_stack
 {
 	std::string content;
@@ -28,21 +13,12 @@ struct expression_stack
 
 #define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' \
 							|| x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.' || x == '?' || x == '[' || x == ']')
-
-#define IsCalculationOp(x)  (x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%')
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=')
-#define IsAssignment2Op(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '&' || x == '|' || x == '^' || x == '%')
-#define IsDualOp(x)			(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '!' || x == '%' || x == '=')
 #define IsPrefixOp(x)		(x == '-' || x == '!' || x == '~' || x == '+')
-#define IsPostEqualOp(x)	(x == '=') //==
-#define BadCalculationOp(x) (x != '(' && x != ')' && !IsCalculationOp(x) && x != '=' && x != '~')
-#define IsValidSyntaxForName(x) (std::isalnum(x) && x != '_')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
 struct rvalue
 {
-	//FIXME - make rvalue constructor require an expression_token instead of just a type :)
-	//edit maybe not?
 	rvalue(const VarType _type, const size_t size = 0) : type(_type){
 		char* buf;
 		switch (_type) {
@@ -101,7 +77,6 @@ public:
 	}
 	void set_string(char* str) {
 		const auto len = strlen(str);
-		//str[len - 1] = '\0';
 
 		if (len != value.buf_size) {
 			value.buffer.reset();
@@ -123,14 +98,12 @@ public:
 };
 struct lvalue
 {
-	//lvalue() : ref(nullptr) {};
-	//~lvalue() = default;
+
 	Variable* ref = 0;
 };
 struct temp_value_s
 {
 	Variable* ref = 0;
-	//VariableValue value;
 	bool increment = false;
 };
 
@@ -162,7 +135,6 @@ namespace expr
 		VarType tokentype = VarType::VT_INVALID;
 		std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
-		//temp_value_s temp;
 
 		bool is_rvalue() const {
 			return rval.get() != nullptr;

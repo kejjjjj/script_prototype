@@ -42,9 +42,6 @@
     <ClCompile Include="compiler.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
-    <ClCompile Include="eval_statement.cpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClCompile>
     <ClCompile Include="compiler_eval_code.cpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClCompile>
@@ -52,9 +49,6 @@
       <Filter>Source Files\scripting</Filter>
     </ClCompile>
     <ClCompile Include="filetools.cpp">
-      <Filter>Source Files\tools</Filter>
-    </ClCompile>
-    <ClCompile Include="hashing.cpp">
       <Filter>Source Files\tools</Filter>
     </ClCompile>
     <ClCompile Include="initializers.cpp">
@@ -77,9 +71,6 @@
     <ClInclude Include="compiler.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
-    <ClInclude Include="eval_statement.hpp">
-      <Filter>Source Files\scripting\code</Filter>
-    </ClInclude>
     <ClInclude Include="compiler_eval_code.hpp">
       <Filter>Source Files\scripting\code</Filter>
     </ClInclude>
@@ -87,9 +78,6 @@
       <Filter>Source Files\scripting</Filter>
     </ClInclude>
     <ClInclude Include="filetools.hpp">
-      <Filter>Source Files\tools</Filter>
-    </ClInclude>
-    <ClInclude Include="hashing.hpp">
       <Filter>Source Files\tools</Filter>
     </ClInclude>
     <ClInclude Include="initializers.hpp">
