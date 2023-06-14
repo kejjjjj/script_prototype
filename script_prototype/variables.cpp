@@ -61,7 +61,11 @@ void Variable::set_expression(const expr::expression_token* token)
 		ptr->replace_array(token->lval->ref->arr, token->lval->ref->numElements);
 		return;
 	}
-
+	int x = 999; // x is not a constant expression
+	const int y = 999;
+	const int z = 99;
+	char c1 = x; // OK, though it might narrow (in this case, it does narrow)
+	char c2{ x }; // error: might narrow
 	switch (ptr->type) {
 	case VarType::VT_INT:
 

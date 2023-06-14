@@ -206,11 +206,21 @@ namespace expr
 			else if (is_lvalue())
 				return lval->ref->set_type(atype);
 
+			throw std::exception("unknown expression used in set_type()");
 		}
 		bool is_integral() const {
 			return get_type() == VarType::VT_INT;
 		}
+		size_t size_of() const {
+			if (is_rvalue())
+				return rval->value.buf_size;
+			else if (is_lvalue())
+				return lval->ref->value.buf_size;
 
+			throw std::exception("unknown expression used in size_of()");
+
+
+		}
 
 	};
 
@@ -230,8 +240,8 @@ namespace expr
 	void ExpressionCastWeakerOperand(expression_token& left, expression_token& right);
 	void ExpressionSetTempValue(temp_value_s& token);
 	expression_token EvaluateExpressionTokens(std::list<expression_token>& tokens);
+	void ExpressionImplicitCast(expression_token& left, expression_token& right);
 
-	//void Eval(expression_token& left, expression_token& right, std::function<void(expression_token&, expression_token&)>& eval_fc);
 
 	struct s_rules
 	{
@@ -265,7 +275,7 @@ namespace expr
 
 			result.rval = std::shared_ptr<rvalue>(new rvalue(right.get_type(),  (right.get_type() == VarType::VT_STRING ? (unsigned short)strlen(right.get_string()) : 0u)));
 
-			ExpressionCastWeakerOperand(left, right);
+			ExpressionImplicitCast(left, right);
 			result.set_type(right.get_type());
 			int iright{};
 			float fright{};

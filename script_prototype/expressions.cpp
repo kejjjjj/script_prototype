@@ -621,7 +621,6 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 			break;
 		}
 		token.lval.reset();
-		//std::cout << "deleting lvalue\n";
 		return;
 	}
 
@@ -708,7 +707,7 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 	case VarType::VT_INT:
 		break;
 	case VarType::VT_FLOAT:
-		auto old_type = weaker->get_type();
+		const auto old_type = weaker->get_type();
 
 		weaker->set_type(stronger->get_type());
 
@@ -725,6 +724,35 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 
 	}
 	 
+}
+void expr::ExpressionImplicitCast(expression_token& left, expression_token& right)
+{
+	if (left.get_type() == right.get_type())
+		return;
+
+
+	if (!left.is_lvalue()) {
+		return ExpressionCastWeakerOperand(left, right);
+	}
+
+	const auto left_v = left.lval->ref;
+
+	if (left.size_of() < right.size_of()) {
+		throw std::exception("cannot implicitly convert to a bigger type (narrowing conversion)");
+		return;
+	}
+	
+	//all other types will error before they reach this part of the code
+
+	switch (left.get_type()) {
+	case VarType::VT_INT:
+		break;
+	case VarType::VT_FLOAT:
+		break;	
+	case VarType::VT_CHAR:
+		break;
+	}
+
 }
 void expr::ExpressionSetTempValue(temp_value_s& token) {
 

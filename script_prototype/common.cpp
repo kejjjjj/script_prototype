@@ -1,26 +1,12 @@
 #include "pch.h"
 
-SIZE_T TokenizeString(const std::string& expr, char delim, std::list<std::string>& tokens)
-{
-    std::stringstream ss(expr);
-
-    std::string token;
-
-
-
-    while (std::getline(ss, token, delim)) {
-        tokens.push_back(token);
-    }
-
-    return tokens.size();
-}
 //does not include the parantheses
 Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, const char e)
 {
-    int32_t idx = -1;
+    int32_t idx = 0;
     int32_t opening{0}, closing{0}, count_opening{0}, count_closing{0};
     for (const auto& i : expr) {
-        idx++;
+        
 
         if (i == s) {
             count_opening = 1;
@@ -35,7 +21,7 @@ Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, c
             break;
         }
 
-        
+        idx++;
         
     }
 
@@ -46,63 +32,6 @@ Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, c
         result_string = ("empty");
 
     return { count_opening, count_closing, opening, len, result_string };
-}
-std::string RemoveBlank(const std::string_view& expr)
-{
-    std::string fixed;
-    for (const auto& i : expr)
-        if (!std::isspace(i))
-            fixed.push_back(i);
-
-    return fixed;
-}
-size_t RemoveBlank(std::string_view& expr, std::string& out)
-{
-    for (const auto& i : expr)
-        if (!std::isspace(i))
-            out.push_back(i);
-
-    return out.size();
-}
-std::string RemoveIrrelevantCode(const std::string_view& expr)
-{
-    bool within_quotes = false;
-    std::string fixed;
-    for (const auto& i : expr)
-    {
-        if (i == '"') {
-            within_quotes = !within_quotes;
-        }if (within_quotes) {
-            fixed.push_back(i);
-            continue;
-        }
-
-        if (std::isspace(i))
-            continue;
-
-
-        fixed.push_back(i);
-
-    }
-
-    if (within_quotes) {
-        CompilerError("missing closing quote");
-        return "";
-    }
-    return fixed;
-}
-std::string RemoveBlanksFromBeginning(const std::string_view& in)
-{
-    std::string out;
-    size_t idx = 0;
-
-    while (std::isspace(in[idx])) 
-    {
-        idx++;
-    }
-
-    out = in.substr(idx);
-    return out;
 }
 OperatorPriority GetOperandPriority(const std::string_view& ops)
 {
@@ -236,17 +165,10 @@ bool SatisfiesOperator(const std::string_view& op)
     }
 
     return IsAnOperator2(op);
-
-    //return (op == "==" || op == "!=" || op == ">=" || op == "<=" || op == ">>" || op == "<<" || op == "&&" || op == "||");
-
 }
 bool IsAnOperator2(const std::string_view& op)
 {
     return IsAnOperator(op) || (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=" || op == "<=>" || op == "++" || op == "--");
-}
-bool EndOfOperator(const std::string_view& op)
-{
-    return (op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == ">>=" || op == "<<=" || op == "&=" || op == "^=" || op == "%=" || op == "|=" || op == "++" || op == "--" || op == "!=");
 }
 bool IsUnaryOperator(const std::string_view& op)
 {
