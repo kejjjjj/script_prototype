@@ -73,7 +73,6 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			rules.next_unary = false;
 		}
 	}
-
 	while (!kill_loop && it != end) {
 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
@@ -87,6 +86,8 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			expr_token.tokentype = VarType::VT_CHAR;
 		}
 
+
+
 		switch (token.t_type) {
 		case token_t::tokentype::STRING_LITERAL:
 		case token_t::tokentype::CHAR_LITERAL:
@@ -99,6 +100,23 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 				else
 					expr_token.tokentype = VarType::VT_INT;
 			}
+
+			if (rules.suffix_allowed && token.t_type == token_t::tokentype::STRING) {
+				auto suffix = literal_suffix.find(token.value);
+				if (suffix != literal_suffix.end()) {
+					expr_token.tokentype = suffix->second;
+					std::cout << "suffix of type: " << VarTypes[int(suffix->second)] << '\n';
+
+					kill_loop = true;
+					break;
+				}
+				throw std::exception(std::format("unrecognized suffix \"{}\"", token.value).c_str());
+				
+			}
+			rules.suffix_allowed = false;
+
+			if (token.t_type == token_t::tokentype::DIGIT)
+				rules.suffix_allowed = true;
 
 			rules.operator_allowed = true;
 
@@ -126,6 +144,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 			}
 			
 			rules.ignore_postfix = false;
+			rules.suffix_allowed = false;
 			if (rules.next_operator) {
 				expr_token.op = true;
 				if(!SatisfiesOperator(token.value))
@@ -186,6 +205,7 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 
 			break;
 		case token_t::tokentype::WHITESPACE:
+			rules.suffix_allowed = false;
 			if (expr_token.content.empty())
 				expr_token.whitespace = true;
 			break;
@@ -227,15 +247,14 @@ void expr::SetTokenValueCategory(expression_token& token)
 			std::cout << "the str: " << token.rval->get_string() << '\n';
 			break;
 		case VarType::VT_CHAR:
-			const int32_t str_len = std::accumulate(++token.content.begin(), --token.content.end(), 0);
+			int32_t value = token.char_literal ? std::accumulate(++token.content.begin(), --token.content.end(), 0) : std::stoi(token.content);
 
 			//if (str_len >= 127) {
 			//	throw std::exception("char literal exceeds the value 127");
 			//	return;
 			//}
 
-			token.rval->set_value<char>(char(str_len));
-			std::cout << "token char as int: " << int(token.rval->get_char()) << " " << str_len << '\n';
+			token.rval->set_value<char>(static_cast<char>(value));
 			break;
 		}
 		return;
@@ -361,22 +380,6 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 			token.content = eval_funcs.find("==")->second(token, r_operand).content;
 
 			break;
-		//case '?':
-
-		//	if (!token.is_lvalue())
-		//		throw std::exception("? operand must be an lvalue");
-
-		//	if(!token.lval->ref->is_reference())
-		//		throw std::exception("? operand must have reference modifier");
-
-		//	token.lval->ref->reference.reset();
-
-
-
-		//	std::cout << "changing token reference soon\n";
-
-		//	token.change_reference = true;
-		//	break;
 		default:
 			break;
 	}
@@ -584,9 +587,6 @@ expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token
 
 		*itr2 = result;
 
-		std::cout << "result name will be: " << result.content << '\n';
-
-
 		tokens.erase(itr1, itr2);
 	}
 
@@ -680,6 +680,7 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 	return false;
 
 }
+//assumes that both operands are rvalues
 void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token& right)
 {
 	unsigned __int16 lengthA = left.is_lvalue() ? GetArrayDepth(left.lval->ref) : 0;
@@ -701,9 +702,9 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 	else
 		return;
 
-
 	switch (stronger->get_type()) {
-
+	case VarType::VT_CHAR:
+		break;
 	case VarType::VT_INT:
 		break;
 	case VarType::VT_FLOAT:
@@ -714,7 +715,8 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 		switch (old_type) {
 		case VarType::VT_INT:
 			std::cout << "an int gets promoted to a float\n";
-			weaker->set_value<float>(static_cast<float>(weaker->get_int()));
+
+			weaker->set_value<float>(weaker->implicit_cast<float>());
 			weaker->set_type(VarType::VT_FLOAT);
 			break;
 		default:
@@ -725,14 +727,18 @@ void expr::ExpressionCastWeakerOperand(expression_token& left, expression_token&
 	}
 	 
 }
+
 void expr::ExpressionImplicitCast(expression_token& left, expression_token& right)
 {
 	if (left.get_type() == right.get_type())
 		return;
 
-
 	if (!left.is_lvalue()) {
 		return ExpressionCastWeakerOperand(left, right);
+	}
+
+	if (right.is_lvalue()) {
+		throw std::exception("implicit cast called with right operand as an lvalue");
 	}
 
 	const auto left_v = left.lval->ref;
@@ -743,16 +749,22 @@ void expr::ExpressionImplicitCast(expression_token& left, expression_token& righ
 	}
 	
 	//all other types will error before they reach this part of the code
+	//right operand will be cast no matter what
 
 	switch (left.get_type()) {
 	case VarType::VT_INT:
+		std::cout << "implicitly casting to 'int'\n";
+		right.set_value<int>(right.implicit_cast<int>());
+		right.set_type(VarType::VT_INT);
 		break;
 	case VarType::VT_FLOAT:
+		std::cout << "implicitly casting to 'float'\n";
+		right.set_value<float>(right.implicit_cast<float>());
+		right.set_type(VarType::VT_FLOAT);
 		break;	
 	case VarType::VT_CHAR:
 		break;
 	}
-
 }
 void expr::ExpressionSetTempValue(temp_value_s& token) {
 

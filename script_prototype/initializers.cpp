@@ -11,7 +11,7 @@ void init::SetVariableInitializer(Variable& target, const std::string& expressio
 	if (const auto str = IsInitializerList(begin, expression.end()))
 		return EvaluateInitializerList(&target, std::string(str.value()));
 
-	const auto result = expr::EvaluateEntireExpression(expression);
+	auto result = expr::EvaluateEntireExpression(expression);
 		 
 	if (result.tokentype == VarType::VT_INVALID) { //this means no initializer
 		throw std::exception("expected an initializer");
@@ -77,7 +77,6 @@ void init::EvaluateInitializerList(Variable* var, const std::string& expression)
 	if (tokens.size() > var->numElements) {
 		throw std::exception("too many initializer values");
 	}
-
 	auto begin = tokens.begin();
 	for (int i = 0; i < var->numElements; i++) {
 
@@ -104,7 +103,7 @@ void init::EvaluateInitializerList(Variable* var, const std::string& expression)
 			if (begin == tokens.end())
 				break;
 
-			const auto expr = expr::EvaluateEntireExpression(*begin++);
+			auto expr = expr::EvaluateEntireExpression(*begin++);
 
 			var->arr[i].initialize_expression(&expr);
 		}

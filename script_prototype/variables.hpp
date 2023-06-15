@@ -5,25 +5,6 @@
 
 #include "pch.h"
 
-inline std::vector<const char*> VarTypes = {"NO_TYPE", "void", "int","float","string", "char"},
-								VarQualifiers = { "NO_QUALIFIER", "const" };
-
-
-
-enum class VarType : char
-{
-	VT_INVALID,
-	VT_VOID,
-	VT_INT,
-	VT_FLOAT,
-	VT_STRING,
-	VT_CHAR
-};
-
-constexpr int operator+(VarType value)
-{
-	return static_cast<int>(value);
-}
 struct VariableValue
 {
 	std::shared_ptr<char*> buffer = 0;
@@ -75,8 +56,9 @@ public:
 	template <typename T>
 	void set_value(const T v) { *reinterpret_cast<T*>(value.buffer.get()) = v; }
 	
-	void set_expression(const expr::expression_token* token);
-	void initialize_expression(const expr::expression_token* token);
+	void set_expression(expr::expression_token* token);
+
+	void initialize_expression(expr::expression_token* token);
 	void set_type(const VarType atype) { type = atype; }
 	auto get_type() const { return type; }
 	decltype(auto) this_or_ref() { return is_reference() ? reference.get() : this; }

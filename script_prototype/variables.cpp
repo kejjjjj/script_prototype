@@ -44,13 +44,11 @@ void Variable::recreate_array(const size_t new_length)
 	arr.reset();
 	arr = std::shared_ptr<Variable[]>(new Variable[new_length]);
 }
-void Variable::set_expression(const expr::expression_token* token)
+void Variable::set_expression(expr::expression_token* token)
 {
 	if (!ExpressionCompatibleOperands(*this, *token)) {
 		throw std::exception(std::format("an operand of type \"{}\" is not compatible with \"{}\"", VarTypes[int(this->get_type())], VarTypes[int(token->tokentype)]).c_str());
 	}
-
-	auto const rtype = token->get_type();
 
 	auto ptr = this;
 
@@ -61,32 +59,26 @@ void Variable::set_expression(const expr::expression_token* token)
 		ptr->replace_array(token->lval->ref->arr, token->lval->ref->numElements);
 		return;
 	}
-	int x = 999; // x is not a constant expression
-	const int y = 999;
-	const int z = 99;
-	char c1 = x; // OK, though it might narrow (in this case, it does narrow)
-	char c2{ x }; // error: might narrow
+
+	expr::ExpressionMakeRvalue(*token);
+
+	expr::expression_token this_token = *ptr;
+
+	expr::ExpressionImplicitCast(this_token, *token);
+
 	switch (ptr->type) {
 	case VarType::VT_INT:
 
-		if (rtype == VarType::VT_FLOAT)
-			ptr->set_value<int>(static_cast<int>(token->get_float()));
-		else if (rtype == VarType::VT_INT)
-			ptr->set_value<int>(token->get_int());
-		else if (rtype == VarType::VT_CHAR)
-			ptr->set_value<int>(static_cast<int>(token->get_char()));
+		ptr->set_value<int>(token->get_int());
 
 		std::cout << "new value: " << ptr->get_int() << '\n';
 
 		break;
 	case VarType::VT_FLOAT:
 
-		if (rtype == VarType::VT_FLOAT)
-			ptr->set_value<float>(token->get_float());
-		else if (rtype == VarType::VT_INT)
-			ptr->set_value<float>(static_cast<float>(token->get_int()));
+		ptr->set_value<float>(token->get_float());
 
-		std::cout << "new value: " << ptr->get_int() << '\n';
+		std::cout << "new value: " << ptr->get_float() << '\n';
 
 
 		break;
@@ -99,15 +91,12 @@ void Variable::set_expression(const expr::expression_token* token)
 		}
 		break;
 	case VarType::VT_CHAR:
-		if (rtype == VarType::VT_INT)
-			ptr->set_value<char>(static_cast<char>(token->get_int()));
-		else if (rtype == VarType::VT_CHAR)
-			ptr->set_value<char>(token->get_char());
+		ptr->set_value<char>(token->get_char());
 		break;
 	}
 
 }
-void Variable::initialize_expression(const expr::expression_token* token)
+void Variable::initialize_expression(expr::expression_token* token)
 {
 	if (is_reference() && !token->is_lvalue()) {
 		stack_variables.erase(name);

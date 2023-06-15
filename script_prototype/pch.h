@@ -21,6 +21,7 @@
 #include <numeric>
 
 #include "filetools.hpp"
+#include "datatypes.hpp"
 #include "variables.hpp"
 #include "common.hpp"
 #include "compiler_eval_code.hpp"

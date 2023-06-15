@@ -221,6 +221,41 @@ namespace expr
 
 
 		}
+		
+		template<typename T>
+		T implicit_cast() const {
+#pragma warning(push)
+#pragma warning(disable : 4244) 
+			if (typeid(T) == typeid(int)) {
+				switch (get_type()) {
+				case VarType::VT_CHAR:
+					return static_cast<int>(get_char());
+				case VarType::VT_INT:
+					return get_int();
+				case VarType::VT_FLOAT:
+					return static_cast<int>(get_float());
+				default:
+					throw std::exception("this cast is illegal - this should never execute");
+				}
+			}
+			
+			if (typeid(T) == typeid(float)) {
+				switch (get_type()) {
+				case VarType::VT_CHAR:
+					return static_cast<float>(get_char()); //why?
+				case VarType::VT_INT:
+					return static_cast<float>(get_int());
+				case VarType::VT_FLOAT:
+					return get_float();
+				default:
+					throw std::exception("this cast is illegal - this should never execute");
+				}
+			}
+#pragma warning(pop)
+
+			throw std::exception("cast() called for an unsupported type");
+
+		}
 
 	};
 
@@ -250,7 +285,7 @@ namespace expr
 		bool next_operator = false;
 		bool ignore_postfix = false;
 		bool operator_allowed = false;
-
+		bool suffix_allowed = false;
 		void reset()
 		{
 			next_postfix = false;
@@ -258,6 +293,7 @@ namespace expr
 			next_operator = false;
 			ignore_postfix = false;
 			operator_allowed = false;
+			suffix_allowed = false;
 		}
 
 	}inline rules;
@@ -273,29 +309,27 @@ namespace expr
 			ExpressionMakeRvalue(left);
 			ExpressionMakeRvalue(right);
 
-			result.rval = std::shared_ptr<rvalue>(new rvalue(right.get_type(),  (right.get_type() == VarType::VT_STRING ? (unsigned short)strlen(right.get_string()) : 0u)));
-
 			ExpressionImplicitCast(left, right);
+
+			//only VT_STRING type can be a dynamic size
+			//subject to change
+			result.rval = std::shared_ptr<rvalue>(new rvalue(right.get_type(), (right.get_type() == VarType::VT_STRING ? strlen(right.get_string()) : 0u)));
+
+
 			result.set_type(right.get_type());
-			int iright{};
-			float fright{};
 			switch (left.get_type()) {
+			case VarType::VT_CHAR:
+				result.set_value(left.get_char() + right.get_char());
+				result.content = std::to_string(result.get_char());
+				return result;
 				case VarType::VT_INT:
 
-					if (right.get_type() == VarType::VT_FLOAT)	
-						 iright = static_cast<int>(right.get_float());
-					else iright = right.get_int();
-
-					result.set_value(left.get_int() + iright);
+					result.set_value(left.get_int() + right.get_int());
 					result.content = std::to_string(result.get_int());
 					return result;
 				case VarType::VT_FLOAT:
 
-					if (right.get_type() == VarType::VT_FLOAT)
-						 fright = right.get_float();
-					else fright = static_cast<float>(right.get_int());
-
-					result.set_value(left.get_float() + fright);
+					result.set_value(left.get_float() + right.get_float());
 					result.content = std::to_string(result.get_float());
 					return result;
 
@@ -308,12 +342,12 @@ namespace expr
 			}
 			return result;
 		}},		
-		{ "=", [](const expression_token& left, const expression_token& right) -> expression_token
+		{ "=", [](const expression_token& left, expression_token& right) -> expression_token
 		{
 			if (!left.is_lvalue())
 				throw std::exception("left operand must be a modifiable lvalue");
 
-			auto var = left.lval->ref;
+			const Variable* var = left.lval->ref;
 
 			expression_token result;
 
@@ -321,7 +355,7 @@ namespace expr
 			result.set_type(left.get_type());
 			result.content = var->name;
 
-			if (left.lval->ref->is_reference()) {
+			if (var->is_reference()) {
 				result.lval->ref->name = left.lval->ref->name;
 			}
 
