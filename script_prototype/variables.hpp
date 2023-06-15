@@ -15,7 +15,7 @@ struct VariableValue
 struct array_declr_data
 {
 	int numElements = 0;
-	VarType type;
+	VarType type = VarType::VT_INVALID;
 };
 
 namespace expr

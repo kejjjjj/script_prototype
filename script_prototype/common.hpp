@@ -60,10 +60,10 @@ enum OperatorPriority
 
 struct Substr_s
 {
-	int32_t count_opening;
-	int32_t count_closing;
-	int32_t opening; //string index where the ( is
-	int32_t strlength; //number of characters after opening until )
+	size_t count_opening;
+	size_t count_closing;
+	size_t opening; //string index where the ( is
+	size_t strlength; //number of characters after opening until )
 	std::string result_string;
 };
 
@@ -78,5 +78,5 @@ bool SatisfiesOperator(const std::string_view& op);
 bool IsAnOperator2(const std::string_view& op);
 bool IsUnaryOperator(const std::string_view& op);
 bool IsPostfixOperator(const std::string_view& op);
-
+bool StringIsBlank(const std::string_view& s);
 #endif

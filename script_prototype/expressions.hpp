@@ -12,7 +12,7 @@ struct expression_stack
 };
 
 #define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' \
-							|| x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.' || x == '?' || x == '[' || x == ']')
+							|| x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.' || x == '[' || x == ']')
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=')
 #define IsPrefixOp(x)		(x == '-' || x == '!' || x == '~' || x == '+')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
@@ -209,7 +209,7 @@ namespace expr
 			throw std::exception("unknown expression used in set_type()");
 		}
 		bool is_integral() const {
-			return get_type() == VarType::VT_INT;
+			return get_type() >= VarType::VT_CHAR || get_type() <= VarType::VT_INT;
 		}
 		size_t size_of() const {
 			if (is_rvalue())
@@ -276,7 +276,7 @@ namespace expr
 	void ExpressionSetTempValue(temp_value_s& token);
 	expression_token EvaluateExpressionTokens(std::list<expression_token>& tokens);
 	void ExpressionImplicitCast(expression_token& left, expression_token& right);
-
+	Substr_s ExpressionFindParentheses(std::string& expression);
 
 	struct s_rules
 	{

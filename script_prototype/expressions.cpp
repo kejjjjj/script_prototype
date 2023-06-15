@@ -10,7 +10,7 @@ expr::expression_token expr::EvaluateEntireExpression(const std::string& str)
 		return {};
 	}
 
-	Substr_s par = GetStringWithinCharacters(str, '(', ')');
+	Substr_s par = ExpressionFindParentheses(const_cast<std::string&>(str));
 
 	if (par.result_string == "empty") {
 		par.result_string = "";
@@ -56,6 +56,51 @@ expr::expression_token expr::EvaluateExpression(const std::string& str)
 	return EvaluateExpressionTokens(tokens);
 
 }
+Substr_s expr::ExpressionFindParentheses(std::string& expression)
+{
+	auto it = expression.begin();
+	auto end = expression.end();
+
+	size_t idx = 0;
+	size_t opening{ 0 }, closing{ 0 }, count_opening{ 0 }, count_closing{ 0 };
+
+	while (it != end) {
+		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
+
+		if (token.t_type == token_t::tokentype::PARENTHESIS) {
+			if (token.value == "(") {
+				count_opening = 1;
+				opening = idx;
+			}
+			else {
+				count_closing = 1;
+				closing = idx;
+			}
+
+			if (count_opening > 0 && count_opening == count_closing) {
+				break;
+			}
+
+		}
+
+		if (it == end && count_opening == 1)
+			throw std::exception("expected a \")\"");
+			
+
+		idx += token.value.size();
+
+	}
+
+	const size_t len = closing - opening - count_opening;
+	//note: cuts out the s and e characters
+	std::string result_string = std::string(expression).substr(opening + 1, len);
+	if (count_opening && count_closing && result_string.empty())
+		result_string = ("empty");
+
+	return { count_opening, count_closing, opening, len, result_string };
+
+
+}
 void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& end, std::list<expression_token>& tokens, int tokens_left)
 {
 	expression_token expr_token;
@@ -68,6 +113,8 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 	rules.next_postfix = false;
 	rules.ignore_postfix = false;
 	rules.operator_allowed = true;
+	rules.suffix_allowed = false;
+
 	if (!tokens.empty()) {
 		if (tokens.back().postfix.front() == ".") { //for cases like 2. + 1;
 			rules.next_unary = false;
@@ -76,7 +123,6 @@ void expr::TokenizeExpression(std::string::iterator& it, std::string::iterator& 
 	while (!kill_loop && it != end) {
 
 		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
-		//std::cout << "token: " << token.value << '\n';
 		
 		if (token.t_type == token_t::tokentype::STRING_LITERAL) {
 			expr_token.string_literal = true;
@@ -247,6 +293,12 @@ void expr::SetTokenValueCategory(expression_token& token)
 			std::cout << "the str: " << token.rval->get_string() << '\n';
 			break;
 		case VarType::VT_CHAR:
+
+			if (std::distance(token.content.begin(), token.content.end()) < 2 && token.char_literal) {
+				throw std::exception("what the hell?");
+			}
+
+			//std::cout << "literal: " << token.char_literal << '\n';
 			int32_t value = token.char_literal ? std::accumulate(++token.content.begin(), --token.content.end(), 0) : std::stoi(token.content);
 
 			//if (str_len >= 127) {
@@ -435,7 +487,9 @@ bool expr::EvaluateSubscript(expression_token& token)
 		throw std::exception("expression must be convertible to an integral type");
 	}
 
-	const int numElements = result.get_int();
+
+
+	const int numElements = result.implicit_cast<int>();
 
 	if (numElements < 0 || numElements >= arrSize)
 		throw std::exception(std::format("accessing an array out of bounds [tried {} when size was {}]", numElements, arrSize).c_str());

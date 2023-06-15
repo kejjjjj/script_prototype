@@ -70,7 +70,7 @@ void Variable::set_expression(expr::expression_token* token)
 	case VarType::VT_INT:
 
 		ptr->set_value<int>(token->get_int());
-
+		
 		std::cout << "new value: " << ptr->get_int() << '\n';
 
 		break;

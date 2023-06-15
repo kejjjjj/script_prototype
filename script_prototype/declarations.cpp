@@ -81,8 +81,6 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 	}
 
 	init::SetVariableInitializer(*var, std::string(expr_it, end));
-	
-	//expr::EvaluateEntireExpression(std::string(expr_it, end)); //now it can be evaluated since it's been pushed to the stack
 }
 
 int decl::EvaluateArrayInitialSize(const std::string& expression)
@@ -143,7 +141,7 @@ void decl::EvaluateDeclarationOperators(std::string::iterator& it, std::string::
 		datalist.push_back(data); // to the back because the evaluation is from left to right
 		return EvaluateDeclarationOperators(it, end, datalist);
 	}
-	else if (token.value == "?") {
+	else if (token.value == "^") {
 		data.reference = true;
 		datalist.push_back(data); // to the back because the evaluation is from left to right
 		return EvaluateDeclarationOperators(it, end, datalist);

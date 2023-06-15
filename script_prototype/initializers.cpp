@@ -68,9 +68,10 @@ std::optional<std::string> init::IsInitializerList(std::string::const_iterator& 
 void init::EvaluateInitializerList(Variable* var, const std::string& expression)
 {
 	//var = var->this_or_ref();
-	if (!var->is_array())
-		throw std::exception("an initializer list used on a non-array type");
+	if (!var->is_array()) {
+		return EvaluateInitializerListForNonArray(var, expression);
 
+	}
 	std::list<std::string> tokens;
 	TokenizeInitializerLists(expression, tokens);
 	
@@ -78,7 +79,7 @@ void init::EvaluateInitializerList(Variable* var, const std::string& expression)
 		throw std::exception("too many initializer values");
 	}
 	auto begin = tokens.begin();
-	for (int i = 0; i < var->numElements; i++) {
+	for (size_t i = 0; i < var->numElements; i++) {
 
 		if (begin == tokens.end())
 			break;
@@ -109,21 +110,50 @@ void init::EvaluateInitializerList(Variable* var, const std::string& expression)
 		}
 
 	}
+}
+void init::EvaluateInitializerListForNonArray(Variable* var, const std::string& expression)
+{
+	std::list<std::string> tokens;
+
+	const auto substr = FindMatchingCurlyBracket(const_cast<std::string&>(expression));
+	const bool substr_found = substr.result_string != "empty" && !substr.result_string.empty();
+
+
+
+	if (substr_found) {
+		throw std::exception(std::format("only one level of braces is allowed on an initializer for an object of type \"{}\"", VarTypes[int(var->get_type())]).c_str());
+	}
+
+	auto new_expr = std::string(expression);
+	auto expr_begin = new_expr.begin();
+
+	TokenizeListArguments(expr_begin, new_expr.end(), tokens);
+
+	if (tokens.size() != 1) {
+		throw std::exception(std::format("only one initializer value can be used for type \"{}\"", VarTypes[int(var->get_type())]).c_str());
+	}
+
+	auto expr = expr::EvaluateEntireExpression(tokens.front());
+
+	var->initialize_expression(&expr);
 
 }
 void init::TokenizeInitializerLists(std::string expr, std::list<std::string>& tokens)
 {
 	auto substr = FindMatchingCurlyBracket(expr);
 
+
+
 	bool substr_found = substr.result_string != "empty" && !substr.result_string.empty();
 
 
 	while (substr_found) {
+				
 		tokens.push_back(substr.result_string);
 
-		expr.erase((size_t)substr.opening, (size_t)substr.strlength+1);
+		expr.erase((size_t)substr.opening, (size_t)substr.strlength+2ull);
 
-		if (expr.empty())
+		if (expr.empty() || StringIsBlank(expr))
 			break;
 
 		auto begin = expr.begin();
@@ -135,34 +165,41 @@ void init::TokenizeInitializerLists(std::string expr, std::list<std::string>& to
 	}
 
 }
-Substr_s init::FindMatchingCurlyBracket(const std::string_view& expr) 
+Substr_s init::FindMatchingCurlyBracket(std::string& expr) 
 {
-	int32_t idx = -1;
-	int32_t opening{ 0 }, closing{ 0 }, count_opening{ 0 }, count_closing{ 0 };
-	for (const auto& i : expr) {
-		idx++;
 
-		if (i == '{') {
-			
-			if(!count_opening)
-				opening = idx;
+	auto it = expr.begin();
+	auto end = expr.end();
 
-			count_opening++;
-			
+	size_t idx = 0;
+	size_t opening{ 0 }, closing{ 0 }, count_opening{ 0 }, count_closing{ 0 };
+
+	while (it != end) {
+		const token_t token = cec::Compiler_ReadToken(it, '\0', end);
+
+		if (token.t_type == token_t::tokentype::OTHER) {
+			if (token.value == "{") {
+				if (!count_opening)
+					opening = idx;
+
+				count_opening++;
+			}
+			else if(token.value == "}") {
+				closing = idx;
+				count_closing++;
+			}
+
+			if (count_opening > 0 && count_opening == count_closing) {
+				break;
+			}
+
 		}
-		else if (i == '}') {
-			
 
-			closing = idx;
-			count_closing++;
-			
-		}
-
-		if (count_opening > 0 && count_opening == count_closing) {
-			break;
-		}
+		if (it == end && count_opening == 1)
+			throw std::exception("expected a \"}\"");
 
 
+		idx += token.value.size();
 
 	}
 
@@ -170,16 +207,15 @@ Substr_s init::FindMatchingCurlyBracket(const std::string_view& expr)
 		throw std::exception("expected a \"}\"");
 	}
 
-	const int len = closing - opening;
-	//note: cuts out the s and e characters
-	std::string result_string = std::string(expr).substr(opening + 1ull, len-1ull);
-	//if (count_opening && count_closing && result_string.empty())
-	//	result_string = ("empty");
+	const size_t len = closing - opening - count_opening;
+
+	std::string result_string = std::string(expr).substr(opening + 1ull, len);
 
 	if (!count_opening && !count_closing)
 		result_string = "";
 
 	return { count_opening, count_closing, opening, len, result_string };
+
 }
 
 void init::FindComma(std::string::const_iterator& it, std::string::const_iterator end) {
@@ -187,14 +223,14 @@ void init::FindComma(std::string::const_iterator& it, std::string::const_iterato
 	while (std::isspace(*it)) {
 
 		if (it == end) {
-			throw std::exception("expected a \",\"");
+			throw std::exception("1. expected a \",\"");
 		}
 
 		++it;
 	}
 
 	if(*it != ',')
-		throw std::exception("expected a \",\"");
+		throw std::exception(std::format("expected a \",\" instead of \"{}\"", std::string(it, end)).c_str());
 	
 
 }

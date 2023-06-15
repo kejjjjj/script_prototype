@@ -13,9 +13,11 @@ namespace init
 	void SetVariableInitializer(Variable& target, const std::string& expression);
 	std::optional<std::string> IsInitializerList(std::string::const_iterator& it, std::string::const_iterator end);
 	void EvaluateInitializerList(Variable* var, const std::string& expression);
+	void EvaluateInitializerListForNonArray(Variable* var, const std::string& expression);
+
 	void TokenizeInitializerLists(std::string expr, std::list<std::string>& tokens);
 
-	Substr_s FindMatchingCurlyBracket(const std::string_view& expr);
+	Substr_s FindMatchingCurlyBracket(std::string& expr);
 
 	void FindComma(std::string::const_iterator& it, std::string::const_iterator end);
 

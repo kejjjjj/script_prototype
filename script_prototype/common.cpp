@@ -3,8 +3,8 @@
 //does not include the parantheses
 Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, const char e)
 {
-    int32_t idx = 0;
-    int32_t opening{0}, closing{0}, count_opening{0}, count_closing{0};
+    size_t idx = 0;
+    size_t opening{0}, closing{0}, count_opening{0}, count_closing{0};
     for (const auto& i : expr) {
         
 
@@ -25,7 +25,7 @@ Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, c
         
     }
 
-    const int len = closing - opening - count_opening;
+    const size_t len = closing - opening - count_opening;
     //note: cuts out the s and e characters
     std::string result_string = std::string(expr).substr(opening + 1, len);
     if (count_opening && count_closing && result_string.empty())
@@ -174,7 +174,7 @@ bool IsUnaryOperator(const std::string_view& op)
 {
     if (op.size() == 1) {
         auto o = op.front();
-        return (o == '+' || o == '-' || o == '!' || o == '~' || o == '?');
+        return (o == '+' || o == '-' || o == '!' || o == '~');
     }
     return UnaryArithmeticOp(op); //++ or --
         
@@ -182,4 +182,14 @@ bool IsUnaryOperator(const std::string_view& op)
 bool IsPostfixOperator(const std::string_view& op)
 {
     return UnaryArithmeticOp(op) || op == "["; //++ or --
+}
+
+
+bool StringIsBlank(const std::string_view& s)
+{
+    for (const auto& i : s)
+        if (!std::isspace(i))
+            return false;
+
+    return true;
 }
