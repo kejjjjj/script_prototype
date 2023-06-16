@@ -69,7 +69,7 @@ struct Substr_s
 
 Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, const char e);
 
-OperatorPriority GetOperandPriority(const std::string_view& ops);
+OperatorPriority GetOperatorPriority(const std::string_view& ops);
 bool ValidNumber(const std::string_view& expr);
 bool IsInteger(const std::string_view& expr);
 

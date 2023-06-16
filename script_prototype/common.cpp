@@ -33,7 +33,7 @@ Substr_s GetStringWithinCharacters(const std::string_view& expr, const char s, c
 
     return { count_opening, count_closing, opening, len, result_string };
 }
-OperatorPriority GetOperandPriority(const std::string_view& ops)
+OperatorPriority GetOperatorPriority(const std::string_view& ops)
 {
 
    // return operatorHash[HashString(ops)];
@@ -174,7 +174,7 @@ bool IsUnaryOperator(const std::string_view& op)
 {
     if (op.size() == 1) {
         auto o = op.front();
-        return (o == '+' || o == '-' || o == '!' || o == '~');
+        return (o == '+' || o == '-' || o == '!' || o == '~' || o == '@');
     }
     return UnaryArithmeticOp(op); //++ or --
         

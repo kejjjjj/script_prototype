@@ -11,10 +11,16 @@ struct expression_stack
 	std::string Operator;
 };
 
+struct codepos_s
+{
+	size_t column{ 0 };
+	size_t line{ 0 };
+
+};
+
 #define IsAnyOperator(x)	(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' \
-							|| x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.' || x == '[' || x == ']')
+							|| x == '^' || x == '%' || x == '=' || x == '!' || x == '~' || x == '.' || x == '[' || x == ']' || x == '@')
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=')
-#define IsPrefixOp(x)		(x == '-' || x == '!' || x == '~' || x == '+')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
 struct rvalue
@@ -46,12 +52,13 @@ struct rvalue
 			break;
 		}
 	}
-	~rvalue()
-	{
-		value.buffer.reset();
-	}
+	//~rvalue()
+	//{
+	//	value.buffer.reset();
+	//}
 	rvalue() = delete;
 	VariableValue value;
+	Variable* pointer;
 private:
 	
 	VarType type;
@@ -268,6 +275,7 @@ namespace expr
 	bool EvaluatePeriodPostfix(std::list<expression_token>::iterator& it, std::list<expression_token>::iterator& end, std::list<expression_token>& tokens);
 	void EvaluatePostfixArithmetic(expression_token& token, bool increment);
 	bool EvaluateSubscript(expression_token& token);
+	bool EvaluateAddressOfPrefix(expression_token& token);
 	bool EvaluatePeriodPrefix(std::list<expression_token>::iterator& it);
 	void EvaluatePrefixArithmetic(expression_token& token, bool increment);
 	bool ExpressionCompatibleOperands(const expression_token& left, const expression_token& right);

@@ -6,6 +6,46 @@
 
 #include "pch.h"
 
+struct code_iterator
+{
+public:
+
+	code_iterator(std::string::iterator& i, const size_t r=0ull, const size_t c=0ull) 
+		: it(i), row(r), column(c) 
+	{
+
+	}
+
+	std::string::iterator& it;
+	size_t row{ 0ull };
+	size_t column{ 0ull };
+
+private:
+	void updatedata()
+	{
+		if (*it == '\n') {
+			row += 1;
+			column = 0;
+			return;
+		}
+
+		column += 1;
+
+	}
+	code_iterator& operator++() 
+	{
+		++it;
+		updatedata();
+		return *this;
+	}
+	code_iterator& operator++(int)
+	{
+		it++;
+		updatedata();
+		return *this;
+	}
+};
+
 inline struct srules_s
 {
 	bool typename_allowed = true;
@@ -30,12 +70,7 @@ enum SYNTAX_FLAGS : size_t
 	S_SEMICOLON				= 0x20ULL,
 	S_EXPRESSION			= 0x40ULL,
 };
-inline size_t operator-=(const SYNTAX_FLAGS f, const size_t flag) { 
-	return ((size_t)f - (size_t)flag);
-}
-inline size_t operator+=(const SYNTAX_FLAGS f, const size_t flag) {
-	return ((size_t)f + (size_t)flag);
-}
+
 struct Syntax
 {
 	Syntax() = default;

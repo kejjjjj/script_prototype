@@ -22,8 +22,8 @@ expr::expression_token expr::EvaluateEntireExpression(const std::string& str)
 
 		auto result = EvaluateExpression(par.result_string);
 
-		copy.erase((size_t)par.opening, (size_t)par.strlength + 2ull);
-		copy.insert((size_t)par.opening, ' ' + result.content + ' '); //spacebar fixes cases like (500+200)0 (without the space this would turn into 7000)
+		copy.erase(par.opening, par.strlength + 2ull);
+		copy.insert(par.opening, ' ' + result.content + ' '); //spacebar fixes cases like (500+200)0 (without the space this would turn into 7000)
 		
 
 		result = EvaluateEntireExpression(copy);
@@ -390,8 +390,6 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 		return EvaluatePrefix(it, end);
 
 	if (UnaryArithmeticOp(token.prefix.back())) {
-		if (token.is_rvalue())
-			throw std::exception("increment/decrement operand must be an lvalue");
 
 		EvaluatePrefixArithmetic(token, token.prefix.back() == "++");
 		token.prefix.pop_back();
@@ -500,6 +498,19 @@ bool expr::EvaluateSubscript(expression_token& token)
 
 	return true;
 }
+bool expr::EvaluateAddressOfPrefix(expression_token& token)
+{
+	if (token.prefix.back() != "@")
+		return false;
+
+	if (!token.is_lvalue())
+		throw std::exception("address_of operand must be an lvalue");
+
+	token.rval = std::shared_ptr<rvalue>(new rvalue(token.get_type(), sizeof(void*)));
+
+	token.rval->pointer = token.lval->ref;
+
+}
 void expr::EvaluatePostfixArithmetic(expression_token& token, bool increment)
 {
 	if (token.is_rvalue())
@@ -598,7 +609,7 @@ expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token
 	std::list<expression_token>::iterator itr1, itr2 = tokens.begin();
 	const auto& op_end = --tokens.end();
 	OperatorPriority op, next_op;
-	
+
 	while (tokens.size() > 2) {
 		itr1 = ++tokens.begin(); 
 		itr2 = itr1;
@@ -609,8 +620,8 @@ expr::expression_token expr::EvaluateExpressionTokens(std::list<expression_token
 
 		if (itr2 != tokens.end()) {
 			do {
-				op = GetOperandPriority(itr1->content);
-				next_op = GetOperandPriority(itr2->content);
+				op = GetOperatorPriority(itr1->content);
+				next_op = GetOperatorPriority(itr2->content);
 
 				if (next_op <= op || itr2 == op_end)
 					break;
@@ -655,7 +666,7 @@ void expr::ExpressionMakeRvalue(expression_token& token)
 	if (token.is_lvalue()) {
 		if (token.lval->ref->is_array())
 			return;
-		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype, (token.get_type() == VarType::VT_STRING ? (unsigned short)strlen(token.get_string()) : 0u)));
+		token.rval = std::shared_ptr<rvalue>(new rvalue(token.tokentype, (token.get_type() == VarType::VT_STRING ? strlen(token.get_string()) : 0u)));
 		switch (token.tokentype) {
 		case VarType::VT_INT:
 			token.rval->set_value<int>(token.lval->ref->get_int());
@@ -718,9 +729,11 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 	if (leftFlag & STRING_FLAG && rightFlag & STRING_FLAG) {
 		return true;
 	}
+	else if (leftFlag & STRING_FLAG && (rightFlag & STRING_FLAG) == NULL || rightFlag & STRING_FLAG && (leftFlag & STRING_FLAG) == NULL)
+		return false; 
 
 	else if (leftFlag & FLOAT_FLAG && (rightFlag & FLOAT_FLAG || rightFlag & INT_FLAG)) {
-		return true;
+		return true; 
 	}
 	else if (leftFlag & INT_FLAG && (rightFlag & INT_FLAG || rightFlag & FLOAT_FLAG || rightFlag & CHAR_FLAG)) {
 		return true;
