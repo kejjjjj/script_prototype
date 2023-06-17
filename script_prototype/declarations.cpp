@@ -72,10 +72,10 @@ void decl::EvaluateDeclaration(const std::string_view& type, std::string::iterat
 			stack_variables.erase(var->name);
 			throw std::exception("expected an initializer");
 		}
-		if (var->is_reference()) {
-			stack_variables.erase(var->name);
-			throw std::exception("a reference declaration requires an initializer");
-		}
+		//if (var->is_pointer()) {
+		//	stack_variables.erase(var->name);
+		//	throw std::exception("a pointer declaration requires an initializer");
+		//}
 
 		return; 
 	}
@@ -180,14 +180,11 @@ void decl::PopulateVariableTree(Variable* parent, std::list<std::optional<int>> 
 
 	if(!children.front().has_value()){ // no value means a reference!
 
-		if (parent->is_reference()) {
-			throw std::exception("a reference to reference is not allowed");
-		}
 		children.erase(children.begin());
 
-		parent->reference = std::shared_ptr<Variable>(new Variable);
+		parent->pointer = std::shared_ptr<Variable>(new Variable);
 
-		return PopulateVariableTree(parent->reference.get(), children);
+		return PopulateVariableTree(parent->pointer.get(), children);
 	}
 	//an array is assumed if this executes
 

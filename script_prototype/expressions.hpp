@@ -58,11 +58,14 @@ struct rvalue
 	//}
 	rvalue() = delete;
 	VariableValue value;
-	Variable* pointer;
+	Variable* pointer = 0;
 private:
 	
 	VarType type;
 public:
+	bool is_pointer() const {
+		return pointer;
+	}
 	int get_int() const {
 		return *reinterpret_cast<int*>(value.buffer.get());
 	}
@@ -143,12 +146,23 @@ namespace expr
 		std::shared_ptr<rvalue> rval;
 		std::shared_ptr<lvalue> lval;
 
-		bool is_rvalue() const {
+		bool is_rvalue() const noexcept {
 			return rval.get() != nullptr;
 		}
-		bool is_lvalue() const {
+		bool is_lvalue() const noexcept {
 			return lval.get() != nullptr;
 		}
+
+		bool is_pointer() const {
+			if (is_rvalue())
+				return rval->is_pointer();
+
+			else if (is_lvalue())
+				return lval->ref->is_pointer();
+
+			return false;
+		}
+
 		int get_int() const {
 			if(is_rvalue())
 				return (rval->get_int());
@@ -363,7 +377,8 @@ namespace expr
 			result.set_type(left.get_type());
 			result.content = var->name;
 
-			if (var->is_reference()) {
+
+			if (var->is_pointer()) {
 				result.lval->ref->name = left.lval->ref->name;
 			}
 

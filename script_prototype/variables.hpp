@@ -30,14 +30,14 @@ public:
 	Variable() = default;
 	~Variable() = default;
 
-	int get_int() const		 { return *reinterpret_cast<int*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
-	float get_float() const  { return *reinterpret_cast<float*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
-	char get_char() const { return *reinterpret_cast<char*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get()); }
+	int get_int() const		 { return *reinterpret_cast<int*>	(value.buffer.get());	}
+	float get_float() const  { return *reinterpret_cast<float*>	(value.buffer.get());	}
+	char get_char() const { return *reinterpret_cast<char*>	(value.buffer.get()); }
 
-	char* get_string() const { return reinterpret_cast<char*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get());	}
+	char* get_string() const { return reinterpret_cast<char*>	(value.buffer.get());	}
 
-	void set_int(int _value)		{*reinterpret_cast<int*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get()) = _value; }
-	void set_float(float _value)	{*reinterpret_cast<float*>	(is_reference() == true ? reference->value.buffer.get() : value.buffer.get()) = _value; }
+	void set_int(int _value)		{*reinterpret_cast<int*>	(value.buffer.get()) = _value; }
+	void set_float(float _value)	{*reinterpret_cast<float*>	(value.buffer.get()) = _value; }
 	void set_string(char* str) {
 		const auto len = strlen(str);
 		//str[len - 1] = '\0';
@@ -61,18 +61,17 @@ public:
 	void initialize_expression(expr::expression_token* token);
 	void set_type(const VarType atype) { type = atype; }
 	auto get_type() const { return type; }
-	decltype(auto) this_or_ref() { return is_reference() ? reference.get() : this; }
+	decltype(auto) this_or_ref() { return is_pointer() ? pointer.get() : this; }
 	
 	void AllocateValues();
 	std::string name;
 	VariableValue value;
-	friend class Array;
 
 	//references
-	std::shared_ptr<Variable> reference;
+	std::shared_ptr<Variable> pointer;
 
 	//reference methods
-	bool is_reference() const { return reference.get(); }
+	bool is_pointer() const { return pointer.get(); }
 
 	//arrays
 	std::shared_ptr<Variable[]> arr;

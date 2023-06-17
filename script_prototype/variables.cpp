@@ -52,8 +52,8 @@ void Variable::set_expression(expr::expression_token* token)
 
 	auto ptr = this;
 
-	if (is_reference())
-		ptr = this->reference.get();
+	//if (is_reference())
+	//	ptr = this->reference.get();
 
 	if (is_array()) {
 		ptr->replace_array(token->lval->ref->arr, token->lval->ref->numElements);
@@ -98,11 +98,12 @@ void Variable::set_expression(expr::expression_token* token)
 }
 void Variable::initialize_expression(expr::expression_token* token)
 {
-	if (is_reference() && !token->is_lvalue()) {
+	
+/*	if (is_pointer() && !token->is_lvalue()) {
 		stack_variables.erase(name);
-		throw std::exception("reference type initializer must be an lvalue");
+		throw std::exception("pointer type initializer must be an lvalue");
 	}
-	else if (is_reference() && token->is_lvalue()) {
+	else if (is_pointer() && token->is_lvalue()) {
 
 		const auto left_type = s_getvariabletype();
 		const auto right_type = token->lval->ref->s_getvariabletype();
@@ -112,9 +113,9 @@ void Variable::initialize_expression(expr::expression_token* token)
 			stack_variables.erase(name);
 
 		}
-		reference = std::shared_ptr<Variable>(token->lval->ref);
-		std::cout << std::format("\"{}\" reference updated! (now points to \"{}\")\n", name, reference->name);
-	}
+		pointer = std::shared_ptr<Variable>(token->lval->ref);
+		std::cout << std::format("\"{}\" reference updated! (now points to \"{}\")\n", name, pointer->name);
+	}*/
 
 
 
@@ -125,28 +126,28 @@ void Variable::print(size_t spaces) const
 
 
 	if (!spaces++) {
-		std::cout << std::format("{}{}:\n", name, is_reference() ? " -> " + reference->name : "");
+		std::cout << std::format("{}{}:\n", name, is_pointer() ? " -> " + pointer->name : "");
 	}
 	const auto ValueToString = [](const Variable& var) -> std::string
 	{
 		switch (var.type) {
 		case VarType::VT_INT:
-			if(var.is_reference())
-				return std::to_string(var.reference->get_int());
+			if(var.is_pointer())
+				return std::to_string(var.pointer->get_int());
 
 			return std::to_string(var.get_int());
 		case VarType::VT_FLOAT:
-			if (var.is_reference())
-				return std::to_string(var.reference->get_float());
+			if (var.is_pointer())
+				return std::to_string(var.pointer->get_float());
 			return std::to_string(var.get_float());
 		case VarType::VT_STRING:
-			if (var.is_reference())
-				return var.reference->get_string();
+			if (var.is_pointer())
+				return var.pointer->get_string();
 			return var.get_string();
 		case VarType::VT_CHAR:
 			std::string s;
-			if (var.is_reference())
-				return s.push_back(var.reference->get_char()), s;
+			if (var.is_pointer())
+				return s.push_back(var.pointer->get_char()), s;
 			return s.push_back(var.get_char()), s;
 		}
 
@@ -239,8 +240,8 @@ std::string Variable::s_getvariabletype() const
 		if (!var)
 			return "";
 
-		if (var->is_reference())
-			return "?" + types_to_text(var->reference.get());
+		if (var->is_pointer())
+			return "^" + types_to_text(var->pointer.get());
 
 		if (var->is_array())
 			return "[]" + types_to_text(var->arr.get());

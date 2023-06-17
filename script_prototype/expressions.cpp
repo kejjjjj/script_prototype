@@ -509,6 +509,7 @@ bool expr::EvaluateAddressOfPrefix(expression_token& token)
 	token.rval = std::shared_ptr<rvalue>(new rvalue(token.get_type(), sizeof(void*)));
 
 	token.rval->pointer = token.lval->ref;
+	token.lval.reset();
 
 }
 void expr::EvaluatePostfixArithmetic(expression_token& token, bool increment)
@@ -708,7 +709,10 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 	unsigned __int16 lengthA = left.is_lvalue()	 ? GetArrayDepth(left.lval->ref)  : 0;
 	unsigned __int16 lengthB = right.is_lvalue() ? GetArrayDepth(right.lval->ref) : 0;
 
-	if (lengthA != lengthB || lengthA && lengthB && ltype != rtype) { //arrays must have same size and type
+	if (lengthA != lengthB 
+		|| lengthA && lengthB && ltype != rtype 
+		|| (left.is_pointer() + right.is_pointer() == 1)) { //arrays must have same size and type and both must be pointers
+		
 		auto left_type = left.is_lvalue() ? left.lval->ref->s_getvariabletype() : VarTypes[int(left.rval->get_type())];
 		auto right_type = right.is_lvalue() ? right.lval->ref->s_getvariabletype() : VarTypes[int(right.rval->get_type())];
 
