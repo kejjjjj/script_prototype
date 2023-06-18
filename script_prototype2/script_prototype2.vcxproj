@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{a3133544-98bf-4ac6-a202-edf51bda1608}</ProjectGuid>
-    <RootNamespace>scriptprototype</RootNamespace>
+    <ProjectGuid>{5ab518db-baea-4dcd-808e-c3e385870ad8}</ProjectGuid>
+    <RootNamespace>scriptprototype2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,19 +70,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>D:\script_prototype2\scripts\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <OutDir>D:\scripting_prototype\$(Platform)\$(Configuration)\</OutDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>D:\script_prototype\scripts\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>D:\script_prototype2\scripts\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -119,13 +111,11 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>D:\scripting_prototype\$(Platform)\Debug\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>D:\script_prototype2\scripts\$(Platform)\Debug\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -137,49 +127,24 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>D:\script_prototype\scripts\$(Platform)\Release\$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>D:\script_prototype2\scripts\$(Platform)\Release\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="common.cpp" />
-    <ClCompile Include="compiler.cpp" />
-    <ClCompile Include="compiler_eval_code.cpp" />
-    <ClCompile Include="datatypes.cpp" />
-    <ClCompile Include="declarations.cpp" />
-    <ClCompile Include="expressions.cpp" />
     <ClCompile Include="filetools.cpp" />
-    <ClCompile Include="initializers.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="rvalue.cpp" />
-    <ClCompile Include="script_prototype.cpp" />
-    <ClCompile Include="variables.cpp" />
+    <ClCompile Include="script.cpp" />
+    <ClCompile Include="script_prototype2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common.hpp" />
-    <ClInclude Include="compiler.hpp" />
-    <ClInclude Include="compiler_eval_code.hpp" />
-    <ClInclude Include="datatypes.hpp" />
-    <ClInclude Include="declarations.hpp" />
-    <ClInclude Include="expressions.hpp" />
     <ClInclude Include="filetools.hpp" />
-    <ClInclude Include="initializers.hpp" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="rvalue.hpp" />
-    <ClInclude Include="variables.hpp" />
+    <ClInclude Include="pch.hpp" />
+    <ClInclude Include="script.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

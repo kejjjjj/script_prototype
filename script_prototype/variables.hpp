@@ -67,7 +67,7 @@ public:
 	std::string name;
 	VariableValue value;
 
-	//references
+	//pointer
 	std::shared_ptr<Variable> pointer;
 
 	//reference methods
@@ -81,6 +81,9 @@ public:
 	bool is_array() const { return arr.get(); }
 	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length);
 	void recreate_array(const size_t new_length);
+	size_t pointer_depth() const;
+	size_t array_depth() const;
+
 
 	//utility functions
 	void print(size_t spaces = 0) const;

@@ -57,6 +57,9 @@
     <ClCompile Include="datatypes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rvalue.cpp">
+      <Filter>Source Files\scripting</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -88,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="datatypes.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rvalue.hpp">
+      <Filter>Source Files\scripting</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

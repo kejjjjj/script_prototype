@@ -188,6 +188,9 @@ void decl::PopulateVariableTree(Variable* parent, std::list<std::optional<int>> 
 	}
 	//an array is assumed if this executes
 
+	if (parent->is_pointer())
+		throw std::exception("pointer to array is not allowed ^[]");
+
 	const auto numChildren = children.front().value();
 
 	children.erase(children.begin());

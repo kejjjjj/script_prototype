@@ -54,7 +54,7 @@ namespace fs
 
 	char F_Get(std::fstream& fp);
 	void F_Reset();
-	void F_SyntaxError(const char* message, ...);
+	void F_SyntaxError(const char* message, ...); 
 	std::string _GetLastError();
 	inline file_s file;
 

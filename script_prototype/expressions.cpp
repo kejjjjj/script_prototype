@@ -389,6 +389,12 @@ void expr::EvaluatePrefix(std::list<expression_token>::iterator& it, std::list<e
 	if (EvaluatePeriodPrefix(it))
 		return EvaluatePrefix(it, end);
 
+	if (EvaluateAddressOfPrefix(*it)) {
+		token.prefix.pop_back();
+		return EvaluatePrefix(it, end);
+
+	}
+
 	if (UnaryArithmeticOp(token.prefix.back())) {
 
 		EvaluatePrefixArithmetic(token, token.prefix.back() == "++");
@@ -504,12 +510,14 @@ bool expr::EvaluateAddressOfPrefix(expression_token& token)
 		return false;
 
 	if (!token.is_lvalue())
-		throw std::exception("address_of operand must be an lvalue");
+		throw std::exception("address-of operand must be an lvalue");
 
 	token.rval = std::shared_ptr<rvalue>(new rvalue(token.get_type(), sizeof(void*)));
 
-	token.rval->pointer = token.lval->ref;
+	token.rval->pointer = std::shared_ptr<Variable>(token.lval->ref);
 	token.lval.reset();
+
+	return true;
 
 }
 void expr::EvaluatePostfixArithmetic(expression_token& token, bool increment)
@@ -536,19 +544,14 @@ void expr::EvaluatePrefixArithmetic(expression_token& token, bool increment)
 	if (type != VarType::VT_INT && type != VarType::VT_FLOAT)
 		throw std::exception("expected an int or float");
 	
-	//auto& value = token.lval->ref->value;
-	//auto ptr = *token.lval->ref->value.buffer.get();
 	if (type == VarType::VT_FLOAT) {
 
 		token.set_value<float>(increment == true ? token.get_float() + 1 : token.get_float()  -1);
-		//*reinterpret_cast<float*>(ptr) += increment == true ? 1 : -1;
 		token.content = std::to_string(token.get_float());
 
 	}
 	else {
 		token.set_value<int>(increment == true ? token.get_int() + 1 : token.get_int() - 1);
-
-		//*reinterpret_cast<int*>(ptr) += increment == true ? 1 : -1;
 		token.content = std::to_string(token.get_int());
 	}
 	std::cout << "it's now " << token.content << '\n';
@@ -706,18 +709,19 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 	if (ltype <= VarType::VT_VOID || rtype <= VarType::VT_VOID)
 		return false;
 
-	unsigned __int16 lengthA = left.is_lvalue()	 ? GetArrayDepth(left.lval->ref)  : 0;
-	unsigned __int16 lengthB = right.is_lvalue() ? GetArrayDepth(right.lval->ref) : 0;
+	if (left.is_array() || right.is_array()) {
 
-	if (lengthA != lengthB 
-		|| lengthA && lengthB && ltype != rtype 
-		|| (left.is_pointer() + right.is_pointer() == 1)) { //arrays must have same size and type and both must be pointers
-		
-		auto left_type = left.is_lvalue() ? left.lval->ref->s_getvariabletype() : VarTypes[int(left.rval->get_type())];
-		auto right_type = right.is_lvalue() ? right.lval->ref->s_getvariabletype() : VarTypes[int(right.rval->get_type())];
+		if (ExpressionCompatibleArrayOperands(left, right))
+			return true;
+
+		const auto left_type = left.s_gettype();
+		const auto right_type = right.s_gettype();
 
 		throw std::exception(std::format("an operand of type \"{}\" is incompatible with \"{}\"", left_type, right_type).c_str());
+		return false;
+
 	}
+
 
 	int leftFlag = 0;
 	int rightFlag = 0;
@@ -749,6 +753,27 @@ bool expr::ExpressionCompatibleOperands(const expression_token& left, const expr
 	
 
 	return false;
+
+}
+//this should be called if either operand IS an array
+//function assumes that at least one operand is an array
+bool expr::ExpressionCompatibleArrayOperands(const expression_token& left, const expression_token& right)
+{
+	const size_t ldepth = left.array_depth();
+	const size_t rdepth = right.array_depth();
+
+	if (ldepth != rdepth)
+		return false;
+
+	if (left.get_type() != right.get_type())
+		return false;
+
+
+	return true;
+
+}
+bool expr::ExpressionCompatiblePointerOperands(const expression_token& left, const expression_token& right)
+{
 
 }
 //assumes that both operands are rvalues

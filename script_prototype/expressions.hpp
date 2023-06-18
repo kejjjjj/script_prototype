@@ -23,89 +23,7 @@ struct codepos_s
 #define IsOperator(x)		(x == '+' || x == '-' || x == '/' || x == '*' || x == '>' || x == '<' || x == '&' || x == '|' || x == '^' || x == '%' || x == '=')
 #define UnaryArithmeticOp(x) (x == "++" || x == "--")
 
-struct rvalue
-{
-	rvalue(const VarType _type, const size_t size = 0) : type(_type){
-		char* buf;
-		switch (_type) {
-		case VarType::VT_INT:
-			value.buffer = std::make_shared<char*>(new char[4]);
-			value.buf_size = sizeof(int);
 
-			break;
-		case VarType::VT_FLOAT:
-			value.buffer = std::make_shared<char*>(new char[4]);
-			value.buf_size = sizeof(float);
-			break;
-		case VarType::VT_STRING:
-			if(!size)
-				throw std::exception("empty string literal is not allowed");
-			
-			value.buffer = std::make_shared<char*>(new char[size+1u]);
-			buf = (char*)value.buffer.get();
-			buf[size] = '\0';
-			value.buf_size = size+1;
-			break;
-		case VarType::VT_CHAR:
-			value.buffer = std::make_shared<char*>(new char[1]);
-			value.buf_size = sizeof(char);
-			break;
-		}
-	}
-	//~rvalue()
-	//{
-	//	value.buffer.reset();
-	//}
-	rvalue() = delete;
-	VariableValue value;
-	Variable* pointer = 0;
-private:
-	
-	VarType type;
-public:
-	bool is_pointer() const {
-		return pointer;
-	}
-	int get_int() const {
-		return *reinterpret_cast<int*>(value.buffer.get());
-	}
-	float get_float() const {
-		return *reinterpret_cast<float*>(value.buffer.get());
-	}
-	double get_double() const {
-		return *reinterpret_cast<double*>(value.buffer.get());
-	}
-	char* get_string() const {
-		return reinterpret_cast<char*>(value.buffer.get());
-	}
-	char get_char() const {
-		return *reinterpret_cast<char*>(value.buffer.get());
-	}
-	template <typename T>
-	void set_value(const T v) {
-		*reinterpret_cast<T*>(value.buffer.get()) = v;
-	}
-	void set_string(char* str) {
-		const auto len = strlen(str);
-
-		if (len != value.buf_size) {
-			value.buffer.reset();
-			value.buffer = std::make_shared<char*>(new char[len+1]);
-			char* alloc = (char*)value.buffer.get();
-			alloc[len] = '\0';
-
-		}
-		memcpy(value.buffer.get(), str, len);
-		value.buf_size = strlen(get_string()); //a bit more expensive but works surely :clueless:
-	}
-	auto get_type() const {
-		return type;
-	}
-	void set_type(const VarType atype) {
-		type = atype;
-	}
-	
-};
 struct lvalue
 {
 
@@ -162,7 +80,15 @@ namespace expr
 
 			return false;
 		}
+		bool is_array() const {
+			if (is_rvalue())
+				return rval->is_array();
 
+			else if (is_lvalue())
+				return lval->ref->is_array();
+
+			return false;
+		}
 		int get_int() const {
 			if(is_rvalue())
 				return (rval->get_int());
@@ -218,6 +144,17 @@ namespace expr
 			throw std::exception("unknown expression used in get_type()");
 
 			return VarType::VT_INVALID;
+		}
+		std::string s_gettype() const
+		{
+			if (is_lvalue())
+				return lval->ref->s_getvariabletype();
+
+			if (is_rvalue())
+				return rval->s_gettype();
+
+			throw std::exception("unknown expression used in s_gettype()");
+			return "";
 		}
 		void set_type(const VarType atype) {
 			tokentype = atype;
@@ -277,7 +214,26 @@ namespace expr
 			throw std::exception("cast() called for an unsupported type");
 
 		}
+		size_t pointer_depth() const
+		{
+			if (is_lvalue())
+				return lval->ref->pointer_depth();
+			if (is_rvalue())
+				return rval->pointer_depth();
 
+			throw std::exception("unknown expression used in pointer_depth()");
+
+		}
+		size_t array_depth() const
+		{
+			if (is_lvalue())
+				return lval->ref->array_depth();
+			if (is_rvalue())
+				return rval->array_depth();
+
+			throw std::exception("unknown expression used in array_depth()");
+
+		}
 	};
 
 	expression_token EvaluateEntireExpression(const std::string& str);
@@ -293,6 +249,9 @@ namespace expr
 	bool EvaluatePeriodPrefix(std::list<expression_token>::iterator& it);
 	void EvaluatePrefixArithmetic(expression_token& token, bool increment);
 	bool ExpressionCompatibleOperands(const expression_token& left, const expression_token& right);
+	bool ExpressionCompatibleArrayOperands(const expression_token& left, const expression_token& right);
+	bool ExpressionCompatiblePointerOperands(const expression_token& left, const expression_token& right);
+
 	void ExpressionMakeRvalue(expression_token& token);
 	void ExpressionCastWeakerOperand(expression_token& left, expression_token& right);
 	void ExpressionSetTempValue(temp_value_s& token);
@@ -364,19 +323,18 @@ namespace expr
 			}
 			return result;
 		}},		
-		{ "=", [](const expression_token& left, expression_token& right) -> expression_token
+		{ "=", [](expression_token& left, expression_token& right) -> expression_token
 		{
 			if (!left.is_lvalue())
 				throw std::exception("left operand must be a modifiable lvalue");
 
-			const Variable* var = left.lval->ref;
+			Variable* var = left.lval->ref;
 
 			expression_token result;
 
 			result.lval = left.lval;
 			result.set_type(left.get_type());
 			result.content = var->name;
-
 
 			if (var->is_pointer()) {
 				result.lval->ref->name = left.lval->ref->name;

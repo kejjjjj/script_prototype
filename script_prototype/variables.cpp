@@ -44,6 +44,38 @@ void Variable::recreate_array(const size_t new_length)
 	arr.reset();
 	arr = std::shared_ptr<Variable[]>(new Variable[new_length]);
 }
+size_t Variable::pointer_depth() const
+{
+	Variable* p = pointer.get();
+	//Variable* a = arr.get();
+	decltype(pointer_depth()) size{ 0 };
+
+	while (p /*|| a*/) {
+		++size;
+
+		if (p) {
+			p = p->pointer.get();
+			break;
+		}
+		
+		//a = a->arr.get();
+	}
+
+	return size;
+}
+size_t Variable::array_depth() const
+{
+	Variable* a = arr.get();
+	decltype(pointer_depth()) size{ 0 };
+
+	while (a) {
+		++size;
+
+		a = a->arr.get();
+	}
+
+	return size;
+}
 void Variable::set_expression(expr::expression_token* token)
 {
 	if (!ExpressionCompatibleOperands(*this, *token)) {

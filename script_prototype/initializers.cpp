@@ -121,7 +121,7 @@ void init::EvaluateInitializerListForNonArray(Variable* var, const std::string& 
 
 
 	if (substr_found) {
-		throw std::exception(std::format("only one level of braces is allowed on an initializer for an object of type \"{}\"", VarTypes[int(var->get_type())]).c_str());
+		throw std::exception(std::format("only one level of braces is allowed on an initializer for an object of type \"{}\"", var->s_getvariabletype()).c_str());
 	}
 
 	auto new_expr = std::string(expression);
@@ -130,7 +130,7 @@ void init::EvaluateInitializerListForNonArray(Variable* var, const std::string& 
 	TokenizeListArguments(expr_begin, new_expr.end(), tokens);
 
 	if (tokens.size() != 1) {
-		throw std::exception(std::format("only one initializer value can be used for type \"{}\"", VarTypes[int(var->get_type())]).c_str());
+		throw std::exception(std::format("only one initializer value can be used for type \"{}\"", var->s_getvariabletype()).c_str());
 	}
 
 	auto expr = expr::EvaluateEntireExpression(tokens.front());
