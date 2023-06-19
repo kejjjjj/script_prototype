@@ -27,6 +27,12 @@
     <ClCompile Include="script.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="expression.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="punctuation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
@@ -36,6 +42,12 @@
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="script.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="expression.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="punctuation.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

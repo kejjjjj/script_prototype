@@ -3,47 +3,7 @@
 #define _sscript_
 
 #include "pch.hpp"
-
-enum OperatorPriority
-{
-	FAILURE,
-	ASSIGNMENT,		//	= += -= *= /= %= >>= <<= &= ^= |=
-	CONDITIONAL,	//	?:
-	LOGICAL_OR,		//	||
-	LOGICAL_AND,	//	&&
-	BITWISE_OR,		//  | 
-	BITWISE_XOR,	//	^
-	BITWISE_AND,	//  & 
-	EQUALITY,		//	< <= > >=
-	RELATIONAL,		//	== !=
-	SHIFT,			//  <<>>
-	ADDITIVE,		//	+-
-	MULTIPLICATIVE,	//	* / %
-	UNARY,			//  + - ! ~ ++ - - (type)* & sizeof	
-	POSTFIX,		//  () [] -> . ++ - -	
-
-};
-enum punctuation_e
-{
-	P_UNKNOWN,
-	P_ADD,
-	P_SUB,
-	P_SEMICOLON
-};
-
-struct punctuation_t
-{
-	std::string identifier;
-	punctuation_e punc = P_UNKNOWN;
-};
-
-constexpr punctuation_t punctuations[] =
-{
-	{"+", P_ADD},
-
-	{";", P_SEMICOLON }
-};
-
+#include "punctuation.hpp"
 enum class tokenType : char
 {
 	INVALID_LITERAL,
@@ -51,6 +11,7 @@ enum class tokenType : char
 	FLOAT_LITERAL,
 	STRING_LITERAL,
 	CHAR_LITERAL,
+	NAME,
 	PUNCTUATION
 };
 
@@ -79,6 +40,7 @@ struct token_t
 struct token_expression_t
 {
 	std::list<token_t>::iterator it;
+	std::list<token_t>::iterator begin;
 	std::list<token_t>::iterator end;
 };
 struct script_t
@@ -119,6 +81,11 @@ private:
 class scriptError_t
 {
 public:
+	scriptError_t(const token_t* _token, const std::string& reason) : token(_token), errReason(reason) {
+
+		errReason = std::format("syntax error:\n{}\n on line: [{},{}]", errReason, token->line, token->column);
+
+	};
 	scriptError_t(const script_t* _script, const std::string& reason) : script(_script), errReason(reason) {
 		
 		errReason = std::format("syntax error:\n{}\n on line: [{},{}]", errReason, script->line, script->column);
@@ -131,6 +98,7 @@ public:
 
 	std::string errReason;
 	const script_t* script = 0;
+	const token_t* token = 0;
 
 };
 

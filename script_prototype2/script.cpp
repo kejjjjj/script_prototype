@@ -46,13 +46,13 @@ void script_t::S_Tokenize()
 }
 token_expression_t script_t::S_CreateExpression()
 {
-	auto& it = token_it;
+	auto& end = token_it;
 	auto begin = token_it;
 
-	while (++it != tokens.end()) {
+	while (end++ != tokens.end()) {
 
-		if (it->tt == tokenType::PUNCTUATION && it->extrainfo == P_SEMICOLON)
-			return { begin, it };
+		if (end->tt == tokenType::PUNCTUATION && end->extrainfo == P_SEMICOLON)
+			return { begin, begin, end };
 	}
 
 	throw scriptError_t(this, "unexpected end of file");
@@ -178,6 +178,7 @@ bool script_t::S_ReadNumber(token_t& token)
 }
 bool script_t::S_ReadName(token_t& token)
 {
+	token.tt = tokenType::NAME;
 	token.string.push_back(*script_p++);
 
 	while (std::isalnum(*script_p) || *script_p == '_') {
