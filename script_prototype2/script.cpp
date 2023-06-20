@@ -206,7 +206,10 @@ bool script_t::S_ReadPunctuation(token_t& token)
 			if (!parsed_str.compare(i.identifier)) {
 				token.string = i.identifier;
 				token.tt = tokenType::PUNCTUATION;
-				token.extrainfo = static_cast<size_t>(i.punc);
+
+				MAKE_LOWORD(token.extrainfo, static_cast<WORD>(i.punc));
+				MAKE_HIWORD(token.extrainfo, static_cast<DWORD>(i.priority));
+
 
 				script_p += token.string.length();
 

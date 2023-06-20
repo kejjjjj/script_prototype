@@ -33,6 +33,12 @@
     <ClCompile Include="punctuation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rvalue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="expression_token.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
@@ -48,6 +54,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="punctuation.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rvalue.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="expression_token.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

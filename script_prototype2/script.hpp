@@ -21,7 +21,7 @@ struct token_t
 	tokenType tt = tokenType::INVALID_LITERAL;
 	size_t line = 0;
 	size_t column = 0;
-	size_t extrainfo = 0; //e.g. this will contain the index of a punctuation mark if tt == PUNCTUATION
+	DWORD extrainfo = 0; //e.g. this will contain the index of a punctuation mark if tt == PUNCTUATION (LOWORD)
 
 	void print() const noexcept
 	{
@@ -81,6 +81,9 @@ private:
 class scriptError_t
 {
 public:
+	scriptError_t(const std::string& reason) : errReason(reason) {
+
+	}
 	scriptError_t(const token_t* _token, const std::string& reason) : token(_token), errReason(reason) {
 
 		errReason = std::format("syntax error:\n{}\n on line: [{},{}]", errReason, token->line, token->column);

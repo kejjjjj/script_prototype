@@ -42,17 +42,18 @@ struct punctuation_t
 {
 	std::string identifier;
 	punctuation_e punc = P_UNKNOWN;
+	OperatorPriority priority = FAILURE;
 };
 
 constexpr punctuation_t punctuations[] =
 {
 	//needs to be sorted from longest string to shortest
 
-	{"++", P_INCR},
-	{"--", P_DECR},
+	{"++", P_INCR, FAILURE},
+	{"--", P_DECR, FAILURE},
 
-	{"+", P_ADD},
-	{"-", P_SUB},
+	{"+", P_ADD, ADDITIVE},
+	{"-", P_SUB, ADDITIVE},
 
 	{";", P_SEMICOLON }
 };

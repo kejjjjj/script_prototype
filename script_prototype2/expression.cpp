@@ -23,6 +23,9 @@ expression_token expression_t::EvaluateEntireExpression()
 expression_token expression_t::EvaluateExpression()
 {
 	TokenizeExpression();
+	std::for_each(sortedTokens.begin(), sortedTokens.end(), [](expression_token& e) { e.set_value_category(); });
+
+	EvaluateExpressionTokens();
 
 	return {};
 }
@@ -67,7 +70,7 @@ bool expression_t::ParseExpression()
 		if (it == tokens.end || it->tt != tokenType::PUNCTUATION)
 			return false;
 
-		if (!is_unary_operator(static_cast<punctuation_e>(it->extrainfo))){
+		if (!is_unary_operator(static_cast<punctuation_e>(LOWORD(it->extrainfo)))){
 			return false;
 		}
 
@@ -88,7 +91,7 @@ bool expression_t::ParseExpression()
 		if (it == tokens.end || it->tt != tokenType::PUNCTUATION)
 			return false;
 
-		if (!is_postfix_operator(static_cast<punctuation_e>(it->extrainfo))) {
+		if (!is_postfix_operator(static_cast<punctuation_e>(LOWORD(it->extrainfo)))) {
 			return false;
 		}
 
@@ -102,7 +105,7 @@ bool expression_t::ParseExpression()
 	}
 	if (!token_peek_name()) {
 		
-		if (it->tt == tokenType::PUNCTUATION && it->extrainfo == P_SEMICOLON && it == tokens.end)
+		if (it->tt == tokenType::PUNCTUATION && LOWORD(it->extrainfo) == P_SEMICOLON && it == tokens.end)
 			return true;
 
 		return false;
@@ -135,12 +138,11 @@ bool expression_t::ParseOperator()
 		return false;
 	}
 
-	if (!satisfies_operator(static_cast<punctuation_e>(it->extrainfo))) {
+	if (!satisfies_operator(static_cast<punctuation_e>(LOWORD(it->extrainfo)))) {
 		return false;
 	}
 	token.set_token(*it);
-
-	
+	token.op = true;
 
 	++it;
 
@@ -150,4 +152,51 @@ bool expression_t::ParseOperator()
 	sortedTokens.push_back(token);
 
 	return true; //operator has valid syntax
+}
+
+
+void expression_t::EvaluateExpressionTokens()
+{
+	std::list<expression_token>::iterator itr1, itr2 = sortedTokens.begin();
+	const auto& op_end = --sortedTokens.end();
+	OperatorPriority op{}, next_op{};
+
+	while (sortedTokens.size() > 2) {
+		itr1 = ++sortedTokens.begin();
+		itr2 = itr1;
+		std::advance(itr2, 2);
+
+		if (!itr1->op)
+			throw scriptError_t(&itr1->get_token(), "expected an expression");
+
+		if (itr2 != sortedTokens.end()) {
+			
+			do {
+				op = static_cast<OperatorPriority>(HIWORD(itr1->get_token().extrainfo));
+				next_op = static_cast<OperatorPriority>(HIWORD(itr2->get_token().extrainfo));
+
+				if (next_op <= op || itr2 == op_end)
+					break;
+
+				std::advance(itr1, 2);
+				std::advance(itr2, 2);
+
+			} while (next_op > op);
+
+		}
+		itr2 = itr1;
+
+
+		auto& Operator	= itr1;
+		auto& leftVal	= --itr1;
+		auto& rightVal	= ++itr2;
+
+		rightVal->rval->set_value<int>(leftVal->rval->get_value<int>() + rightVal->rval->get_value<int>());
+
+		
+
+		sortedTokens.erase(itr1, itr2);
+	}
+
+	std::cout << "result: " << itr2->rval->get_value<int>() << '\n';
 }
