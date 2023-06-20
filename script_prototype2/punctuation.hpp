@@ -30,6 +30,11 @@ enum punctuation_e : size_t
 	P_UNKNOWN,
 	P_ADD,
 	P_SUB,
+	
+	P_INCR,
+	P_DECR,
+
+
 	P_SEMICOLON
 };
 
@@ -41,6 +46,11 @@ struct punctuation_t
 
 constexpr punctuation_t punctuations[] =
 {
+	//needs to be sorted from longest string to shortest
+
+	{"++", P_INCR},
+	{"--", P_DECR},
+
 	{"+", P_ADD},
 	{"-", P_SUB},
 

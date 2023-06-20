@@ -213,6 +213,8 @@ bool script_t::S_ReadPunctuation(token_t& token)
 				token.print();
 				column += token.string.length();
 
+				
+
 				return 1;
 			}
 

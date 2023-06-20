@@ -33,182 +33,121 @@ void expression_t::TokenizeExpression()
 	if (tokens.it == tokens.end)
 		return;
 
-	expression_token token;
-	bool unary_allowed = tokens.it->tt == tokenType::PUNCTUATION ? false : true;
-	bool postfix_allowed = false;
-	bool exit = false;
-
-	const auto token_peek_unary = [&](const token_expression_t& token)
-	{
-		if (!unary_allowed || token.it->tt < tokenType::PUNCTUATION)
-			return false;
-
-		if (!is_unary_operator(static_cast<punctuation_e>(token.it->extrainfo)))
-			throw scriptError_t(&*token.it, std::format("unrecognized unary operator \"{}\"", token.it->string));
-
-		return true;
-	};
-	
-	const auto token_peek_name = [&](const token_expression_t& token)
-	{
-		if (unary_allowed && token.it->tt < tokenType::PUNCTUATION) {
-			postfix_allowed = true;
-			return true;
-		}
-		
-		//if unary is not allowed, then this is a normal operator
-		else if (!unary_allowed && token.it->tt == tokenType::PUNCTUATION) {
-			postfix_allowed = false;
-			return true;
-		}
-
-		throw scriptError_t(&*token.it, std::format("expected a \";\" instead of \"{}\"", token.it->string));
-
-		return false;
-
-	};
-
-	const auto token_peek_postfix = [&](const token_expression_t& token)
-	{
-		if (!postfix_allowed)
-			return false;
-
-		//code here to check if it satisfies operator
-
-		if (!is_postfix_operator(static_cast<punctuation_e>(token.it->extrainfo)))
-			throw scriptError_t(&*token.it, std::format("unrecognized unary operator \"{}\"", token.it->string));
-
-		return true;
-	};
-
-
 	while (tokens.it != tokens.end) {
-
-		
-		while (token_peek_unary(tokens)) {
-			token.insert_prefix(*tokens.it);
-			tokens.it++;
-		}
-		if (token_peek_name(tokens)) {
-			token.set_token(*tokens.it);
-			tokens.it++;
-		}
-		while (token_peek_postfix(tokens)) {
-			token.insert_postfix(*tokens.it);
-			tokens.it++;
+		if (!ParseExpression()) {
+			throw scriptError_t(&*tokens.it, std::format("unexpected token \"{}\" used in expression\n", tokens.it->string));
 		}
 
+		if (tokens.it == tokens.end)
+			break;
 
+		if (!ParseOperator()) {
+			if (tokens.it == tokens.end)
+				throw scriptError_t(&*tokens.it, std::format("expected an expression before \"{}\"\n", tokens.it->string));
 
+			throw scriptError_t(&*tokens.it, std::format("expected an operator instead of \"{}\"\n", tokens.it->string));
+
+		}
 
 	}
 
-	//while (tokens.it != tokens.end) {
+	for (auto& i : sortedTokens)
+		i.print();
 
-	//	if (tokens.it->tt < tokenType::PUNCTUATION) {
-
-	//		if (postfix_allowed) {
-	//			exit = true;
-	//		}
-	//		else {
-	//			token.set_token(*tokens.it);
-
-	//			unary_allowed = false;
-	//			postfix_allowed = true;
-	//		}
-	//	}
-
-	//	else if (tokens.it->tt == tokenType::PUNCTUATION) {
-
-	//		if (unary_allowed) {
-	//			if (!is_unary_operator(static_cast<punctuation_e>(tokens.it->extrainfo)))
-	//				throw scriptError_t(&*tokens.it, std::format("unrecognized unary operator \"{}\"", tokens.it->string));
-
-	//			token.insert_prefix(*tokens.it);
-	//		}
-	//		else if (!unary_allowed && !postfix_allowed) {
-	//			token.set_token(*tokens.it);
-	//			exit = true;
-	//		}
-
-	//		else if (!unary_allowed && postfix_allowed) {
-
-	//			//true if there is an operator after text
-	//			if (satisfies_operator(static_cast<punctuation_e>(tokens.it->extrainfo))) {
-	//				exit = true;
-	//			}
-	//			else {
-	//				if (!is_postfix_operator(static_cast<punctuation_e>(tokens.it->extrainfo)))
-	//					throw scriptError_t(&*tokens.it, std::format("unrecognized postfix operator \"{}\"", tokens.it->string));
-	//				token.insert_postfix(*tokens.it);
-	//			}
-	//		}
-
-	//	}
+}
+bool expression_t::ParseExpression()
+{
+	auto& it = tokens.it;
+	expression_token token;
 
 
-	//	if (!CanExpressionContinue(token.get_token(), ++tokens.it))
-	//		throw scriptError_t(&*tokens.it, std::format("cannot continue expression due to unexpected token: \"{}\"", tokens.it->string));
+	const auto token_peek_unary = [&]()
+	{
 
+		if (it == tokens.end || it->tt != tokenType::PUNCTUATION)
+			return false;
 
-	//	if (exit)
-	//		break;
+		if (!is_unary_operator(static_cast<punctuation_e>(it->extrainfo))){
+			return false;
+		}
 
-	//}
+		return true;
+	};
+	const auto token_peek_name = [&]()
+	{
+		if (it == tokens.end)
+			return false;
+
+		if (it->tt == tokenType::PUNCTUATION)
+			return false;
+
+		return true;
+	};
+	const auto token_peek_postfix = [&]()
+	{
+		if (it == tokens.end || it->tt != tokenType::PUNCTUATION)
+			return false;
+
+		if (!is_postfix_operator(static_cast<punctuation_e>(it->extrainfo))) {
+			return false;
+		}
+
+		return true;
+	};
+
+	while (token_peek_unary()) {
+		std::cout << "insert prefix: " << it->string << '\n';
+		token.insert_prefix(*it);
+		it++;
+	}
+	if (!token_peek_name()) {
+		
+		if (it->tt == tokenType::PUNCTUATION && it->extrainfo == P_SEMICOLON && it == tokens.end)
+			return true;
+
+		return false;
+	}
+	else {
+		token.set_token(*it);
+		it++;
+	}
+
+	while (token_peek_postfix()) {
+		token.insert_postfix(*it);
+		it++;
+	}
 
 	sortedTokens.push_back(token);
 
-	TokenizeExpression();
-
+	return true; //expression has valid syntax
 }
-bool expression_t::CanExpressionContinue(const token_t& token, const std::list<token_t>::iterator& nextToken) const noexcept
+bool expression_t::ParseOperator()
 {
-	//last token cannot be a punctuation symbol
-	if (nextToken == tokens.end) {
-		return token.tt < tokenType::PUNCTUATION;
-	}
-
-	//token.tt should NEVER be a unary or postfix here
-	else if (token.tt == tokenType::PUNCTUATION) {
-
-		if (nextToken->tt < tokenType::PUNCTUATION)
-			return true;
-		
-		else if (nextToken->tt == tokenType::PUNCTUATION) {
-
-			if (is_unary_operator(static_cast<punctuation_e>(nextToken->extrainfo))) {
-				return true;
-			}
-			
-		}
-
-		return false;
-	}
-
-	//a token after text cannot be more text
-	else if (token.tt < tokenType::PUNCTUATION) {
-
-		if (nextToken->tt == tokenType::PUNCTUATION) {
-			return true;
-		}
-
-		return false;
-	}
-
-	return true;
-
-}
-bool expression_t::ExpectToken(const token_t& token, const expected_token& expectedToken) const noexcept
-{
-	if (expectedToken.tt == tokenType::INVALID_LITERAL)
-		return true;
-
-	if (token.tt != expectedToken.tt)
-		return false;
 	
 
+	auto& it = tokens.it;
+	expression_token token;
 
+	if (it == tokens.end)
+		return false;
 
-	return true;
+	if (it->tt != tokenType::PUNCTUATION) {
+		return false;
+	}
 
+	if (!satisfies_operator(static_cast<punctuation_e>(it->extrainfo))) {
+		return false;
+	}
+	token.set_token(*it);
+
+	
+
+	++it;
+
+	//if (it == tokens.end) //last token should NOT be an operator
+	//	return false;
+
+	sortedTokens.push_back(token);
+
+	return true; //operator has valid syntax
 }

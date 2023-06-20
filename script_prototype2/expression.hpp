@@ -21,18 +21,28 @@ struct expression_token
 		token = _token;
 	}
 	token_t& get_token() noexcept { return token; }
+
+	void print() const noexcept
+	{
+		std::cout << "\n---------TOKEN---------\n";
+		for (const auto& i : prefix)
+			std::cout << i->string << ' ';
+		std::cout << '\n';
+		std::cout << token.string << '\n';
+		for (const auto& i : postfix)
+			std::cout << i->string << ' ';
+		
+		std::cout << '\n';
+
+
+
+	}
 private:
 	std::list<token_t*> prefix;
 	std::list<token_t*> postfix;
 	token_t token;
 };
 
-struct expected_token
-{
-	std::string string;
-	tokenType tt = tokenType::INVALID_LITERAL;
-	size_t extrainfo = 0;
-};
 
 class expression_t {
 public:
@@ -46,10 +56,9 @@ public:
 private:
 
 	void TokenizeExpression();
+	bool ParseExpression();
+	bool ParseOperator();
 	expression_token EvaluateExpression();
-
-	bool CanExpressionContinue(const token_t& token, const std::list<token_t>::iterator& nextToken) const noexcept;
-	bool ExpectToken(const token_t& token, const expected_token& expectedToken) const noexcept;
 
 	token_expression_t tokens;
 	std::list<expression_token> sortedTokens;
