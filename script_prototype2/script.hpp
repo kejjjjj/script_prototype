@@ -38,7 +38,7 @@ struct token_t
 		column = 0;
 	}
 };
-struct token_expression_t
+struct token_statement_t
 {
 	std::list<token_t>::iterator it;
 	std::list<token_t>::iterator begin;
@@ -62,7 +62,7 @@ struct script_t
 
 
 	void S_Tokenize();
-	token_expression_t S_CreateExpression();
+	token_statement_t S_CreateStatement();
 
 private:
 	bool eof_allowed = true;

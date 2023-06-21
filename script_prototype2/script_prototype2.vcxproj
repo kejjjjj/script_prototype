@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="declaration.cpp" />
     <ClCompile Include="expression.cpp" />
     <ClCompile Include="expression_token.cpp" />
     <ClCompile Include="filetools.cpp" />
@@ -145,10 +146,12 @@
     <ClCompile Include="script.cpp" />
     <ClCompile Include="script_prototype2.cpp" />
     <ClCompile Include="datatype.cpp" />
+    <ClCompile Include="statement.cpp" />
     <ClCompile Include="variable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="datatype.hpp" />
+    <ClInclude Include="declaration.hpp" />
     <ClInclude Include="expression.hpp" />
     <ClInclude Include="expression_token.hpp" />
     <ClInclude Include="filetools.hpp" />
@@ -156,6 +159,7 @@
     <ClInclude Include="punctuation.hpp" />
     <ClInclude Include="rvalue.hpp" />
     <ClInclude Include="script.hpp" />
+    <ClInclude Include="statement.hpp" />
     <ClInclude Include="variable.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

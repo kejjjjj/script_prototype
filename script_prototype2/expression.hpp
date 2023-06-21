@@ -8,7 +8,7 @@
 
 class expression_t {
 public:
-	expression_t(const token_expression_t& expression) : tokens(expression)
+	expression_t(const token_statement_t& expression) : tokens(expression)
 	{
 	};
 
@@ -24,7 +24,7 @@ private:
 	void EvaluateExpressionTokens();
 
 	expression_token result;
-	token_expression_t tokens;
+	token_statement_t tokens;
 	std::list<expression_token> sortedTokens;
 };
 

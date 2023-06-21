@@ -44,7 +44,7 @@ void script_t::S_Tokenize()
 	}
 	token_it = tokens.begin();
 }
-token_expression_t script_t::S_CreateExpression()
+token_statement_t script_t::S_CreateStatement()
 {
 	auto& end = token_it;
 	auto begin = token_it;

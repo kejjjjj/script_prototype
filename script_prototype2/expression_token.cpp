@@ -7,7 +7,8 @@ void expression_token::set_value_category()
 	if (op)
 		return;
 
-	
+	if(token.tt == tokenType::BUILT_IN_TYPE)
+		throw scriptError_t(&token, std::format("a datatype was unexpected here"));
 
 	if (token.tt == tokenType::NAME) {
 		const auto& instance = VariableTable::getInstance();

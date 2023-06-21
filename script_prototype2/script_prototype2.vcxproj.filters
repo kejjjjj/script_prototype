@@ -45,6 +45,12 @@
     <ClCompile Include="datatype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="declaration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="statement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
@@ -72,6 +78,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="datatype.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="declaration.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="statement.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
