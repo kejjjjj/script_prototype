@@ -4,6 +4,7 @@
 #include "pch.hpp"
 #include "script.hpp"
 #include "rvalue.hpp"
+#include "variable.hpp"
 
 struct expression_token
 {
@@ -36,6 +37,7 @@ struct expression_token
 
 	bool op = false;
 	std::shared_ptr<rvalue> rval;
+	Variable* lval = 0;
 private:
 	
 	std::list<token_t*> prefix;

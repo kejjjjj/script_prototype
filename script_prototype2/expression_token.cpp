@@ -1,10 +1,23 @@
 
 #include "expression_token.hpp"
+#include "variable.hpp"
 
 void expression_token::set_value_category()
 {
 	if (op)
 		return;
+
+	
+
+	if (token.tt == tokenType::NAME) {
+		const auto& instance = VariableTable::getInstance();
+
+		if (instance.find(token.string).has_value() == false) {
+			throw scriptError_t(&token, std::format("the identifier \"{}\" is undefined", token.string));
+		}
+		throw scriptError_t(&token, std::format("yippee!"));
+
+	}
 
 	//passing &token is fine because the rvalue's lifetime is the same as this expression_token :clueless:
 

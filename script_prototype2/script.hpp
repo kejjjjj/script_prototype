@@ -11,6 +11,7 @@ enum class tokenType : char
 	FLOAT_LITERAL,
 	STRING_LITERAL,
 	CHAR_LITERAL,
+	BUILT_IN_TYPE,
 	NAME,
 	PUNCTUATION
 };
@@ -69,6 +70,8 @@ private:
 	bool S_ReadToken(token_t& token);
 	bool S_ReadWhitespace();
 	bool S_ReadNumber(token_t& token);
+	bool S_ReadType(token_t& token);
+
 	bool S_ReadName(token_t& token);
 	bool S_ReadPunctuation(token_t& token);
 	bool S_ParseInt(token_t& token);

@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>D:\script_prototype2\scripts\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>C:\Users\luukas230\Documents\repo\script_prototype\scripts\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>D:\script_prototype2\scripts\$(Platform)\$(Configuration)\</OutDir>
@@ -133,7 +133,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>D:\script_prototype2\scripts\$(Platform)\Release\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>C:\Users\luukas230\Documents\repo\script_prototype\scripts\$(Platform)\Release\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -144,8 +144,11 @@
     <ClCompile Include="rvalue.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="script_prototype2.cpp" />
+    <ClCompile Include="datatype.cpp" />
+    <ClCompile Include="variable.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="datatype.hpp" />
     <ClInclude Include="expression.hpp" />
     <ClInclude Include="expression_token.hpp" />
     <ClInclude Include="filetools.hpp" />
@@ -153,6 +156,7 @@
     <ClInclude Include="punctuation.hpp" />
     <ClInclude Include="rvalue.hpp" />
     <ClInclude Include="script.hpp" />
+    <ClInclude Include="variable.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

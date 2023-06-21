@@ -39,6 +39,12 @@
     <ClCompile Include="expression_token.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="variable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="datatype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
@@ -60,6 +66,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="expression_token.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="variable.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="datatype.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

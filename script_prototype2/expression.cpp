@@ -19,13 +19,15 @@ expression_token expression_t::EvaluateEntireExpression()
 
 	return EvaluateExpression();
 }
-
 expression_token expression_t::EvaluateExpression()
 {
+
+
 	TokenizeExpression();
 	std::for_each(sortedTokens.begin(), sortedTokens.end(), [](expression_token& e) { e.set_value_category(); });
 
 	EvaluateExpressionTokens();
+	
 
 	return {};
 }

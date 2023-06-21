@@ -1,6 +1,6 @@
 #include "script.hpp"
 #include "filetools.hpp"
-
+#include "datatype.hpp"
 script_t::script_t(const std::string& filename)
 {
 
@@ -185,12 +185,21 @@ bool script_t::S_ReadName(token_t& token)
 
 		if (script_p == scriptend_p)
 			return 0;
+		
 
 		token.string.push_back(*script_p++);
 	}
 
 	token.print();
 	column += token.string.length();
+	if (const auto it = dataTypeTable::getInstance().find_builtin(token.string)) {
+
+		if (it.has_value()) {
+			token.tt = tokenType::BUILT_IN_TYPE;
+			token.extrainfo = it->second;
+		}
+	}
+
 	return 1;
 }
 bool script_t::S_ReadPunctuation(token_t& token)
