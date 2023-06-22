@@ -4,18 +4,8 @@
 
 #include "pch.hpp"
 #include "script.hpp"
+#include "datatype.hpp"
 
-inline std::array<const char*, 3> s_dataTypes = {
-	"NULL",
-	"int",
-	"float"
-};
-enum class dataTypes_e
-{
-	UNKNOWN,
-	INT,
-	FLOAT
-};
 
 struct VariableValue
 {

@@ -11,7 +11,13 @@ struct customType
 	size_t size = 0;
 	size_t numElements = 0;
 };
-
+enum class dataTypes_e
+{
+	
+	INT,
+	FLOAT,
+	UNKNOWN
+};
 class dataTypeTable
 {
 public:
@@ -36,7 +42,12 @@ public:
 	}
 
 private:
-	const std::list<std::string> built_in = { "int", "float" };
+	const std::list<std::string> built_in = {
+		
+		{"int"}, 
+		{"float"} 
+	};
+
 	std::unordered_map<std::string, customType> table;
 };
 

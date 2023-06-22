@@ -190,8 +190,6 @@ bool script_t::S_ReadName(token_t& token)
 		token.string.push_back(*script_p++);
 	}
 
-	token.print();
-	column += token.string.length();
 	if (const auto it = dataTypeTable::getInstance().find_builtin(token.string)) {
 
 		if (it.has_value()) {
@@ -199,6 +197,9 @@ bool script_t::S_ReadName(token_t& token)
 			token.extrainfo = it->second;
 		}
 	}
+
+	token.print();
+	column += token.string.length();
 
 	return 1;
 }
