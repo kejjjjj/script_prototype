@@ -5,6 +5,8 @@
 #include "pch.hpp"
 #include "script.hpp"
 #include "datatype.hpp"
+#include "variable.hpp"
+
 class declaration_t {
 public:
 	declaration_t(const token_statement_t& expression) : tokens(expression)
@@ -21,10 +23,13 @@ private:
 	void get_identifier_name();
 	bool get_type_modifiers();
 
+	bool has_initializer();
+	void initialize();
+
 	dataTypes_e dtype = dataTypes_e::UNKNOWN;
 	std::string identifier;
 	token_statement_t tokens;
-
+	Variable* target = 0;
 };
 
 

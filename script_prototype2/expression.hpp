@@ -5,6 +5,7 @@
 
 #include "script.hpp"
 #include "expression_token.hpp"
+#include "o_standard.hpp"
 
 class expression_t {
 public:
@@ -14,13 +15,12 @@ public:
 
 	bool is_ready() const noexcept { return tokens.it != tokens.end; }
 	expression_token EvaluateEntireExpression();
-
+	
 private:
-
 	void TokenizeExpression();
 	bool ParseExpression();
 	bool ParseOperator();
-	expression_token EvaluateExpression();
+	void EvaluateExpression();
 	void EvaluateExpressionTokens();
 
 	expression_token result;

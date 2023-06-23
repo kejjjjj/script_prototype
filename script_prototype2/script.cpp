@@ -194,7 +194,7 @@ bool script_t::S_ReadName(token_t& token)
 
 		if (it.has_value()) {
 			token.tt = tokenType::BUILT_IN_TYPE;
-			token.extrainfo = it->second;
+			token.extrainfo = static_cast<DWORD>(it->second);
 		}
 	}
 

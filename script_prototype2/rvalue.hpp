@@ -25,6 +25,9 @@ struct rvalue
 {
 	rvalue(const rval_declr_data& declaration_data);
 
+	int get_int() const { return get_value<int>(); }
+	float get_float() const { return get_value<float>(); }
+
 	template<typename T> T get_value() const
 	{
 		if (value.buffer.use_count() == NULL) { throw scriptError_t("rvalue: called get_value() without a value.. how?"); }
@@ -39,6 +42,7 @@ struct rvalue
 
 
 	auto get_type() const noexcept { return type; }
+	void set_type(const dataTypes_e d) noexcept { type = d; }
 
 private:
 	const token_t* token = 0; //read_only

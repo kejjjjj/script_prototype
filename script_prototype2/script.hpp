@@ -89,12 +89,12 @@ public:
 	}
 	scriptError_t(const token_t* _token, const std::string& reason) : token(_token), errReason(reason) {
 
-		errReason = std::format("syntax error:\n{}\n on line: [{},{}]", errReason, token->line, token->column);
+		errReason = std::format("syntax error:\n{}\non line: [{},{}]", errReason, token->line, token->column);
 
 	};
 	scriptError_t(const script_t* _script, const std::string& reason) : script(_script), errReason(reason) {
 		
-		errReason = std::format("syntax error:\n{}\n on line: [{},{}]", errReason, script->line, script->column);
+		errReason = std::format("syntax error:\n{}\non line: [{},{}]", errReason, script->line, script->column);
 
 	};
 	scriptError_t() = delete;

@@ -34,6 +34,8 @@ enum punctuation_e : size_t
 	P_INCR,
 	P_DECR,
 
+	P_ASSIGN,
+
 	P_PAR_OPEN,
 	P_PAR_CLOSE,
 
@@ -56,6 +58,8 @@ constexpr punctuation_t punctuations[] =
 
 	{"+", P_ADD, ADDITIVE},
 	{"-", P_SUB, ADDITIVE},
+
+	{"=", P_ASSIGN, ASSIGNMENT},
 
 	{"(", P_PAR_OPEN, FAILURE},
 	{")", P_PAR_CLOSE, FAILURE},

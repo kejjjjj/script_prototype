@@ -17,19 +17,25 @@ expression_token expression_t::EvaluateEntireExpression()
 
 	}
 
-	return EvaluateExpression();
+	EvaluateExpression();
+
+	return result;
 }
-expression_token expression_t::EvaluateExpression()
+void expression_t::EvaluateExpression()
 {
 
 
 	TokenizeExpression();
-	std::for_each(sortedTokens.begin(), sortedTokens.end(), [](expression_token& e) { e.set_value_category(); });
+
+	std::for_each(sortedTokens.begin(), sortedTokens.end(), [](expression_token& t) {
+		t.eval_postfix();
+		t.eval_prefix();
+	});
 
 	EvaluateExpressionTokens();
 	
 
-	return {};
+	return;
 }
 
 
@@ -65,7 +71,6 @@ bool expression_t::ParseExpression()
 	auto& it = tokens.it;
 	expression_token token;
 
-
 	const auto token_peek_unary = [&]()
 	{
 
@@ -97,6 +102,8 @@ bool expression_t::ParseExpression()
 			return false;
 		}
 
+
+
 		return true;
 	};
 
@@ -121,7 +128,7 @@ bool expression_t::ParseExpression()
 		token.insert_postfix(*it);
 		it++;
 	}
-
+	token.set_value_category();
 	sortedTokens.push_back(token);
 
 	return true; //expression has valid syntax
@@ -150,12 +157,11 @@ bool expression_t::ParseOperator()
 
 	//if (it == tokens.end) //last token should NOT be an operator
 	//	return false;
-
+	token.set_value_category();
 	sortedTokens.push_back(token);
 
 	return true; //operator has valid syntax
 }
-
 
 void expression_t::EvaluateExpressionTokens()
 {
@@ -189,16 +195,20 @@ void expression_t::EvaluateExpressionTokens()
 		itr2 = itr1;
 
 
-		auto& Operator	= itr1;
+		auto& Operator	= itr1->get_token();
 		auto& leftVal	= --itr1;
 		auto& rightVal	= ++itr2;
 
-		rightVal->rval->set_value<int>(leftVal->rval->get_value<int>() + rightVal->rval->get_value<int>());
+		const auto func = evaluationFunctions::getInstance().find_function(static_cast<punctuation_e>(LOWORD(Operator.extrainfo)));
 
-		
+		if (!func.has_value())
+			throw scriptError_t(&Operator, std::format("no evaluation function for the \"{}\" operator", Operator.string));
+
+		*itr2 = func.value()(*leftVal, *rightVal);
+	
 
 		sortedTokens.erase(itr1, itr2);
 	}
 
-	std::cout << "result: " << itr2->rval->get_value<int>() << '\n';
+	result = *itr2;
 }
