@@ -23,6 +23,8 @@ public:
 private:
 	std::unordered_map<punctuation_e, std::function<expression_token(expression_token&, expression_token&)>> eval_functions;
 	static expression_token arithmetic_addition(expression_token& left, expression_token& right);
+	static expression_token assignment(expression_token& left, expression_token& right);
+
 	
 };
 #endif

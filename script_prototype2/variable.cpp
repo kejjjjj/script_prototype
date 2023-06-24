@@ -1,4 +1,5 @@
 #include "variable.hpp"
+#include "expression_token.hpp"
 
 Variable::Variable(const var_declr_data& init_data)
 {
@@ -23,7 +24,15 @@ Variable::Variable(const var_declr_data& init_data)
 
 
 }
+expression_token Variable::to_expression()
+{
+	expression_token token;
+	
+	token.lval = this;
+	token.op = false;
 
+	return token;
+}
 void Variable::print(size_t spaces) const
 {
 	auto getval = [this]() -> std::string

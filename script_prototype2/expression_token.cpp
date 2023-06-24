@@ -70,13 +70,17 @@ void expression_token::lvalue_to_rvalue()
 			.token = &token 
 		}));
 
+	rval->replace_value(lval->get_value());
+
 	lval = nullptr;
 
 }
 void expression_token::implicit_cast(expression_token& other)
 {
-	if (get_type() == other.get_type())
+	if (get_type() == other.get_type()) {
+		std::cout << "no implicit cast!\n";
 		return;
+	}
 
 	if (is_lvalue() == false) {
 		cast_weaker_operand(other);

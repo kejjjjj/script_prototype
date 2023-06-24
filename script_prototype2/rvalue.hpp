@@ -39,6 +39,7 @@ struct rvalue
 		if (value.buffer.use_count() == NULL) { throw scriptError_t("rvalue: called set_value() without a value.. how?"); }
 		*reinterpret_cast<T*>(*value.buffer.get()) = _value;
 	}
+	void replace_value(const VariableValue& v) noexcept { value = v; }
 
 
 	auto get_type() const noexcept { return type; }

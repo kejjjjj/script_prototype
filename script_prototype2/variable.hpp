@@ -13,6 +13,7 @@ struct var_declr_data
 	size_t size = 0ull; //optional unless the datatype is not a constant size
 
 };
+struct expression_token;
 
 class Variable
 {
@@ -25,7 +26,7 @@ public:
 	template<typename T> void set_value(const T& _value)
 	{
 		if (value.buffer.use_count() == NULL) { throw scriptError_t("lvalue: called set_value() without a value.. how?"); }
-		*reinterpret_cast<T*>(*value.buffer.get()) = _value;
+		*reinterpret_cast<T*>(value.buffer.get()) = _value;
 	}
 
 	int get_int() const noexcept { return *reinterpret_cast<int*>	(value.buffer.get()); }
@@ -34,6 +35,9 @@ public:
 	void print(size_t spaces = 0) const;
 	auto get_type() const noexcept { return type; }
 	auto& get_value() const noexcept { return value; }
+
+	expression_token to_expression();
+
 	std::string identifier;
 private:
 	VariableValue value;

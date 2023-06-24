@@ -8,6 +8,7 @@ void evaluationFunctions::createFunctions()
 		return;
 
 	eval_functions.insert({ P_ADD, arithmetic_addition });
+	eval_functions.insert({ P_ASSIGN, assignment});
 
 	init = true;
 }
@@ -41,4 +42,31 @@ expression_token evaluationFunctions::arithmetic_addition(expression_token& left
 
 	return result;
 
+}
+expression_token evaluationFunctions::assignment(expression_token& left, expression_token& right)
+{
+	if (!left.is_lvalue())
+		throw scriptError_t(&left.get_token(), "left operand must be modifiable");
+
+	std::cout << "assignment pog\n";
+
+	right.lvalue_to_rvalue();
+
+	left.implicit_cast(right);
+
+
+	switch (left.get_type()) {
+	case dataTypes_e::INT:
+		std::cout << left.get_int() << " -> ";
+		left.set_value<int>(right.get_int());
+		std::cout << left.get_int() << '\n';
+		break;
+	case dataTypes_e::FLOAT:
+		std::cout << left.get_float() << " -> ";
+		left.set_value<float>(right.get_float());
+		std::cout << left.get_float() << '\n';
+		break;
+	}
+
+	return left;
 }
