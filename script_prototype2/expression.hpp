@@ -17,9 +17,21 @@ public:
 	expression_token EvaluateEntireExpression();
 	
 private:
+
+	enum unary_parentheses_e
+	{
+		INVALID,
+		UNARY_CAST,
+		EXPRESSION
+	};
+
 	void TokenizeExpression();
 	bool ParseExpression();
 	bool ParseOperator();
+	bool ParseUnaryCast(expression_token& token);
+	bool ExpressionParseParentheses(expression_token& token);
+	void ExpressionFindMatchingParenthesis(token_statement_t& token);
+
 	void EvaluateExpression();
 	void EvaluateExpressionTokens();
 

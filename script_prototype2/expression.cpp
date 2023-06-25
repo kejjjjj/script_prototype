@@ -70,9 +70,13 @@ bool expression_t::ParseExpression()
 {
 	auto& it = tokens.it;
 	expression_token token;
-
 	const auto token_peek_unary = [&]()
 	{
+		const auto cast_exists = ParseUnaryCast(token);
+		if (cast_exists) {
+			return true;
+		}
+		
 
 		if (it == tokens.end || it->tt != tokenType::PUNCTUATION)
 			return false;
@@ -81,6 +85,9 @@ bool expression_t::ParseExpression()
 			return false;
 		}
 
+		token.insert_prefix(*it);
+		it++;
+
 		return true;
 	};
 	const auto token_peek_name = [&]()
@@ -88,8 +95,13 @@ bool expression_t::ParseExpression()
 		if (it == tokens.end)
 			return false;
 
-		if (it->tt == tokenType::PUNCTUATION)
+		if (it->tt == tokenType::PUNCTUATION )
 			return false;
+
+		token.set_token(*it);
+		std::cout << "ye " << tokens.it->string << " is totally valid brah!\n";
+
+		it++;
 
 		return true;
 	};
@@ -108,20 +120,17 @@ bool expression_t::ParseExpression()
 	};
 
 	while (token_peek_unary()) {
-		std::cout << "insert prefix: " << it->string << '\n';
-		token.insert_prefix(*it);
-		it++;
+		std::cout << "unary!\n";
 	}
 	if (!token_peek_name()) {
 		
-		if (it->tt == tokenType::PUNCTUATION && LOWORD(it->extrainfo) == P_SEMICOLON && it == tokens.end)
+		if (it->tt == tokenType::PUNCTUATION && LOWORD(it->extrainfo) == P_SEMICOLON && it == tokens.end) // semicolon (end of expression)
 			return true;
 
-		return false;
-	}
-	else {
-		token.set_token(*it);
-		it++;
+		if(ExpressionParseParentheses(token) == false)
+			return false;
+
+		std::cout << "parentheses PAGGERS\n";
 	}
 
 	while (token_peek_postfix()) {
@@ -163,6 +172,71 @@ bool expression_t::ParseOperator()
 	return true; //operator has valid syntax
 }
 
+bool expression_t::ParseUnaryCast(expression_token& token)
+{
+	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
+		return false;
+
+	std::cout << "parsing parentheses\n";
+	
+	tokens.it++;
+		
+	if (tokens.it->tt != tokenType::BUILT_IN_TYPE) {
+		tokens.it--;
+		return false;
+	}
+
+	token.insert_prefix(*tokens.it);
+
+	tokens.it++;
+	
+	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_CLOSE) == false)
+		throw scriptError_t(&*tokens.it, "expected to find a \")\"");
+
+	tokens.it++;
+
+	std::cout << "unary cast!\n";
+
+	return true;
+}
+bool expression_t::ExpressionParseParentheses(expression_token& token)
+{
+	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
+		return false;
+
+	std::cout << "parsing parentheses\n";
+
+	tokens.it++;
+	auto copy = tokens.it;
+
+	ExpressionFindMatchingParenthesis(tokens);
+
+	while ((copy->tt == tokenType::PUNCTUATION && LOWORD(copy->extrainfo) == punctuation_e::P_PAR_CLOSE) == false) {
+
+		if (copy == tokens.end)
+			throw scriptError_t(&*copy, "expected to find a \")\"");
+		copy++;
+	}
+
+	std::cout << "evaluating parentheses\n";
+
+	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = copy };
+
+
+	token = expression_t(statement).EvaluateEntireExpression();
+	tokens.it = ++copy; //move iterator to the end
+
+	std::cout << "continuing iteration from " << tokens.it->string << '\n';
+
+	return true;
+}
+void expression_t::ExpressionFindMatchingParenthesis(token_statement_t& token)
+{
+	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
+		throw scriptError_t(&*tokens.it, "this should never happen");
+
+
+}
 void expression_t::EvaluateExpressionTokens()
 {
 	std::list<expression_token>::iterator itr1, itr2 = sortedTokens.begin();
@@ -199,12 +273,17 @@ void expression_t::EvaluateExpressionTokens()
 		auto& leftVal	= --itr1;
 		auto& rightVal	= ++itr2;
 
-		const auto func = evaluationFunctions::getInstance().find_function(static_cast<punctuation_e>(LOWORD(Operator.extrainfo)));
+		using FunctionType = std::function<expression_token(expression_token&, expression_token&)>;
+		using OptionalFunctionType = std::optional<FunctionType>;
 
-		if (!func.has_value())
+		const auto& evalFunctions = evaluationFunctions::getInstance();
+		const auto punctuationType = static_cast<punctuation_e>(LOWORD(Operator.extrainfo));
+		const OptionalFunctionType function = evalFunctions.find_function(punctuationType);
+
+		if (!function.has_value())
 			throw scriptError_t(&Operator, std::format("no evaluation function for the \"{}\" operator", Operator.string));
 
-		*itr2 = func.value()(*leftVal, *rightVal);
+		*itr2 = function.value()(*leftVal, *rightVal);
 	
 
 		sortedTokens.erase(itr1, itr2);

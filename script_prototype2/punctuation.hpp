@@ -6,7 +6,7 @@
 #include "script.hpp"
 
 
-enum OperatorPriority
+enum OperatorPriority : WORD
 {
 	FAILURE,
 	ASSIGNMENT,		//	= += -= *= /= %= >>= <<= &= ^= |=
@@ -25,7 +25,7 @@ enum OperatorPriority
 	POSTFIX,		//  () [] -> . ++ - -	
 
 };
-enum punctuation_e : size_t
+enum punctuation_e : WORD
 {
 	P_UNKNOWN,
 	P_ADD,
@@ -45,8 +45,8 @@ enum punctuation_e : size_t
 struct punctuation_t
 {
 	std::string identifier;
-	punctuation_e punc = P_UNKNOWN;
-	OperatorPriority priority = FAILURE;
+	punctuation_e punc = P_UNKNOWN; //LOWORD
+	OperatorPriority priority = FAILURE; //HIWORD
 };
 
 constexpr punctuation_t punctuations[] =

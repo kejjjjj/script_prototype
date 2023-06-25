@@ -8,7 +8,7 @@ bool is_unary_operator(const punctuation_e p)
 	if (p >= P_INCR && p <= P_DECR)
 		return true;
 
-	if (p < punctuation_e::P_SEMICOLON)
+	if (p < punctuation_e::P_PAR_OPEN)
 		return true;
 
 	return false;

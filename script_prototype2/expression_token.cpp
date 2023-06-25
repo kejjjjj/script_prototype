@@ -7,6 +7,9 @@ void expression_token::set_value_category()
 	if (op)
 		return;
 
+	if (is_lvalue() || is_rvalue())
+		return;
+
 	if(token.tt == tokenType::BUILT_IN_TYPE)
 		throw scriptError_t(&token, std::format("a datatype was unexpected here"));
 
