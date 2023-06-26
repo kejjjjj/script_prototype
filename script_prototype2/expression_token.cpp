@@ -14,12 +14,15 @@ void expression_token::set_value_category()
 		throw scriptError_t(&token, std::format("a datatype was unexpected here"));
 
 	if (token.tt == tokenType::NAME) {
-		const auto& instance = VariableTable::getInstance();
+		auto& instance = VariableTable::getInstance();
+		auto result = instance.find(token.string);
 
-		if (instance.find(token.string).has_value() == false) {
+		if (result.has_value() == false) {
 			throw scriptError_t(&token, std::format("the identifier \"{}\" is undefined", token.string));
 		}
-		throw scriptError_t(&token, std::format("yippee!"));
+		
+		lval = &result.value()->second;
+		return;
 
 	}
 
@@ -69,11 +72,12 @@ void expression_token::lvalue_to_rvalue()
 
 	rval = std::shared_ptr<rvalue>(new rvalue({ 
 			.type = lval->get_type(), 
-			.size = lval->get_value().buf_size, 
+			.size = lval->value.buf_size, 
 			.token = &token 
 		}));
 
-	rval->replace_value(lval->get_value());
+
+	rval->replace_value(lval->value);
 
 	lval = nullptr;
 

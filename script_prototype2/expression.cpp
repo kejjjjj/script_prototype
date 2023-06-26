@@ -56,14 +56,11 @@ void expression_t::TokenizeExpression()
 			if (tokens.it == tokens.end)
 				throw scriptError_t(&*tokens.it, std::format("expected an expression before \"{}\"\n", tokens.it->string));
 
-			throw scriptError_t(&*tokens.it, std::format("expected an operator instead of \"{}\"\n", tokens.it->string));
+			throw scriptError_t(&*tokens.it, std::format("expected an operator or \";\" instead of \"{}\"\n", tokens.it->string));
 
 		}
 
 	}
-
-	for (auto& i : sortedTokens)
-		i.print();
 
 }
 bool expression_t::ParseExpression()
@@ -81,9 +78,17 @@ bool expression_t::ParseExpression()
 		if (it == tokens.end || it->tt != tokenType::PUNCTUATION)
 			return false;
 
-		if (!is_unary_operator(static_cast<punctuation_e>(LOWORD(it->extrainfo)))){
+		const auto punctuation = static_cast<punctuation_e>(LOWORD(it->extrainfo));
+
+		if (bad_unary_operator(punctuation)) {
+			throw scriptError_t(&*it, std::format("expected unary operator instead of \"{}\"", it->string));
+		}
+
+		if (!is_unary_operator(punctuation)){
 			return false;
 		}
+
+		
 
 		token.insert_prefix(*it);
 		it++;
@@ -176,8 +181,6 @@ bool expression_t::ParseUnaryCast(expression_token& token)
 {
 	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
 		return false;
-
-	std::cout << "parsing parentheses\n";
 	
 	tokens.it++;
 		
@@ -204,37 +207,55 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
 		return false;
 
-	std::cout << "parsing parentheses\n";
+	//creates a copy that will find the matching )
+	auto parentheses_statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = tokens.end };
+	ExpressionFindMatchingParenthesis(parentheses_statement);
 
-	tokens.it++;
-	auto copy = tokens.it;
+	//skip the (
+	++tokens.it;
 
-	ExpressionFindMatchingParenthesis(tokens);
-
-	while ((copy->tt == tokenType::PUNCTUATION && LOWORD(copy->extrainfo) == punctuation_e::P_PAR_CLOSE) == false) {
-
-		if (copy == tokens.end)
-			throw scriptError_t(&*copy, "expected to find a \")\"");
-		copy++;
-	}
-
-	std::cout << "evaluating parentheses\n";
-
-	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = copy };
+	//parentheses_statement.it contains the position of the matching ), so it will be the end
+	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = parentheses_statement.it };
 
 
 	token = expression_t(statement).EvaluateEntireExpression();
-	tokens.it = ++copy; //move iterator to the end
-
+	tokens.it = parentheses_statement.it;
+	++tokens.it;
 	std::cout << "continuing iteration from " << tokens.it->string << '\n';
 
 	return true;
 }
 void expression_t::ExpressionFindMatchingParenthesis(token_statement_t& token)
 {
-	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
-		throw scriptError_t(&*tokens.it, "this should never happen");
+	const auto is_opening = [](const token_t& token) {
+		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_PAR_OPEN;
+	};
+	const auto is_closing = [](const token_t& token) {
+		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_PAR_CLOSE;
+	};
 
+	if (is_opening(*token.it) == false)
+		throw scriptError_t(&*token.it, "this should never happen");
+
+	token.it++;
+	size_t numOpen = 1;
+	size_t numClosing = 0;
+
+	while (token.it != token.end) {
+		if (is_opening(*token.it))
+			numOpen++;
+
+		else if (is_closing(*token.it)) {
+			numClosing++;
+
+			if (numOpen == numClosing) {
+				return;
+			}
+		}
+
+		token.it++;
+	}
+	throw scriptError_t(&*token.it, "expected to find a \")\"");
 
 }
 void expression_t::EvaluateExpressionTokens()

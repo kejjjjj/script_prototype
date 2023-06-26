@@ -34,13 +34,13 @@ public:
 
 	void print(size_t spaces = 0) const;
 	auto get_type() const noexcept { return type; }
-	auto& get_value() const noexcept { return value; }
 
 	expression_token to_expression();
 
 	std::string identifier;
-private:
 	VariableValue value;
+private:
+	
 	dataTypes_e type = dataTypes_e::UNKNOWN;
 
 };
@@ -56,7 +56,7 @@ public:
 		return &table.insert(std::make_pair(v.identifier, v)).first->second;
 	}
 
-	auto find(const std::string& v) const {
+	auto find(const std::string& v) {
 		auto found = table.find(v);
 		return found != table.end() ? std::make_optional(found) : std::nullopt;
 	}
