@@ -1,6 +1,7 @@
 
 #include "expression_token.hpp"
 #include "variable.hpp"
+#include "o_unary.hpp"
 
 void expression_token::set_value_category()
 {
@@ -27,26 +28,35 @@ void expression_token::set_value_category()
 	}
 
 	//passing &token is fine because the rvalue's lifetime is the same as this expression_token :clueless:
-
+	
 	switch (token.tt) {
+	case tokenType::CHAR_LITERAL:
+		rval = std::shared_ptr<rvalue>(new rvalue({
+			.type = dataTypes_e::CHAR,
+			.token = &token }));
+		break;
 	case tokenType::NUMBER_LITERAL:
 		rval = std::shared_ptr<rvalue>(new rvalue({
-			.type=dataTypes_e::INT, 
-			.token=&token}));
-		rval->set_value<int32_t>(std::stoi(token.string));
-		return;
-	case tokenType::FLOAT_LITERAL:
-		rval = std::shared_ptr<rvalue>(new rvalue({ 
-			.type = dataTypes_e::FLOAT, 
+			.type = typeFromIntegerSuffix(token.extrainfo),
 			.token = &token }));
-		rval->set_value<float>(std::stof(token.string));
-		return;
+
+		break;
+	case tokenType::FLOAT_LITERAL:
+		rval = std::shared_ptr<rvalue>(new rvalue({
+			.type = dataTypes_e::FLOAT,
+			.token = &token }));
+		break;
 	default:
 		throw scriptError_t(&token, "this value type is not supported yet :)");
 
 	}
+	rval->set_initial_value(token.string);
 
 }
+
+using FunctionType = std::function<void(expression_token&)>;
+using OptionalFunctionType = std::optional<FunctionType>;
+
 void expression_token::eval_postfix()
 {
 	if (postfix.empty())
@@ -58,8 +68,26 @@ void expression_token::eval_postfix()
 }
 void expression_token::eval_prefix()
 {
+
 	if (prefix.empty())
 		return;
+
+	auto& back = prefix.back();
+
+	if (back->tt != tokenType::PUNCTUATION) {
+		throw scriptError_t(&token, "cannot evaluate unary on non-punctuation type yet! :)");
+	}
+
+	auto& unaryInstance = unaryFunctions::getInstance();
+	const auto punctuation = static_cast<punctuation_e>(LOWORD(back->extrainfo));
+
+	const OptionalFunctionType function = unaryInstance.find_function(punctuation);
+	
+	if (!function.has_value()) {
+		throw scriptError_t(&token, std::format("no function for the \"{}\" unary operator", back->string));
+	}
+
+	function.value()(*this);
 
 	prefix.pop_back();
 	eval_prefix();
@@ -70,6 +98,8 @@ void expression_token::lvalue_to_rvalue()
 	if (!is_lvalue())
 		return;
 
+
+
 	rval = std::shared_ptr<rvalue>(new rvalue({ 
 			.type = lval->get_type(), 
 			.size = lval->value.buf_size, 
@@ -79,18 +109,26 @@ void expression_token::lvalue_to_rvalue()
 
 	rval->replace_value(lval->value);
 
+
 	lval = nullptr;
 
 }
 void expression_token::implicit_cast(expression_token& other)
 {
 	if (get_type() == other.get_type()) {
-		std::cout << "no implicit cast!\n";
+		//std::cout << "no implicit cast!\n";
 		return;
 	}
 
 	if (is_lvalue() == false) {
 		cast_weaker_operand(other);
+		return;
+	}
+
+	if (size_of() < other.size_of()) {
+		throw scriptError_t(&other.get_token(), std::format("cannot implicitly convert from \"{}\" to \"{}\" due to data loss", 
+			get_type_as_text(other.get_type()),
+			get_type_as_text(get_type())));
 		return;
 	}
 
@@ -117,6 +155,8 @@ template<typename T>
 T expression_token::implicit_cast() const {
 	if (typeid(T) == typeid(int)) {
 		switch (get_type()) {
+		case dataTypes_e::CHAR:
+			return static_cast<int>(get_char());
 		case dataTypes_e::INT:
 			return get_int();
 		case dataTypes_e::FLOAT:
@@ -127,6 +167,8 @@ T expression_token::implicit_cast() const {
 	}
 	else if (typeid(T) == typeid(float)) {
 		switch (get_type()) {
+		case dataTypes_e::CHAR:
+			return static_cast<float>(get_char());
 		case dataTypes_e::INT:
 			return static_cast<float>(get_int());
 		case dataTypes_e::FLOAT:
@@ -157,13 +199,31 @@ void expression_token::cast_weaker_operand(expression_token& other)
 	else
 		return;
 
+
 	switch (stronger->get_type()) {
 	case dataTypes_e::INT:
+
+		switch (weaker->get_type()) {
+		case dataTypes_e::CHAR:
+			std::cout << "a char gets promoted to an int\n";
+
+			weaker->rval->set_value<int>(weaker->implicit_cast<int>());
+			weaker->rval->set_type(dataTypes_e::INT);
+			break;
+		}
+
 		break;
 	case dataTypes_e::FLOAT:
-		const auto old_type = weaker->get_type();
+		
 
-		switch (old_type) {
+		switch (weaker->get_type()) {
+		case dataTypes_e::CHAR:
+			std::cout << "a char gets promoted to a float\n";
+
+			weaker->rval->set_value<float>(weaker->implicit_cast<float>());
+			weaker->rval->set_type(dataTypes_e::FLOAT);
+			break;
+
 		case dataTypes_e::INT:
 			std::cout << "an int gets promoted to a float\n";
 

@@ -15,7 +15,12 @@ enum class tokenType : char
 	NAME,
 	PUNCTUATION
 };
-
+enum class literalSuffixType : DWORD
+{
+	NONE,
+	UNSIGNED,
+	CHAR
+};
 struct token_t
 {
 	std::string string;
@@ -73,6 +78,7 @@ private:
 	bool S_ReadType(token_t& token);
 
 	bool S_ReadName(token_t& token);
+	bool S_ReadCharacterLiteral(token_t& token);
 	bool S_ReadPunctuation(token_t& token);
 	bool S_ParseInt(token_t& token);
 

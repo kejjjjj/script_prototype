@@ -28,7 +28,7 @@ public:
 		if (value.buffer.use_count() == NULL) { throw scriptError_t("lvalue: called set_value() without a value.. how?"); }
 		*reinterpret_cast<T*>(value.buffer.get()) = _value;
 	}
-
+	char get_char() const noexcept { return *reinterpret_cast<char*>	(value.buffer.get()); }
 	int get_int() const noexcept { return *reinterpret_cast<int*>	(value.buffer.get()); }
 	float get_float() const noexcept { return *reinterpret_cast<float*>	(value.buffer.get()); }
 

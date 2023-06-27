@@ -25,6 +25,7 @@ struct rvalue
 {
 	rvalue(const rval_declr_data& declaration_data);
 
+	char get_char() const { return get_value<char>(); }
 	int get_int() const { return get_value<int>(); }
 	float get_float() const { return get_value<float>(); }
 
@@ -39,6 +40,7 @@ struct rvalue
 		if (value.buffer.use_count() == NULL) { throw scriptError_t("rvalue: called set_value() without a value.. how?"); }
 		*reinterpret_cast<T*>(value.buffer.get()) = _value;
 	}
+	void set_initial_value(const std::string& s);
 	void replace_value(const VariableValue& v) 
 	{ 
 
@@ -54,10 +56,12 @@ struct rvalue
 
 	auto get_type() const noexcept { return type; }
 	void set_type(const dataTypes_e d) noexcept { type = d; }
-
-private:
-	const token_t* token = 0; //read_only
+	auto get_code_pos() const noexcept(true) { return std::make_pair(token.line, token.column); }
 	VariableValue value;
+	token_t token; //read_only
+private:
+	
+	
 	dataTypes_e type;
 };
 

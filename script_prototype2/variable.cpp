@@ -7,7 +7,10 @@ Variable::Variable(const var_declr_data& init_data)
 	type = init_data.type;
 
 	switch (type) {
-
+	case dataTypes_e::CHAR:
+		value.buffer = std::make_unique<char*>(new char[sizeof(char)]);
+		value.buf_size = sizeof(char);
+		break;
 	case dataTypes_e::INT:
 		value.buffer = std::make_unique<char*>(new char[sizeof(int32_t)]);
 		value.buf_size = sizeof(int32_t);
@@ -37,11 +40,15 @@ void Variable::print(size_t spaces) const
 {
 	auto getval = [this]() -> std::string
 	{
+		std::string c;
 		switch (type) {
+		case dataTypes_e::CHAR:
+			 return c.push_back(get_char()), c;
 		case dataTypes_e::INT:
 			return std::to_string(get_int());
 		case dataTypes_e::FLOAT:
 			return std::to_string(get_float());
+
 		default:
 			return "null";
 		}
@@ -55,7 +62,7 @@ void Variable::print(size_t spaces) const
 
 	}
 
-	std::cout << std::format("{}{}: <{}> ({})\n", prefix, identifier, int(type), getval());
+	std::cout << std::format("{}{}: <{}> ({})\n", prefix, identifier, get_type_as_text(type), getval());
 
 
 

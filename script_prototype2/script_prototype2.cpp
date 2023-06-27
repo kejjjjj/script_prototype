@@ -4,6 +4,7 @@
 #include "statement.hpp"
 #include "declaration.hpp"
 #include "o_standard.hpp"
+#include "o_unary.hpp"
 int main()
 {
     std::cout << "Hello World!\n";
@@ -17,6 +18,7 @@ int main()
     }
 
     evaluationFunctions::getInstance().createFunctions();
+    unaryFunctions::getInstance().createFunctions();
 
     try {
         script.S_Tokenize();

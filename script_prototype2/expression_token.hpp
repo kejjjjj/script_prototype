@@ -15,7 +15,10 @@ struct expression_token
 	void insert_prefix(token_t& _token) { prefix.push_back(&_token); }
 	void insert_postfix(token_t& _token) { postfix.push_back(&_token); }
 	void set_token(token_t& _token) { token = _token; }
-	token_t& get_token() noexcept { return token; }
+	token_t& get_token() noexcept { 
+		if(is_rvalue()) 
+			return rval->token;
+		return token; }
 
 	void set_value_category();
 	void eval_postfix();
@@ -25,6 +28,13 @@ struct expression_token
 	template<typename T> T implicit_cast() const;
 
 	void implicit_cast(expression_token& other);
+	bool is_literal() const 
+	{ 
+		if (is_lvalue() || is_rvalue())
+			return false; 
+
+		return token.tt >= tokenType::NUMBER_LITERAL && token.tt <= tokenType::CHAR_LITERAL;
+	}
 
 	void print() const noexcept;
 
@@ -53,6 +63,14 @@ struct expression_token
 
 		throw scriptError_t(&token, "get_float() without value ok");
 	}
+	char get_char() const {
+		if (is_lvalue())
+			return lval->get_char();
+		else if (is_rvalue())
+			return rval->get_char();
+
+		throw scriptError_t(&token, "get_char() without value ok");
+	}
 	bool is_lvalue() const noexcept { return lval; }
 	bool is_rvalue() const noexcept { return rval.use_count(); }
 
@@ -63,16 +81,27 @@ struct expression_token
 		else if (is_lvalue())
 			lval->set_value(value);
 	}
+	size_t size_of() const {
+		if (is_rvalue())
+			return rval->value.buf_size;
+		else if (is_lvalue())
+			return lval->value.buf_size;
+
+		throw scriptError_t(&token, "unknown expression used in size_of()");
+
+
+	}
 
 	bool op = false;
 	std::shared_ptr<rvalue> rval;
 	Variable* lval = 0;
+
+	std::list<token_t*> prefix;
+	std::list<token_t*> postfix;
 private:
 	
 	void cast_weaker_operand(expression_token& other);
 
-	std::list<token_t*> prefix;
-	std::list<token_t*> postfix;
 	token_t token;
 };
 

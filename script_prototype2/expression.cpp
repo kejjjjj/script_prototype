@@ -4,13 +4,13 @@
 expression_token expression_t::EvaluateEntireExpression()
 {
 	if (!is_ready())
-		throw scriptError_t(&*tokens.it, "EvaluateEntireExpression() called when the expression was invalid");
+		throw scriptError_t(&*tokens.it, "empty expression is not allowed");
 
 	std::cout << "EvaluateEntireExpression(";
 	for (auto it = tokens.it; it != tokens.end; ++it) {
 		std::cout << it->string<<' ';
 	}
-	std::cout << '\n';
+	std::cout << ")\n";
 
 	//do parentheses check here...
 	{
@@ -104,8 +104,6 @@ bool expression_t::ParseExpression()
 			return false;
 
 		token.set_token(*it);
-		std::cout << "ye " << tokens.it->string << " is totally valid brah!\n";
-
 		it++;
 
 		return true;
@@ -125,7 +123,6 @@ bool expression_t::ParseExpression()
 	};
 
 	while (token_peek_unary()) {
-		std::cout << "unary!\n";
 	}
 	if (!token_peek_name()) {
 		
@@ -135,7 +132,6 @@ bool expression_t::ParseExpression()
 		if(ExpressionParseParentheses(token) == false)
 			return false;
 
-		std::cout << "parentheses PAGGERS\n";
 	}
 
 	while (token_peek_postfix()) {
@@ -217,11 +213,18 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	//parentheses_statement.it contains the position of the matching ), so it will be the end
 	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = parentheses_statement.it };
 
+	std::list<token_t*> backup_prefix = token.prefix;
+	std::list<token_t*> backup_postfix = token.postfix;
 
 	token = expression_t(statement).EvaluateEntireExpression();
+
+	token.prefix = backup_prefix;
+	token.postfix = backup_postfix;
+
+
 	tokens.it = parentheses_statement.it;
 	++tokens.it;
-	std::cout << "continuing iteration from " << tokens.it->string << '\n';
+	//std::cout << "continuing iteration from " << tokens.it->string << '\n';
 
 	return true;
 }

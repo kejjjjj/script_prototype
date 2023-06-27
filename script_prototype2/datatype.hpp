@@ -13,11 +13,13 @@ struct customType
 };
 enum class dataTypes_e
 {
-	
+	CHAR,
 	INT,
 	FLOAT,
 	UNKNOWN
 };
+dataTypes_e typeFromIntegerSuffix(const DWORD typeInfo);
+std::string get_type_as_text(const dataTypes_e type);
 class dataTypeTable
 {
 public:
@@ -41,9 +43,13 @@ public:
 		table.erase(v);
 	}
 
+	auto& get_list() const noexcept(true) {
+		return built_in;
+	};
+
 private:
 	const std::list<std::string> built_in = {
-		
+		{"char"},
 		{"int"}, 
 		{"float"} 
 	};

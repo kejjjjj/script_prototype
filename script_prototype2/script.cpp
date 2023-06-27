@@ -77,6 +77,11 @@ bool script_t::S_ReadToken(token_t& token)
 			return 0;
 		}
 	}
+	else if (*script_p == '\'') {
+		if (!S_ReadCharacterLiteral(token)) {
+			return 0;
+		}
+	}
 	else {
 		if (!S_ReadPunctuation(token)) {
 			throw scriptError_t(this, "an unexpected token");
@@ -140,6 +145,11 @@ bool script_t::S_ReadNumber(token_t& token)
 	//a floating point literal with . prefix
 	if (*script_p == '.') { //assumes that there is a number next
 
+		//if the character after the dot is not a number, then stop
+		if (!std::isdigit(*(script_p + 1))) {
+			return 0;
+		}
+
 		token.string.push_back(*script_p++);
 		token.tt = tokenType::FLOAT_LITERAL;
 
@@ -165,14 +175,22 @@ bool script_t::S_ReadNumber(token_t& token)
 			if (!S_ParseInt(token)) 
 				return 0;
 		}
+		else {
+			token.extrainfo = std::underlying_type_t<literalSuffixType>(literalSuffixType::NONE);
 
-		//parse suffix
+			if (*script_p == 'u' || *script_p == 'U') {
+				token.extrainfo = std::underlying_type_t<literalSuffixType>(literalSuffixType::UNSIGNED);
+				token.string.push_back(*script_p++);
+			}
+			else if (*script_p == 'c' || *script_p == 'C') {
+				token.extrainfo = std::underlying_type_t<literalSuffixType>(literalSuffixType::CHAR);
+				token.string.push_back(*script_p++);
+			}
+		}
 
 	}
-	
 
-
-	token.print();
+	//token.print();
 	column += token.string.length();
 	return 1;
 }
@@ -198,9 +216,27 @@ bool script_t::S_ReadName(token_t& token)
 		}
 	}
 
-	token.print();
+	//token.print();
 	column += token.string.length();
 
+	return 1;
+}
+bool script_t::S_ReadCharacterLiteral(token_t& token)
+{
+	token.tt = tokenType::CHAR_LITERAL;
+	token.string.push_back(*script_p++);
+
+	while (*script_p != '\'') {
+
+		if (script_p == scriptend_p)
+			return 0;
+
+		token.string.push_back(*script_p++);
+
+	}
+	token.string.push_back(*script_p++);
+	column += token.string.length();
+	
 	return 1;
 }
 bool script_t::S_ReadPunctuation(token_t& token)
@@ -223,7 +259,7 @@ bool script_t::S_ReadPunctuation(token_t& token)
 
 				script_p += token.string.length();
 
-				token.print();
+				//token.print();
 				column += token.string.length();
 
 				
