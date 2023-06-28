@@ -77,6 +77,6 @@ expression_token evaluationFunctions::assignment(expression_token& left, express
 		std::cout << left.get_float() << '\n';
 		break;
 	}
-
+	left.lval->isInitialized = true;
 	return left;
 }

@@ -141,6 +141,7 @@
     <ClCompile Include="expression.cpp" />
     <ClCompile Include="expression_token.cpp" />
     <ClCompile Include="filetools.cpp" />
+    <ClCompile Include="initializer_list.cpp" />
     <ClCompile Include="o_standard.cpp" />
     <ClCompile Include="o_unary.cpp" />
     <ClCompile Include="punctuation.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="expression.hpp" />
     <ClInclude Include="expression_token.hpp" />
     <ClInclude Include="filetools.hpp" />
+    <ClInclude Include="initializer_list.hpp" />
     <ClInclude Include="o_standard.hpp" />
     <ClInclude Include="o_unary.hpp" />
     <ClInclude Include="pch.hpp" />

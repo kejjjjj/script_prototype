@@ -60,13 +60,13 @@
     <ClCompile Include="o_standard.cpp">
       <Filter>Source Files\operations</Filter>
     </ClCompile>
+    <ClCompile Include="initializer_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="filetools.hpp">
-      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="script.hpp">
       <Filter>Source Files</Filter>
@@ -100,6 +100,12 @@
     </ClInclude>
     <ClInclude Include="o_standard.hpp">
       <Filter>Source Files\operations</Filter>
+    </ClInclude>
+    <ClInclude Include="filetools.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="initializer_list.hpp">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

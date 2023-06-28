@@ -1,12 +1,15 @@
 #include "declaration.hpp"
 #include "variable.hpp"
 #include "expression.hpp"
+#include "initializer_list.hpp"
 void declaration_t::declare_and_initialize()
 {
 	get_declaration_type();
 	get_identifier_name();
 		
 	target = VariableTable::getInstance().declare_variable(var_declr_data({ dtype, identifier, NULL }));
+
+	apply_modifiers(*target);
 
 	if (has_initializer()) {
 		initialize();
@@ -23,13 +26,13 @@ void declaration_t::get_declaration_type()
 
 	dtype = static_cast<dataTypes_e>(tokens.it->extrainfo);
 
+	tokens.it++;
 	//check for type modifiers
 	get_type_modifiers();
 
 }
 void declaration_t::get_identifier_name()
 {
-	++tokens.it;
 
 	if (tokens.it == tokens.end)
 		throw scriptError_t(&*tokens.it, "expected an identifier");
@@ -57,9 +60,15 @@ void declaration_t::initialize()
 {
 	++tokens.it;
 
-	//handle initializer list
-	{
+	const auto is_initializer_list = [](const token_t& token) { return (token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_CURLYBRACKET_OPEN); };
 
+
+	//handle initializer list
+	if(is_initializer_list(*tokens.it))
+	{
+		initializer_list_t ilist(tokens, *target);
+		ilist.evaluate();
+		return;
 	}
 
 	auto result = expression_t(tokens);
@@ -74,7 +83,61 @@ void declaration_t::initialize()
 	f.value()(e, value);
 
 }
-bool declaration_t::get_type_modifiers()
+void declaration_t::get_type_modifiers()
 {
-	return 1;
+	while (tokens.it != tokens.end) {
+		if (parse_subscript()) {
+			continue;
+		}
+
+		if (tokens.it->tt == tokenType::PUNCTUATION)
+			throw scriptError_t(&*tokens.it, std::format("unrecognized type modifier \"{}\"", tokens.it->string));
+
+		break;
+	}
+
+	
+	
+	return;
+}
+
+bool declaration_t::parse_subscript()
+{
+	const auto is_opening = [](const token_t& token) { return (token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_BRACKET_OPEN); };
+	const auto is_closing = [](const token_t& token) { return (token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_BRACKET_CLOSE); };
+
+	if (is_opening(*tokens.it) == false)
+		return 0;
+
+	tokens.it++;
+
+	if (is_closing(*tokens.it) == false)
+		throw scriptError_t(&*tokens.it, "expected a \"]\"");
+
+	std::cout << "adding [] type modifier!\n";
+	typeModifiers.push_back(declaration_modifiers_e::ARRAY);
+	tokens.it++;
+	return true;
+
+}
+
+void declaration_t::apply_modifiers(Variable& _target)
+{
+	if (typeModifiers.empty())
+		return;
+
+	auto modifier = typeModifiers.front();
+	typeModifiers.pop_front();
+
+	switch (modifier) {
+	case declaration_modifiers_e::ARRAY:
+		_target.create_array(); //create an array of size 1
+		return apply_modifiers(_target.arrayElements[0]); //and then do this to every child
+	default:
+		throw scriptError_t("this modifier case should never execute!");
+	}
+
+	
+	
+
 }

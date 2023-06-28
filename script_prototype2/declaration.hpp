@@ -9,6 +9,7 @@
 
 class declaration_t {
 public:
+
 	declaration_t(const token_statement_t& expression) : tokens(expression)
 	{
 
@@ -18,10 +19,16 @@ public:
 
 	void declare_and_initialize();
 private:
-
+	enum class declaration_modifiers_e : char
+	{
+		ARRAY
+	};
 	void get_declaration_type();
 	void get_identifier_name();
-	bool get_type_modifiers();
+	void get_type_modifiers();
+	void apply_modifiers(Variable& _target);
+
+	bool parse_subscript();
 
 	bool has_initializer();
 	void initialize();
@@ -30,6 +37,8 @@ private:
 	std::string identifier;
 	token_statement_t tokens;
 	Variable* target = 0;
+	std::list<declaration_modifiers_e> typeModifiers;
+
 };
 
 

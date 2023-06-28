@@ -142,7 +142,7 @@ void init::TokenizeInitializerLists(std::string expr, std::list<std::string>& to
 {
 	auto substr = FindMatchingCurlyBracket(expr);
 
-
+	
 
 	bool substr_found = substr.result_string != "empty" && !substr.result_string.empty();
 

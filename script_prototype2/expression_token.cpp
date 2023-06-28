@@ -68,7 +68,6 @@ void expression_token::eval_postfix()
 }
 void expression_token::eval_prefix()
 {
-
 	if (prefix.empty())
 		return;
 
@@ -98,7 +97,8 @@ void expression_token::lvalue_to_rvalue()
 	if (!is_lvalue())
 		return;
 
-
+	if (lval->isInitialized == false)
+		throw scriptError_t(&token, std::format("the variable \"{}\" is uninitialized", lval->identifier));
 
 	rval = std::shared_ptr<rvalue>(new rvalue({ 
 			.type = lval->get_type(), 

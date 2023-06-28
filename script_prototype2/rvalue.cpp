@@ -27,7 +27,6 @@ rvalue::rvalue(const rval_declr_data& declaration_data)
 
 void rvalue::set_initial_value(const std::string& s) 
 {
-
 	size_t accumulatedValue = 0;
 
 	try {

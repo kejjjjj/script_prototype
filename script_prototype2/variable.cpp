@@ -6,6 +6,10 @@ Variable::Variable(const var_declr_data& init_data)
 	identifier = init_data.name;
 	type = init_data.type;
 
+	AllocateValues();
+}
+void Variable::AllocateValues()
+{
 	switch (type) {
 	case dataTypes_e::CHAR:
 		value.buffer = std::make_unique<char*>(new char[sizeof(char)]);
@@ -24,8 +28,6 @@ Variable::Variable(const var_declr_data& init_data)
 		throw scriptError_t("huh.. variable constructed without a type..");
 
 	}
-
-
 }
 expression_token Variable::to_expression()
 {
@@ -35,6 +37,32 @@ expression_token Variable::to_expression()
 	token.op = false;
 
 	return token;
+}
+void Variable::create_array()
+{
+	numElements = 1;
+	arrayElements = std::shared_ptr<Variable[]>(new Variable[numElements]);
+
+	for (decltype(numElements) i = 0; i < numElements; i++) {
+		arrayElements[i].set_type(get_type());
+		arrayElements[i].AllocateValues();
+
+	}
+}
+void Variable::resize_array(const size_t newSize)
+{
+	if(!is_array())
+		throw scriptError_t("why are we trying to resize a non-array?");
+
+	std::shared_ptr<Variable[]> newArray(new Variable[newSize]);
+
+	const size_t copySize = std::min(newSize, numElements);
+	std::copy(arrayElements.get(), arrayElements.get() + copySize, newArray.get());
+
+	arrayElements = newArray;
+	std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
+	numElements = newSize;
+
 }
 void Variable::print(size_t spaces) const
 {

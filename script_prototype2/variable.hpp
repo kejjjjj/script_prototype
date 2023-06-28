@@ -18,11 +18,12 @@ struct expression_token;
 class Variable
 {
 public:
-	Variable() = delete;
+	Variable() = default;
+
 	//Variable(const Variable&) = delete;
 	//Variable(Variable&) = delete;
 	Variable(const var_declr_data& init_data);
-	
+	void AllocateValues();
 	template<typename T> void set_value(const T& _value)
 	{
 		if (value.buffer.use_count() == NULL) { throw scriptError_t("lvalue: called set_value() without a value.. how?"); }
@@ -34,13 +35,26 @@ public:
 
 	void print(size_t spaces = 0) const;
 	auto get_type() const noexcept { return type; }
-
+	void set_type(const dataTypes_e _type) noexcept(true) { type = _type; }
+	bool is_array() const noexcept { return arrayElements.get(); }
+	void resize_array(const size_t newSize);
+	void create_array();
 	expression_token to_expression();
 
 	std::string identifier;
 	VariableValue value;
+
+	std::shared_ptr<Variable[]> arrayElements;
+	size_t numElements = 0;
+	
+	
+	bool isInitialized = false;
+	//Array arr;
 private:
 	
+
+	
+
 	dataTypes_e type = dataTypes_e::UNKNOWN;
 
 };
@@ -53,7 +67,7 @@ public:
 		return instance;
 	}
 	auto declare_variable(const Variable& v) -> Variable* {
-		return &table.insert(std::make_pair(v.identifier, v)).first->second;
+		return &table.insert(std::make_pair(v.identifier, (v))).first->second;
 	}
 
 	auto find(const std::string& v) {

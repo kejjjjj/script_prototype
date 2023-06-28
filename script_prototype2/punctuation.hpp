@@ -39,6 +39,12 @@ enum punctuation_e : WORD
 	P_PAR_OPEN,
 	P_PAR_CLOSE,
 
+	P_BRACKET_OPEN,
+	P_BRACKET_CLOSE,
+
+	P_CURLYBRACKET_OPEN,
+	P_CURLYBRACKET_CLOSE,
+
 	P_SEMICOLON
 };
 
@@ -63,6 +69,12 @@ constexpr punctuation_t punctuations[] =
 
 	{"(", P_PAR_OPEN, FAILURE},
 	{")", P_PAR_CLOSE, FAILURE},
+
+	{"[", P_BRACKET_OPEN, FAILURE},
+	{"]", P_BRACKET_CLOSE, FAILURE},
+
+	{"{", P_CURLYBRACKET_OPEN, FAILURE},
+	{"}", P_CURLYBRACKET_CLOSE, FAILURE},
 
 	{";", P_SEMICOLON }
 };
