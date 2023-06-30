@@ -46,7 +46,7 @@ void expression_t::TokenizeExpression()
 
 	while (tokens.it != tokens.end) {
 		if (!ParseExpression()) {
-			throw scriptError_t(&*tokens.it, std::format("unexpected token \"{}\" used in expression\n", tokens.it->string));
+			throw scriptError_t(&*tokens.it, std::format("expected an expression instead of \"{}\"\n", tokens.it->string));
 		}
 
 		if (tokens.it == tokens.end)
@@ -61,7 +61,9 @@ void expression_t::TokenizeExpression()
 		}
 
 	}
-
+	if (sortedTokens.back().op) {
+		throw scriptError_t(&*tokens.it, std::format("unexpected end-of-expression \"{}\"", tokens.it->string));
+	}
 }
 bool expression_t::ParseExpression()
 {
@@ -125,12 +127,17 @@ bool expression_t::ParseExpression()
 	while (token_peek_unary()) {
 	}
 	if (!token_peek_name()) {
-		
-		if (it->tt == tokenType::PUNCTUATION && LOWORD(it->extrainfo) == P_SEMICOLON && it == tokens.end) // semicolon (end of expression)
-			return true;
 
-		if(ExpressionParseParentheses(token) == false)
+		if (ExpressionParseParentheses(token) == false) {
+
+			if (token.prefix.empty() == false)
+				throw scriptError_t(&*it, "expected an expression because parentheses failed lol");
+
 			return false;
+		}
+
+		//else if (token.prefix.empty() == false)
+		//	throw scriptError_t(&*it, "expected an expression because there is a prefix lol");
 
 	}
 
@@ -139,6 +146,7 @@ bool expression_t::ParseExpression()
 		it++;
 	}
 	token.set_value_category();
+
 	sortedTokens.push_back(token);
 
 	return true; //expression has valid syntax
@@ -211,7 +219,7 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	++tokens.it;
 
 	//parentheses_statement.it contains the position of the matching ), so it will be the end
-	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = parentheses_statement.it };
+	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = --parentheses_statement.it };
 
 	std::list<token_t*> backup_prefix = token.prefix;
 	std::list<token_t*> backup_postfix = token.postfix;
@@ -222,9 +230,9 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	token.postfix = backup_postfix;
 
 
-	tokens.it = parentheses_statement.it;
+	tokens.it = ++parentheses_statement.it;
 	++tokens.it;
-	//std::cout << "continuing iteration from " << tokens.it->string << '\n';
+	std::cout << "continuing iteration from " << tokens.it->string << '\n';
 
 	return true;
 }

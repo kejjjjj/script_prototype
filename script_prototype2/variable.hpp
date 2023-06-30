@@ -34,6 +34,8 @@ public:
 	float get_float() const noexcept { return *reinterpret_cast<float*>	(value.buffer.get()); }
 
 	void print(size_t spaces = 0) const;
+	std::string s_getvariabletype() const;
+
 	auto get_type() const noexcept { return type; }
 	void set_type(const dataTypes_e _type) noexcept(true) { type = _type; }
 	bool is_array() const noexcept { return arrayElements.get(); }

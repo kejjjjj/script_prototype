@@ -11,6 +11,7 @@ class expression_t {
 public:
 	expression_t(const token_statement_t& expression) : tokens(expression)
 	{
+		++tokens.end;
 	};
 
 	bool is_ready() const noexcept { return tokens.it != tokens.end; }

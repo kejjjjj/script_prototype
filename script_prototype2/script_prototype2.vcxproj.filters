@@ -63,6 +63,9 @@
     <ClCompile Include="initializer_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="o_postfix.cpp">
+      <Filter>Source Files\operations</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
@@ -106,6 +109,9 @@
     </ClInclude>
     <ClInclude Include="initializer_list.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="o_postfix.hpp">
+      <Filter>Source Files\operations</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

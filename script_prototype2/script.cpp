@@ -52,7 +52,7 @@ token_statement_t script_t::S_CreateStatement()
 	while (end++ != tokens.end()) {
 
 		if (end->tt == tokenType::PUNCTUATION && end->extrainfo == P_SEMICOLON)
-			return { begin, begin, end };
+			return { begin, begin, --end++ };
 	}
 
 	throw scriptError_t(this, "unexpected end of file");

@@ -48,11 +48,19 @@ void Variable::create_array()
 		arrayElements[i].AllocateValues();
 
 	}
+
+
+
 }
 void Variable::resize_array(const size_t newSize)
 {
 	if(!is_array())
 		throw scriptError_t("why are we trying to resize a non-array?");
+
+	if (newSize == numElements)
+		return;
+
+	bool childArray = arrayElements[0].is_array();
 
 	std::shared_ptr<Variable[]> newArray(new Variable[newSize]);
 
@@ -60,22 +68,34 @@ void Variable::resize_array(const size_t newSize)
 	std::copy(arrayElements.get(), arrayElements.get() + copySize, newArray.get());
 
 	arrayElements = newArray;
-	std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
+	//std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
 	numElements = newSize;
 
+	for (decltype(numElements) i = copySize; i < newSize; i++) {
+		arrayElements[i].set_type(get_type());
+		arrayElements[i].AllocateValues();
+
+		if (childArray)
+			arrayElements[i].create_array();
+	}
 }
 void Variable::print(size_t spaces) const
 {
-	auto getval = [this]() -> std::string
+
+	if (!spaces++) {
+		std::cout << std::format("{}:\n", identifier);
+	}
+
+	auto getval = [](const Variable& var) -> std::string
 	{
 		std::string c;
-		switch (type) {
+		switch (var.type) {
 		case dataTypes_e::CHAR:
-			 return c.push_back(get_char()), c;
+			 return c.push_back(var.get_char()), c;
 		case dataTypes_e::INT:
-			return std::to_string(get_int());
+			return std::to_string(var.get_int());
 		case dataTypes_e::FLOAT:
-			return std::to_string(get_float());
+			return std::to_string(var.get_float());
 
 		default:
 			return "null";
@@ -90,8 +110,32 @@ void Variable::print(size_t spaces) const
 
 	}
 
-	std::cout << std::format("{}{}: <{}> ({})\n", prefix, identifier, get_type_as_text(type), getval());
+	for (size_t i = 0; i < numElements; i++) {
+		std::cout << std::format("{}[{}]: <{}> ({})\n", prefix, i, get_type_as_text(type), getval(arrayElements[i]));
+		arrayElements[i].print(spaces + 1);
+	}
+	if (!numElements && !identifier.empty())
+		std::cout << std::format("{}: <{}> ({})\n", prefix, get_type_as_text(type), getval(*this));
+
+//	std::cout << std::format("{}{}: <{}> ({})\n", prefix, identifier, get_type_as_text(type), getval(*this));
 
 
+
+}
+std::string Variable::s_getvariabletype() const
+{
+	std::function<std::string(const Variable*)> types_to_text = [&types_to_text](const Variable* var) -> std::string {
+
+		if (!var)
+			return "";
+
+		if (var->is_array())
+			return "[]" + types_to_text(var->arrayElements.get());
+
+		return "";
+
+	};
+
+	return std::format("{}{}", get_type_as_text(get_type()), types_to_text(this));
 
 }
