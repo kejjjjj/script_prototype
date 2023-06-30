@@ -23,16 +23,22 @@ void unaryFunctions::increment(expression_token& token)
 	auto lvalue = token.lval;
 
 	switch (token.get_type()) {
+	case dataTypes_e::CHAR:
+		std::cout << "incrementing lvalue from " << lvalue->get_char() << " to ";
 
+		lvalue->set_value<int>(lvalue->get_char() + 1);
+		std::cout << lvalue->get_char() << '\n';
+
+		break;
 	case dataTypes_e::INT:
-		std::cout << "incrementing \"" << lvalue->identifier << "\" from " << lvalue->get_int() << " to ";
+		std::cout << "incrementing lvalue from " << lvalue->get_int() << " to ";
 
 		lvalue->set_value<int>(lvalue->get_int() + 1);
 		std::cout << lvalue->get_int() << '\n';
 
 		break;
 	case dataTypes_e::FLOAT:
-		std::cout << "incrementing \"" << lvalue->identifier << "\" from " << lvalue->get_float() << " to ";
+		std::cout << "incrementing lvalue from " << lvalue->get_float() << " to ";
 		lvalue->set_value<float>(lvalue->get_float() + 1.f);
 		std::cout << lvalue->get_float() << '\n';
 		break;
@@ -49,14 +55,20 @@ void unaryFunctions::decrement(expression_token& token)
 	auto lvalue = token.lval;
 
 	switch (token.get_type()) {
+	case dataTypes_e::CHAR:
+		std::cout << "decrementing lvalue from " << lvalue->get_char() << " to ";
 
+		lvalue->set_value<int>(lvalue->get_char() - 1);
+		std::cout << lvalue->get_char() << '\n';
+
+		break;
 	case dataTypes_e::INT:
-		std::cout << "decrementing \"" << lvalue->identifier << "\" from " << lvalue->get_int() << " to ";
+		std::cout << "decrementing lvalue from " << lvalue->get_int() << " to ";
 		lvalue->set_value<int>(lvalue->get_int() - 1);
 		std::cout << lvalue->get_int() << '\n';
 		break;
 	case dataTypes_e::FLOAT:
-		std::cout << "decrementing \"" << lvalue->identifier << "\" from " << lvalue->get_float() << " to ";
+		std::cout << "decrementing from " << lvalue->get_float() << " to ";
 		lvalue->set_value<float>(lvalue->get_float() - 1.f);
 		std::cout << lvalue->get_float() << '\n';
 

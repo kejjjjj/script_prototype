@@ -1,5 +1,5 @@
 #include "expression.hpp"
-
+#include "o_postfix.hpp"
 //each expression sequence will be converted to just one remaining expression
 expression_token expression_t::EvaluateEntireExpression()
 {
@@ -119,13 +119,31 @@ bool expression_t::ParseExpression()
 			return false;
 		}
 
+		auto copy = tokens;
+
+		if (ExpressionFindMatchingBracket(tokens)) {
+			copy.begin++; //skip [
+			copy.it++; // skip [
+			copy.end = --tokens.it; //ignore ]
+
+
+			token.insert_postfix(copy, P_BRACKET_OPEN);
+
+			it++; //go to ]
+			it++; //skip ]
+
+			return true;
+		}
+		
+		
+		it++;
 
 
 		return true;
 	};
 
-	while (token_peek_unary()) {
-	}
+	while (token_peek_unary()) {}
+
 	if (!token_peek_name()) {
 
 		if (ExpressionParseParentheses(token) == false) {
@@ -141,10 +159,8 @@ bool expression_t::ParseExpression()
 
 	}
 
-	while (token_peek_postfix()) {
-		token.insert_postfix(*it);
-		it++;
-	}
+	while (token_peek_postfix()) {}
+
 	token.set_value_category();
 
 	sortedTokens.push_back(token);
@@ -222,7 +238,7 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = --parentheses_statement.it };
 
 	std::list<token_t*> backup_prefix = token.prefix;
-	std::list<token_t*> backup_postfix = token.postfix;
+	decltype(token.postfix) backup_postfix = token.postfix;
 
 	token = expression_t(statement).EvaluateEntireExpression();
 
@@ -232,7 +248,7 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 
 	tokens.it = ++parentheses_statement.it;
 	++tokens.it;
-	std::cout << "continuing iteration from " << tokens.it->string << '\n';
+	//std::cout << "continuing iteration from " << tokens.it->string << '\n';
 
 	return true;
 }

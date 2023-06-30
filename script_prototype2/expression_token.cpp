@@ -2,7 +2,7 @@
 #include "expression_token.hpp"
 #include "variable.hpp"
 #include "o_unary.hpp"
-
+#include "o_postfix.hpp"
 void expression_token::set_value_category()
 {
 	if (op)
@@ -53,17 +53,29 @@ void expression_token::set_value_category()
 	rval->set_initial_value(token.string);
 
 }
+using PostfixFunctionType = std::function<void(expression_token&, std::optional<token_statement_t*>)>;
+using OptionalPostfixFunctionType = std::optional<PostfixFunctionType>;
 
-using FunctionType = std::function<void(expression_token&)>;
-using OptionalFunctionType = std::optional<FunctionType>;
+using UnaryFunctionType = std::function<void(expression_token&)>;
+using OptionalUnaryFunctionType = std::optional<UnaryFunctionType>;
 
 void expression_token::eval_postfix()
 {
 	if (postfix.empty())
 		return;
 
-	postfix.pop_front();
+	auto& front = postfix.front();
+	
+	auto& postfixInstance = postfixFunctions::getInstance();	
+	const OptionalPostfixFunctionType function = postfixInstance.find_function(front.second);
 
+	if (!function.has_value()) {
+		throw scriptError_t(&token, std::format("no function for the {} postfix operator???????", static_cast<int>(front.second)));
+	}
+
+	function.value()(*this, &front.first);
+
+	postfix.pop_front();
 	eval_postfix();
 }
 void expression_token::eval_prefix()
@@ -80,7 +92,7 @@ void expression_token::eval_prefix()
 	auto& unaryInstance = unaryFunctions::getInstance();
 	const auto punctuation = static_cast<punctuation_e>(LOWORD(back->extrainfo));
 
-	const OptionalFunctionType function = unaryInstance.find_function(punctuation);
+	const OptionalUnaryFunctionType function = unaryInstance.find_function(punctuation);
 	
 	if (!function.has_value()) {
 		throw scriptError_t(&token, std::format("no function for the \"{}\" unary operator", back->string));
@@ -236,16 +248,4 @@ void expression_token::cast_weaker_operand(expression_token& other)
 		break;
 
 	}
-}
-void expression_token::print() const noexcept
-{
-	std::cout << "\n---------TOKEN---------\n";
-	for (const auto& i : prefix)
-		std::cout << i->string << ' ';
-	std::cout << '\n';
-	std::cout << token.string << '\n';
-	for (const auto& i : postfix)
-		std::cout << i->string << ' ';
-
-	std::cout << '\n';
 }

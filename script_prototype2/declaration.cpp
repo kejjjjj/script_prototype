@@ -41,6 +41,10 @@ void declaration_t::get_identifier_name()
 		throw scriptError_t(&*tokens.it, "expected an identifier");
 
 	identifier = tokens.it->string;
+
+	if (VariableTable::getInstance().find(identifier)) {
+		throw scriptError_t(&*tokens.it, std::format("the variable \"{}\" is already defined", identifier));
+	}
 }
 bool declaration_t::has_initializer()
 {

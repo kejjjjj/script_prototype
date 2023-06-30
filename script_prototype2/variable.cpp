@@ -46,6 +46,7 @@ void Variable::create_array()
 	for (decltype(numElements) i = 0; i < numElements; i++) {
 		arrayElements[i].set_type(get_type());
 		arrayElements[i].AllocateValues();
+		arrayElements[i].isInitialized = true;
 
 	}
 
@@ -74,10 +75,19 @@ void Variable::resize_array(const size_t newSize)
 	for (decltype(numElements) i = copySize; i < newSize; i++) {
 		arrayElements[i].set_type(get_type());
 		arrayElements[i].AllocateValues();
+		arrayElements[i].isInitialized = true;
 
 		if (childArray)
 			arrayElements[i].create_array();
 	}
+}
+void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length)
+{
+	if (length != numElements)
+		std::cout << "resizing the array from " << numElements << " to " << length << '\n';
+
+	arrayElements = a_arr;
+	numElements = length;
 }
 void Variable::print(size_t spaces) const
 {

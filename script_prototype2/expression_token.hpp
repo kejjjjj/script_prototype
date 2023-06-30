@@ -13,7 +13,7 @@ struct expression_token
 
 	}
 	void insert_prefix(token_t& _token) { prefix.push_back(&_token); }
-	void insert_postfix(token_t& _token) { postfix.push_back(&_token); }
+	void insert_postfix(const token_statement_t& _token, const punctuation_e p) { postfix.push_back( { _token, p } ); }
 	void set_token(token_t& _token) { token = _token; }
 	token_t& get_token() noexcept { 
 		if(is_rvalue()) 
@@ -91,13 +91,14 @@ struct expression_token
 
 
 	}
+	bool is_integral() const noexcept { return get_type() > dataTypes_e::CHAR && get_type() < dataTypes_e::FLOAT; }
 
 	bool op = false;
 	std::shared_ptr<rvalue> rval;
 	Variable* lval = 0;
 
 	std::list<token_t*> prefix;
-	std::list<token_t*> postfix;
+	std::list<std::pair<token_statement_t, punctuation_e>> postfix;
 private:
 	
 	void cast_weaker_operand(expression_token& other);

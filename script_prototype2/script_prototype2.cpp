@@ -5,6 +5,7 @@
 #include "declaration.hpp"
 #include "o_standard.hpp"
 #include "o_unary.hpp"
+#include "o_postfix.hpp"
 int main()
 {
     std::cout << "Hello World!\n";
@@ -19,28 +20,33 @@ int main()
 
     evaluationFunctions::getInstance().createFunctions();
     unaryFunctions::getInstance().createFunctions();
+    postfixFunctions::getInstance().createFunctions();
 
     try {
         script.S_Tokenize();
-        auto statement = script.S_CreateStatement();
-        auto statement_type = statement_determine(statement);
+        while(!script.is_eof()){
 
-        if (statement_type == statementType_e::EXPRESSION) {
-            expression_t e(statement);
+          
+            auto statement = script.S_CreateStatement();
+            auto statement_type = statement_determine(statement);
 
-            if (e.is_ready()) {
-                e.EvaluateEntireExpression();
-            }
+            if (statement_type == statementType_e::EXPRESSION) {
+                expression_t e(statement);
+
+                if (e.is_ready()) {
+                    e.EvaluateEntireExpression();
+                }
                 
-        }
-
-        else if(statement_type == statementType_e::DECLARATION){
-            declaration_t e(statement);
-
-            if (e.is_ready()) {
-                e.declare_and_initialize();
             }
-                
+
+            else if (statement_type == statementType_e::DECLARATION) {
+                declaration_t e(statement);
+
+                if (e.is_ready()) {
+                    e.declare_and_initialize();
+                }
+
+            }
         }
     }
     catch (scriptError_t& err) {

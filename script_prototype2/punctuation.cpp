@@ -32,6 +32,9 @@ bool is_postfix_operator(const punctuation_e p)
 	if (p >= P_INCR && p <= P_DECR)
 		return true;
 
+	if (p == P_BRACKET_OPEN)
+		return true;
+
 	return false;
 }
 

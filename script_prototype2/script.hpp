@@ -69,6 +69,8 @@ struct script_t
 	void S_Tokenize();
 	token_statement_t S_CreateStatement();
 
+	bool is_eof() const noexcept { return token_it == tokens.end(); }
+
 private:
 	bool eof_allowed = true;
 
