@@ -15,10 +15,10 @@ public:
 
 private:
 	void evaluate_list(Variable& target);
+
 	std::optional<token_statement_t> find_curlybracket_substring(const token_statement_t& token);
-	void tokenize_lists(std::list<token_statement_t>& statements);
-	void initialize_array(Variable& targetArray);
-	void tokenize_values(std::list<token_statement_t>& statements);
+	std::optional<token_statement_t> read_expression(token_statement_t& _statement);
+
 	token_statement_t statement;
 	Variable& targetVar;
 };

@@ -42,6 +42,7 @@ public:
 	void resize_array(const size_t newSize);
 	void create_array();
 	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length);
+	size_t array_depth() const;
 
 	expression_token to_expression();
 

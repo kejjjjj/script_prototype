@@ -91,16 +91,30 @@ struct expression_token
 
 
 	}
+	size_t array_depth() const {
+		if (is_rvalue())
+			return 0ull;
+		else if (is_lvalue())
+			return lval->array_depth();
+
+		throw scriptError_t(&token, "unknown expression used in array_depth()");
+	}
+
+	void test_operand_compatibility(const expression_token& other) const;
+	bool compatible_operand(const expression_token& other) const;
 	bool is_integral() const noexcept { return get_type() > dataTypes_e::CHAR && get_type() < dataTypes_e::FLOAT; }
 
-	bool op = false;
+	std::underlying_type_t<punctuation_e> op = 0;
+	std::underlying_type_t<OperatorPriority> op_priority = 0;
+
 	std::shared_ptr<rvalue> rval;
 	Variable* lval = 0;
 
 	std::list<token_t*> prefix;
 	std::list<std::pair<token_statement_t, punctuation_e>> postfix;
 private:
-	
+	bool compatible_array_operand(const expression_token& other) const;
+
 	void cast_weaker_operand(expression_token& other);
 
 	token_t token;

@@ -22,6 +22,9 @@ void unaryFunctions::increment(expression_token& token)
 
 	auto lvalue = token.lval;
 
+	if (lvalue->is_array())
+		throw scriptError_t(&token.get_token(), "cannot increment an array");
+
 	switch (token.get_type()) {
 	case dataTypes_e::CHAR:
 		std::cout << "incrementing lvalue from " << lvalue->get_char() << " to ";
@@ -53,6 +56,9 @@ void unaryFunctions::decrement(expression_token& token)
 	}
 
 	auto lvalue = token.lval;
+
+	if (lvalue->is_array())
+		throw scriptError_t(&token.get_token(), "cannot decrement an array");
 
 	switch (token.get_type()) {
 	case dataTypes_e::CHAR:

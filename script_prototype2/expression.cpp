@@ -185,8 +185,8 @@ bool expression_t::ParseOperator()
 		return false;
 	}
 	token.set_token(*it);
-	token.op = true;
-
+	token.op = LOWORD(it->extrainfo);
+	token.op_priority = HIWORD(it->extrainfo);
 	++it;
 
 	//if (it == tokens.end) //last token should NOT be an operator
@@ -300,12 +300,14 @@ void expression_t::EvaluateExpressionTokens()
 			throw scriptError_t(&itr1->get_token(), "expected an expression");
 
 		if (itr2 != sortedTokens.end()) {
-			
 			do {
-				op = static_cast<OperatorPriority>(HIWORD(itr1->get_token().extrainfo));
-				next_op = static_cast<OperatorPriority>(HIWORD(itr2->get_token().extrainfo));
+	/*			if (!itr2->op || !itr1->op) {
+					throw scriptError_t(&itr2->get_token(), "how the FUCK are you not an operator");
+				}*/
+				op = static_cast<OperatorPriority>(itr1->op_priority);
+				next_op = static_cast<OperatorPriority>(itr2->op_priority);
 
-				if (next_op <= op || itr2 == op_end)
+				if (itr2 == sortedTokens.end() || itr2 == op_end || next_op <= op)
 					break;
 
 				std::advance(itr1, 2);

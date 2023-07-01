@@ -1,5 +1,6 @@
 #include "variable.hpp"
 #include "expression_token.hpp"
+#include "o_standard.hpp"
 
 Variable::Variable(const var_declr_data& init_data)
 {
@@ -83,16 +84,41 @@ void Variable::resize_array(const size_t newSize)
 }
 void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length)
 {
-	if (length != numElements)
-		std::cout << "resizing the array from " << numElements << " to " << length << '\n';
+	std::cout << "replacing array\n";
+	if (length != numElements);
+		resize_array(length);
 
-	arrayElements = a_arr;
+	const auto f = evaluationFunctions::getInstance().find_function(P_ASSIGN);
+	expression_token l, r;
+
+
+	if (!f.has_value())
+		throw scriptError_t("how?");
+
+	for (size_t i = 0; i < length; i++) {
+		l = arrayElements[i].to_expression();
+		r = a_arr[i].to_expression();
+		f.value()(l, r);
+	}
+
 	numElements = length;
+}
+size_t Variable::array_depth() const
+{
+	Variable* a = arrayElements.get();
+	size_t size{ 0 };
+
+	while (a) {
+		++size;
+		a = a->arrayElements.get();
+	}
+
+	return size;
 }
 void Variable::print(size_t spaces) const
 {
 
-	if (!spaces++) {
+	if (!spaces++ && is_array()) {
 		std::cout << std::format("{}:\n", identifier);
 	}
 
@@ -121,11 +147,17 @@ void Variable::print(size_t spaces) const
 	}
 
 	for (size_t i = 0; i < numElements; i++) {
-		std::cout << std::format("{}[{}]: <{}> ({})\n", prefix, i, get_type_as_text(type), getval(arrayElements[i]));
+		if (arrayElements[i].is_array() == false) {
+			std::cout << std::format("{}[{}]: <{}> ({})\n", prefix, i, get_type_as_text(type), getval(arrayElements[i]));
+		}
+		else {
+			std::cout << std::format("{}[{}]: <{}>\n", prefix, i, get_type_as_text(type));
+
+		}
 		arrayElements[i].print(spaces + 1);
 	}
-	if (!numElements && !identifier.empty())
-		std::cout << std::format("{}: <{}> ({})\n", prefix, get_type_as_text(type), getval(*this));
+	if (is_array() == false && !identifier.empty())
+		std::cout << std::format("{}: <{}> ({})\n", identifier, get_type_as_text(type), getval(*this));
 
 //	std::cout << std::format("{}{}: <{}> ({})\n", prefix, identifier, get_type_as_text(type), getval(*this));
 

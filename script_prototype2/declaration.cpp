@@ -11,6 +11,9 @@ void declaration_t::declare_and_initialize()
 
 	apply_modifiers(*target);
 
+	std::cout << "declaring a variable of type \"" << target->s_getvariabletype() << "\" with the name of \"" << target->identifier << "\"\n";
+
+
 	if (has_initializer()) {
 		initialize();
 
@@ -127,8 +130,9 @@ bool declaration_t::parse_subscript()
 
 void declaration_t::apply_modifiers(Variable& _target)
 {
-	if (typeModifiers.empty())
+	if (typeModifiers.empty()) {
 		return;
+	}
 
 	auto modifier = typeModifiers.front();
 	typeModifiers.pop_front();

@@ -16,6 +16,7 @@ void evaluationFunctions::createFunctions()
 expression_token evaluationFunctions::arithmetic_addition(expression_token& left, expression_token& right)
 {
 	
+	left.test_operand_compatibility(right);
 
 	left.lvalue_to_rvalue();
 	right.lvalue_to_rvalue();
@@ -56,6 +57,9 @@ expression_token evaluationFunctions::assignment(expression_token& left, express
 {
 	if (!left.is_lvalue())
 		throw scriptError_t(&left.get_token(), "left operand must be modifiable");
+
+	left.test_operand_compatibility(right);
+
 
 	if (left.lval->is_array()) {
 

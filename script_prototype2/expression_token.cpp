@@ -249,3 +249,46 @@ void expression_token::cast_weaker_operand(expression_token& other)
 
 	}
 }
+void expression_token::test_operand_compatibility(const expression_token& other) const
+{
+	if (compatible_operand(other))
+		return;
+
+	const auto left_type = is_lvalue() ? lval->s_getvariabletype() : get_type_as_text(get_type());
+	const auto right_type = other.is_lvalue() ? other.lval->s_getvariabletype() : get_type_as_text(other.get_type());
+
+	throw scriptError_t(&token, std::format("an operand of type \"{}\" is incompatible with \"{}\"", left_type, right_type).c_str());
+	
+}
+bool expression_token::compatible_operand(const expression_token& other) const
+{
+	
+	if (is_lvalue()) {
+
+		if (compatible_array_operand(other))
+			return true;
+
+		return false;
+
+	}
+
+	return true;
+
+}
+bool expression_token::compatible_array_operand(const expression_token& other) const
+{
+	const size_t ldepth = array_depth();
+	const size_t rdepth = other.array_depth();
+
+	if (!ldepth && !rdepth)
+		return true;
+
+	if (ldepth != rdepth)
+		return false;
+
+	if (get_type() != other.get_type())
+		return false;
+
+
+	return true;
+}

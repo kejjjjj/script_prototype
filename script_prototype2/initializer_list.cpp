@@ -8,7 +8,7 @@ initializer_list_t::initializer_list_t(const token_statement_t& _statement, Vari
 
 	if (auto substr = find_curlybracket_substring(statement)) {
 		statement.it++; //ignore first {
-		statement.end = --(substr.value().it); //ignore last }
+		statement.end = --(substr.value().end); //ignore last }
 	}
 	else
 		throw scriptError_t(&*statement.it, "HOW is this real");
@@ -21,143 +21,81 @@ void initializer_list_t::evaluate()
 }
 void initializer_list_t::evaluate_list(Variable& target)
 {
+	if (!target.is_array()) {
+		throw scriptError_t(&*statement.it, "too many braces for an initializer list");
+	}
 
-	const auto get_initializer_list_type = [&target](const std::list<token_statement_t>& lists)
-	{
-		std::string r;
-		std::for_each(lists.begin(), lists.end(), [&r](const token_statement_t&) {r += "[]"; });
-		return r;
-
+	const auto is_comma = [](const token_t& token) {
+		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_COMMA;
 	};
 
-	std::list<token_statement_t> initializer_lists;
-	tokenize_lists(initializer_lists);
-
-	if (!initializer_lists.empty()) {
-
-		if (!target.is_array()) {
-			const auto type = get_type_as_text(target.get_type());
-			throw scriptError_t(&*statement.it, std::format("\"{}\" is incompatible with \"{}\"", type + get_initializer_list_type(initializer_lists), type));
-		}
-
-		target.resize_array(initializer_lists.size());
-	}
-	size_t arrayIndex = 0;
-	for (auto& i : initializer_lists) {
-
-		initializer_list_t ilist(i, target.arrayElements[arrayIndex]);
-		ilist.evaluate();
-		arrayIndex++;
-	}
-
-
-	if (!initializer_lists.empty())
-		return;
-
-	
-	initialize_array(target);
-
-}
-void initializer_list_t::initialize_array(Variable& targetArray)
-{
-
-	if (!targetArray.is_array()) {
-		const auto type = targetArray.s_getvariabletype();
-		throw scriptError_t(&*statement.it, std::format("\"{}\" is incompatible with \"{}\"", type + "[]", type));
-	}
-
-	std::list<token_statement_t> expressions;
-	tokenize_values(expressions);
-
-	if (expressions.empty())
-		throw scriptError_t("include at least one initializer");
-
-	targetArray.resize_array(expressions.size());
-	expression_token left_operand, right_operand;
+	size_t elementIndex = 0ull;
 
 	const auto assign_function = evaluationFunctions::getInstance().find_function(P_ASSIGN);
 
 	if (!assign_function.has_value())
-		throw scriptError_t("initialize_array(): how?");
+		throw scriptError_t("evaluate_list2(): how?");
 
-	size_t arrayIndex = 0;
-	for (auto& i : expressions) {
+	while (true) {
 
-		right_operand = expression_t(i).EvaluateEntireExpression();
-		left_operand = targetArray.arrayElements[arrayIndex].to_expression();
+		if (elementIndex+1ull > target.numElements)
+			target.resize_array(elementIndex+1ull);
 
-		assign_function.value()(left_operand, right_operand);
+		if (const auto bracket_statement = find_curlybracket_substring(statement)) {
 
-		arrayIndex++;
+			initializer_list_t ilist(bracket_statement.value(), target.arrayElements[elementIndex]);
+			(statement.it = bracket_statement.value().end); //iterate to the next character
 
+			if (statement.it != statement.end)
+				statement.it++;
+
+			ilist.evaluate();
+		}
+		else if(const auto expression_statement = read_expression(statement)) {
+			
+			auto expression = expression_t(expression_statement.value()).EvaluateEntireExpression();
+			auto l = target.arrayElements[elementIndex].to_expression();
+			l.set_token(expression.get_token());
+			assign_function.value()(l, expression);
+		}
+		else throw scriptError_t(&*statement.it, "fuck you");
+
+		if (statement.it == statement.end)
+			break;
+
+		if (!is_comma(*statement.it))
+			throw scriptError_t(&*statement.it, "expected a \",\"");
+
+		statement.it++; //skip the ,
+
+		elementIndex++;
 	}
 }
-void initializer_list_t::tokenize_lists(std::list<token_statement_t>& statements)
-{
-	const auto is_comma = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_COMMA;
-	};
-	const auto is_opening = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_CURLYBRACKET_OPEN;
-	};
-	token_statement_t statement_copy = statement;
-	token_statement_t new_statement;
-	while (auto result = find_curlybracket_substring(statement_copy)) {
 
-		new_statement = result.value();
-
-		statements.push_back(token_statement_t{ 
-			.it = statement_copy.it, 
-			.begin = statement_copy.begin, 
-			.end = new_statement.it });
-
-		if (new_statement.it == statement.end)
-			return;
-
-		new_statement.it++;
-
-		if (!is_comma(*new_statement.it)) {
-			throw scriptError_t(&*new_statement.it, "expected a \",\"");
-
-		}
-
-		new_statement.it++;
-
-		if (!is_opening(*new_statement.it)) {
-			throw scriptError_t(&*new_statement.it, "expected a \"{\"");
-		}
-
-		statement_copy = new_statement;
-		
-	}
-
-	//throw scriptError_t(&*statement_copy.it, "ummm?");
-}
-void initializer_list_t::tokenize_values(std::list<token_statement_t>& statements)
+std::optional<token_statement_t> initializer_list_t::read_expression(token_statement_t& _statement)
 {
 	const auto is_comma = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_COMMA;
 	};
 
-	auto& it = statement.it;
+	auto& it = _statement.it;
 	std::list<token_t>::iterator beginning = it;
+	
+	token_statement_t result;
 
-	while (it != statement.end) {
+	while (it != _statement.end) {
 
 		if (is_comma(*it)) {
 			--it; //get the ending
-			statements.push_back({ .it = beginning, .begin = beginning, .end = it });
-			beginning = (++(++it))--; //skip the ,
+			result = { .it = beginning, .begin = beginning, .end = it };
+			++it; //go back to the comma
+			return result;
 		}
 
 		++it;
 	}
 
-	if (is_comma(*it)) {
-		statements.push_back({ .it = it, .begin = it, .end = it }); //push_back an expression that will instantly fail :)
-	}else
-		statements.push_back({ .it = beginning, .begin = beginning, .end = it });
-
+	return result = {.it = beginning, .begin = beginning, .end = it };
 }
 //accepts } as statement.end iterator
 std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring(const token_statement_t& statement_)
@@ -186,7 +124,7 @@ std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring
 			numClosing++;
 
 			if (numOpen == numClosing) {
-				return token;
+				return token_statement_t{ .it = statement_.it, .begin = statement_.it, .end = token.it };
 			}
 		}
 
@@ -197,7 +135,7 @@ std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring
 		numClosing++;
 
 		if (numOpen == numClosing) {
-			return token;
+			return token_statement_t{ .it = statement_.it, .begin = statement_.it, .end = token.it };
 		}
 	}
 
