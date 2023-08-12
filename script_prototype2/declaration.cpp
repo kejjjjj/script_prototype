@@ -73,11 +73,16 @@ void declaration_t::initialize()
 	//handle initializer list
 	if(is_initializer_list(*tokens.it))
 	{
+		if (auto substr = initializer_list_t::find_curlybracket_substring(tokens)) {
+			tokens.it++; //ignore first {
+			tokens.end = --(substr.value().end); //ignore last }
+		}
+
 		initializer_list_t ilist(tokens, *target);
 		ilist.evaluate();
 		return;
 	}
-
+	tokens.end--; //remove the ;
 	auto result = expression_t(tokens);
 	auto value = result.EvaluateEntireExpression();
 	const auto f = evaluationFunctions::getInstance().find_function(P_ASSIGN);

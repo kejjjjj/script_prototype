@@ -19,6 +19,9 @@
     <Filter Include="Source Files\operations">
       <UniqueIdentifier>{339eeeac-5151-4732-8b4c-da3d541640ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\statements">
+      <UniqueIdentifier>{295f01b4-3de3-4766-9a8e-0e5246420df3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="script_prototype2.cpp">
@@ -66,6 +69,12 @@
     <ClCompile Include="o_postfix.cpp">
       <Filter>Source Files\operations</Filter>
     </ClCompile>
+    <ClCompile Include="if_statement.cpp">
+      <Filter>Source Files\statements</Filter>
+    </ClCompile>
+    <ClCompile Include="scope.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
@@ -112,6 +121,12 @@
     </ClInclude>
     <ClInclude Include="o_postfix.hpp">
       <Filter>Source Files\operations</Filter>
+    </ClInclude>
+    <ClInclude Include="if_statement.hpp">
+      <Filter>Source Files\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="scope.hpp">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

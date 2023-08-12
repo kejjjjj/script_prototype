@@ -70,7 +70,7 @@ void Variable::resize_array(const size_t newSize)
 	std::copy(arrayElements.get(), arrayElements.get() + copySize, newArray.get());
 
 	arrayElements = newArray;
-	//std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
+	std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
 	numElements = newSize;
 
 	for (decltype(numElements) i = copySize; i < newSize; i++) {

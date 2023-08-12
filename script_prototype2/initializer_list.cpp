@@ -6,12 +6,12 @@ initializer_list_t::initializer_list_t(const token_statement_t& _statement, Vari
 	if (statement.begin == statement.end)
 		throw scriptError_t(&*statement.begin, "how did this initializer list exception occur?");
 
-	if (auto substr = find_curlybracket_substring(statement)) {
-		statement.it++; //ignore first {
-		statement.end = --(substr.value().end); //ignore last }
-	}
-	else
-		throw scriptError_t(&*statement.it, "HOW is this real");
+	//if (auto substr = find_curlybracket_substring(statement)) {
+	//	statement.it++; //ignore first {
+	//	statement.end = --(substr.value().second.end); //ignore last }
+	//}
+	//else
+	//	throw scriptError_t(&*statement.it, "HOW is this real");
 
 
 }
@@ -24,6 +24,12 @@ void initializer_list_t::evaluate_list(Variable& target)
 	if (!target.is_array()) {
 		throw scriptError_t(&*statement.it, "too many braces for an initializer list");
 	}
+
+	std::cout << "depth: " << target.array_depth() << " | for statement: ";
+	for (auto it = statement.it; it != statement.end; it++) {
+		std::cout << it->string;
+	}
+	std::cout << statement.end->string << '\n';
 
 	const auto is_comma = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_COMMA;
@@ -41,15 +47,21 @@ void initializer_list_t::evaluate_list(Variable& target)
 		if (elementIndex+1ull > target.numElements)
 			target.resize_array(elementIndex+1ull);
 
-		if (const auto bracket_statement = find_curlybracket_substring(statement)) {
+		if (auto bracket_statement = find_curlybracket_substring(statement)) {
 
-			initializer_list_t ilist(bracket_statement.value(), target.arrayElements[elementIndex]);
-			(statement.it = bracket_statement.value().end); //iterate to the next character
+			auto& _statement = bracket_statement.value();
+
+			_statement.it++;
+			_statement.end--;
+
+			initializer_list_t ilist(_statement, target.arrayElements[elementIndex]);
+			(statement.it = ++_statement.end); //iterate to the next character
 
 			if (statement.it != statement.end)
 				statement.it++;
 
 			ilist.evaluate();
+			
 		}
 		else if(const auto expression_statement = read_expression(statement)) {
 			
@@ -70,6 +82,8 @@ void initializer_list_t::evaluate_list(Variable& target)
 
 		elementIndex++;
 	}
+
+	std::cout << "elements in list: " << elementIndex << '\n';
 }
 
 std::optional<token_statement_t> initializer_list_t::read_expression(token_statement_t& _statement)
@@ -124,9 +138,10 @@ std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring
 			numClosing++;
 
 			if (numOpen == numClosing) {
-				return token_statement_t{ .it = statement_.it, .begin = statement_.it, .end = token.it };
+				return token_statement_t{.it = statement_.it, .begin = statement_.it, .end = token.it };
 			}
 		}
+
 
 		token.it++;
 	}

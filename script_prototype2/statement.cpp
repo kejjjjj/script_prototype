@@ -18,6 +18,14 @@ statementType_e statement_determine(const token_statement_t& tokens)
 	if (tokens.it->tt == tokenType::BUILT_IN_TYPE)
 		return statement_resolve_datatype_ambiguity(tokens);
 
+	else if (tokens.it->tt == tokenType::STATEMENT)
+		return statementType_e::STATEMENT_KEYWORD;
+
+	else if (tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_CURLYBRACKET_OPEN)
+		return statementType_e::SCOPE;
+
+
+
 	return statementType_e::EXPRESSION;
 
 }

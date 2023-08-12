@@ -12,11 +12,6 @@ expression_token expression_t::EvaluateEntireExpression()
 	}
 	std::cout << ")\n";
 
-	//do parentheses check here...
-	{
-
-	}
-
 	EvaluateExpression();
 
 	return result;
@@ -249,7 +244,6 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	tokens.it = ++parentheses_statement.it;
 	++tokens.it;
 	//std::cout << "continuing iteration from " << tokens.it->string << '\n';
-
 	return true;
 }
 void expression_t::ExpressionFindMatchingParenthesis(token_statement_t& token)
@@ -262,7 +256,7 @@ void expression_t::ExpressionFindMatchingParenthesis(token_statement_t& token)
 	};
 
 	if (is_opening(*token.it) == false)
-		throw scriptError_t(&*token.it, "this should never happen");
+		throw scriptError_t(&*token.it, "expected to find a \"(\"\n");
 
 	token.it++;
 	size_t numOpen = 1;

@@ -1,6 +1,8 @@
 #include "script.hpp"
 #include "filetools.hpp"
 #include "datatype.hpp"
+#include "statement.hpp"
+
 script_t::script_t(const std::string& filename)
 {
 
@@ -208,12 +210,18 @@ bool script_t::S_ReadName(token_t& token)
 		token.string.push_back(*script_p++);
 	}
 
+	//built-in datatype keyword
 	if (const auto it = dataTypeTable::getInstance().find_builtin(token.string)) {
 
 		if (it.has_value()) {
 			token.tt = tokenType::BUILT_IN_TYPE;
 			token.extrainfo = static_cast<DWORD>(it->second);
 		}
+	}
+	//built-in statement keyword
+	else if (const auto statement_it = statementKeywordTable::getInstance().find_builtin(token.string)) {
+		token.tt = tokenType::STATEMENT;
+		token.extrainfo = static_cast<std::underlying_type_t<statementKeywords_e>>((statement_it->first->second));
 	}
 
 	//token.print();

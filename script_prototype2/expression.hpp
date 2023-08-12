@@ -17,6 +17,9 @@ public:
 	bool is_ready() const noexcept { return tokens.it != tokens.end; }
 	expression_token EvaluateEntireExpression();
 	
+	static void ExpressionFindMatchingParenthesis(token_statement_t& token);
+
+
 private:
 
 	enum unary_parentheses_e
@@ -31,7 +34,6 @@ private:
 	bool ParseOperator();
 	bool ParseUnaryCast(expression_token& token);
 	bool ExpressionParseParentheses(expression_token& token);
-	void ExpressionFindMatchingParenthesis(token_statement_t& token);
 
 	void EvaluateExpression();
 	void EvaluateExpressionTokens();

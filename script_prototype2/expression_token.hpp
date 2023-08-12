@@ -102,7 +102,7 @@ struct expression_token
 
 	void test_operand_compatibility(const expression_token& other) const;
 	bool compatible_operand(const expression_token& other) const;
-	bool is_integral() const noexcept { return get_type() > dataTypes_e::CHAR && get_type() < dataTypes_e::FLOAT; }
+	bool is_integral() const noexcept { return get_type() > dataTypes_e::CHAR && get_type() < dataTypes_e::FLOAT && array_depth() == NULL; }
 
 	std::underlying_type_t<punctuation_e> op = 0;
 	std::underlying_type_t<OperatorPriority> op_priority = 0;
