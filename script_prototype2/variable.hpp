@@ -40,6 +40,7 @@ public:
 	void set_type(const dataTypes_e _type) noexcept(true) { type = _type; }
 	bool is_array() const noexcept { return arrayElements.get(); }
 	void resize_array(const size_t newSize);
+	void set_array_depth(const size_t newSize);
 	void create_array();
 	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length);
 	size_t array_depth() const;
@@ -83,7 +84,17 @@ public:
 	void erase(const std::string& v) noexcept(true) {
 		table.erase(v);
 	}
+	void erase_all() noexcept(true) {
+		if(table.empty() == false)
+			std::cout << "\n---- killing local variables: ----\n";
 
+		for (auto& i : table)
+			std::cout << i.second.identifier << '<' << i.second.s_getvariabletype() << '>' << '\n';
+
+
+
+		table.clear();
+	}
 	void print() const noexcept {
 		if (table.empty()) {
 			std::cout << "empty script stack\n";

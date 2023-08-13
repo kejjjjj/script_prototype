@@ -59,6 +59,10 @@ token_statement_t script_t::S_CreateStatement()
 
 	throw scriptError_t(this, "unexpected end of file");
 }
+token_statement_t script_t::S_GiveRemaining() noexcept(true)
+{
+	return token_statement_t{ token_it, token_it, --tokens.end()};
+}
 bool script_t::S_ReadToken(token_t& token)
 {
 	lastscript_p = script_p;

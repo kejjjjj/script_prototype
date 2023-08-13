@@ -70,7 +70,7 @@ void Variable::resize_array(const size_t newSize)
 	std::copy(arrayElements.get(), arrayElements.get() + copySize, newArray.get());
 
 	arrayElements = newArray;
-	std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
+	//std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
 	numElements = newSize;
 
 	for (decltype(numElements) i = copySize; i < newSize; i++) {
@@ -80,6 +80,21 @@ void Variable::resize_array(const size_t newSize)
 
 		if (childArray)
 			arrayElements[i].create_array();
+	}
+
+}
+void Variable::set_array_depth(const size_t newSize)
+{
+	if (!is_array())
+		create_array();
+
+	for (size_t i = 0; i < numElements; i++) {
+
+		if (arrayElements[i].array_depth() != newSize - 1ull) {
+			arrayElements[i].set_array_depth(newSize - 1ull);
+		}
+
+		
 	}
 }
 void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length)

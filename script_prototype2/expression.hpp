@@ -6,10 +6,11 @@
 #include "script.hpp"
 #include "expression_token.hpp"
 #include "o_standard.hpp"
+#include "scope.hpp"
 
 class expression_t {
 public:
-	expression_t(const token_statement_t& expression) : tokens(expression)
+	expression_t(scr_scope_t* scope, const token_statement_t& expression) : tokens(expression), block(scope)
 	{
 		++tokens.end;
 	};
@@ -41,6 +42,7 @@ private:
 	expression_token result;
 	token_statement_t tokens;
 	std::list<expression_token> sortedTokens;
+	scr_scope_t* block = 0;
 };
 
 #endif

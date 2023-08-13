@@ -39,7 +39,8 @@ enum class statementType_e : char
 	EXPRESSION,
 	DECLARATION,
 	STATEMENT_KEYWORD,
-	SCOPE
+	SCOPE,
+	SCOPE_EXIT
 };
 statementType_e statement_resolve_datatype_ambiguity(token_statement_t& tokens);
 statementType_e statement_determine(const token_statement_t& tokens);

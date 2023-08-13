@@ -4,6 +4,7 @@
 
 #include "pch.hpp"
 #include "punctuation.hpp"
+
 enum class tokenType : char
 {
 	INVALID_LITERAL,
@@ -49,6 +50,15 @@ struct token_statement_t
 	std::list<token_t>::iterator it;
 	std::list<token_t>::iterator begin;
 	std::list<token_t>::iterator end;
+
+	void print() const noexcept {
+
+		std::cout << "token_statement_t::print():\n";
+		for (auto i = it; i != end; i++) {
+			std::cout << i->string;
+		}
+		std::cout << end->string << '\n';
+	}
 };
 struct script_t
 {
@@ -65,10 +75,14 @@ struct script_t
 	size_t line = 0;
 	size_t column = 0;
 	
-
+	std::shared_ptr<scr_scope_t> global_scope;
 
 	void S_Tokenize();
 	token_statement_t S_CreateStatement();
+	token_statement_t S_GiveRemaining() noexcept(true);
+	auto S_GetIterator() noexcept(true) { return token_it; }
+	void S_SetIterator(std::list<token_t>::iterator it) { token_it = it; }
+	decltype(auto) S_GetEnd() noexcept(true) { return --tokens.end(); }
 
 	bool is_eof() const noexcept { return token_it == tokens.end(); }
 

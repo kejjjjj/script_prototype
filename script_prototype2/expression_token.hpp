@@ -5,6 +5,7 @@
 #include "script.hpp"
 #include "rvalue.hpp"
 #include "variable.hpp"
+#include "scope.hpp"
 
 struct expression_token
 {
@@ -21,7 +22,7 @@ struct expression_token
 		return token; }
 
 	void set_value_category();
-	void eval_postfix();
+	void eval_postfix(scr_scope_t* block);
 	void eval_prefix();
 
 	void lvalue_to_rvalue();

@@ -12,7 +12,7 @@ void postfixFunctions::createFunctions()
 	init = true;
 }
 
-void postfixFunctions::subscript(expression_token& operand, std::optional<token_statement_t*> Arg_statement)
+void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, std::optional<token_statement_t*> Arg_statement)
 {
 
 	if (operand.is_lvalue() == false) throw scriptError_t(&operand.get_token(), "[] operand must be an lvalue");
@@ -21,7 +21,7 @@ void postfixFunctions::subscript(expression_token& operand, std::optional<token_
 
 	token_statement_t statement = *Arg_statement.value();
 
-	const auto result = expression_t(statement).EvaluateEntireExpression();
+	const auto result = expression_t(block, statement).EvaluateEntireExpression();
 
 	if (result.is_integral() == false) {
 		throw scriptError_t(&*statement.it, "expression must evaluate to an integral type");

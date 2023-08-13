@@ -7,6 +7,7 @@
 #include "o_unary.hpp"
 #include "o_postfix.hpp"
 #include "if_statement.hpp"
+#include "scope.hpp"
 
 int main()
 {
@@ -24,49 +25,27 @@ int main()
     unaryFunctions::getInstance().createFunctions();
     postfixFunctions::getInstance().createFunctions();
 
-    std::unique_ptr<expression_t> expression;
-    std::unique_ptr<declaration_t> declaration;
-
+    script.global_scope = new scr_scope_t;
     
-
     try {
         script.S_Tokenize();
+
+        auto it = script.S_GetIterator();
+        auto& end = script.S_GetEnd();
+
+        script.global_scope->set_range
+        (
+            codepos_t{ .line = it->line,  .column = it->column },
+            codepos_t{ .line = end->line, .column = end->column }
+        );
+
+
+
         while(!script.is_eof()){
 
+            Codeblock_read(script, script.global_scope);
           
-            auto statement = script.S_CreateStatement();
-            auto statement_type = statement_determine(statement);
-
-            switch (statement_type) {
-            case statementType_e::EXPRESSION:
-                expression = std::unique_ptr<expression_t>(new expression_t(statement));
-
-                if ((expression->is_ready()))
-                    expression->EvaluateEntireExpression();
-
-                break;
-            case statementType_e::DECLARATION:
-                declaration = std::unique_ptr<declaration_t>(new declaration_t(statement));
-
-                if ((declaration->is_ready()))
-                    declaration->declare_and_initialize();
-
-                break;
-            case statementType_e::STATEMENT_KEYWORD:
-
-                switch (static_cast<statementKeywords_e>(statement.it->extrainfo)) {
-
-                case statementKeywords_e::IF:
-                    if_statement(statement).evaluate_statement();
-                    break;
-
-                default:
-                    throw scriptError_t(&*statement.it, "statementKeywords_e: default case");
-
-                }
-
-                break;
-            }
+          
 
         }
     }
@@ -76,8 +55,8 @@ int main()
         //MessageBox(NULL, err.what(), "Syntax Error!", MB_ICONERROR);
     }
 
-
-    VariableTable::getInstance().print();
+    
+    delete script.global_scope;
 
     system("pause");
 }

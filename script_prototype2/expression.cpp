@@ -22,8 +22,8 @@ void expression_t::EvaluateExpression()
 
 	TokenizeExpression();
 
-	std::for_each(sortedTokens.begin(), sortedTokens.end(), [](expression_token& t) {
-		t.eval_postfix();
+	std::for_each(sortedTokens.begin(), sortedTokens.end(), [this](expression_token& t) {
+		t.eval_postfix(block);
 		t.eval_prefix();
 	});
 
@@ -235,7 +235,7 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	std::list<token_t*> backup_prefix = token.prefix;
 	decltype(token.postfix) backup_postfix = token.postfix;
 
-	token = expression_t(statement).EvaluateEntireExpression();
+	token = expression_t(block, statement).EvaluateEntireExpression();
 
 	token.prefix = backup_prefix;
 	token.postfix = backup_postfix;

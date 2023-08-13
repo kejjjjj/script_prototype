@@ -7,7 +7,7 @@ void declaration_t::declare_and_initialize()
 	get_declaration_type();
 	get_identifier_name();
 		
-	target = VariableTable::getInstance().declare_variable(var_declr_data({ dtype, identifier, NULL }));
+	target = block->declare_variable(var_declr_data({ dtype, identifier, NULL }));
 
 	apply_modifiers(*target);
 
@@ -21,8 +21,6 @@ void declaration_t::declare_and_initialize()
 }
 void declaration_t::get_declaration_type()
 {
-	//auto& instance = dataTypeTable::getInstance();
-
 	if (tokens.it->tt != tokenType::BUILT_IN_TYPE) {
 		throw scriptError_t(&*tokens.it, "how?");
 	}
@@ -45,7 +43,7 @@ void declaration_t::get_identifier_name()
 
 	identifier = tokens.it->string;
 
-	if (VariableTable::getInstance().find(identifier)) {
+	if (block->find_variable(identifier)) {
 		throw scriptError_t(&*tokens.it, std::format("the variable \"{}\" is already defined", identifier));
 	}
 }
@@ -78,12 +76,12 @@ void declaration_t::initialize()
 			tokens.end = --(substr.value().end); //ignore last }
 		}
 
-		initializer_list_t ilist(tokens, *target);
+		initializer_list_t ilist(block, tokens, *target);
 		ilist.evaluate();
 		return;
 	}
 	tokens.end--; //remove the ;
-	auto result = expression_t(tokens);
+	auto result = expression_t(block, tokens);
 	auto value = result.EvaluateEntireExpression();
 	const auto f = evaluationFunctions::getInstance().find_function(P_ASSIGN);
 

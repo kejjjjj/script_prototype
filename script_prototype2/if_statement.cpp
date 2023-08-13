@@ -24,7 +24,7 @@ void if_statement::evaluate_statement()
 	//_statement.it contains the position of the matching ), so it will be the end
 	const token_statement_t _statement = token_statement_t{ .it = it, .begin = it, .end = --parentheses_statement.it };
 
-	auto token = expression_t(_statement).EvaluateEntireExpression();
+	auto token = expression_t(block, _statement).EvaluateEntireExpression();
 
 	if (token.is_integral() == false) {
 		throw scriptError_t(&token.get_token(), "expression must be convertible to a boolean type");

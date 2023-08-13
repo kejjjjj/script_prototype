@@ -5,11 +5,12 @@
 #include "pch.hpp"
 #include "statement.hpp"
 #include "variable.hpp"
+#include "scope.hpp"
 
 class initializer_list_t
 {
 public:
-	initializer_list_t(const token_statement_t& _statement, Variable& _target);
+	initializer_list_t(scr_scope_t* scope, const token_statement_t& _statement, Variable& _target);
 
 	void evaluate();
 	
@@ -22,6 +23,7 @@ private:
 
 	token_statement_t statement;
 	Variable& targetVar;
+	scr_scope_t* block = 0;
 };
 
 #endif

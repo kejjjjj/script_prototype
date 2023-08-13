@@ -6,11 +6,12 @@
 #include "script.hpp"
 #include "datatype.hpp"
 #include "variable.hpp"
+#include "scope.hpp"
 
 class declaration_t {
 public:
 
-	declaration_t(const token_statement_t& expression) : tokens(expression)
+	declaration_t(scr_scope_t* scope, const token_statement_t& expression) : tokens(expression), block(scope)
 	{
 		tokens.end++;
 	};
@@ -38,6 +39,7 @@ private:
 	token_statement_t tokens;
 	Variable* target = 0;
 	std::list<declaration_modifiers_e> typeModifiers;
+	scr_scope_t* block = 0;
 
 };
 

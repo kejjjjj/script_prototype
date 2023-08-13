@@ -53,13 +53,13 @@ void expression_token::set_value_category()
 	rval->set_initial_value(token.string);
 
 }
-using PostfixFunctionType = std::function<void(expression_token&, std::optional<token_statement_t*>)>;
+using PostfixFunctionType = std::function<void(scr_scope_t*, expression_token&, std::optional<token_statement_t*>)>;
 using OptionalPostfixFunctionType = std::optional<PostfixFunctionType>;
 
 using UnaryFunctionType = std::function<void(expression_token&)>;
 using OptionalUnaryFunctionType = std::optional<UnaryFunctionType>;
 
-void expression_token::eval_postfix()
+void expression_token::eval_postfix(scr_scope_t* block)
 {
 	if (postfix.empty())
 		return;
@@ -73,10 +73,10 @@ void expression_token::eval_postfix()
 		throw scriptError_t(&token, std::format("no function for the {} postfix operator???????", static_cast<int>(front.second)));
 	}
 
-	function.value()(*this, &front.first);
+	function.value()(block, *this, &front.first);
 
 	postfix.pop_front();
-	eval_postfix();
+	eval_postfix(block);
 }
 void expression_token::eval_prefix()
 {
