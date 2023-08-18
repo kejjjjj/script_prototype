@@ -40,7 +40,6 @@ int main()
         );
 
 
-
         while(!script.is_eof()){
 
             Codeblock_read(script, script.global_scope);
@@ -55,7 +54,10 @@ int main()
         //MessageBox(NULL, err.what(), "Syntax Error!", MB_ICONERROR);
     }
 
-    
+    std::cout << "\n------- global variables -------\n\n";
+    script.global_scope->print_localvars();
+    std::cout << "\n--------------------------------\n";
+
     delete script.global_scope;
 
     system("pause");

@@ -14,9 +14,21 @@ public:
 
 	scr_scope_t() = default;
 
-	scr_scope_t(std::shared_ptr<scr_scope_t>& lower_scope)
-		: lower_scope(lower_scope)
-	{
+	//scr_scope_t(std::shared_ptr<scr_scope_t>& lower_scope)
+	//	: lower_scope(lower_scope)
+	//{
+	//	std::shared_ptr<scr_scope_t> previous = lower_scope;
+
+
+	//}
+
+	void set_lower_scope(const scr_scope_t& scope) {
+
+		lower_scope = std::shared_ptr<scr_scope_t>(new scr_scope_t(scope));
+
+		
+
+
 	}
 
 	//~scr_scope_t() { on_exit(); }
@@ -53,13 +65,17 @@ public:
 		localVars.print();
 	}
 
-	scr_scope_t* on_exit(){
+	auto on_exit(){
+
+		if (!lower_scope.get())
+			throw scriptError_t("how the hell is lowerscope a null pointer");
+
 		std::cout << "exiting scope\n";
 		print_localvars();
 		localVars.erase_all();
 		return lower_scope.get();
 	}
-
+	auto& get_lower() noexcept { return lower_scope; }
 private:
 	codepos_t codepos_begin{};
 	std::shared_ptr<scr_scope_t> lower_scope = 0;

@@ -11,6 +11,7 @@ void Codeblock_read(script_t& script, scr_scope_t* block)
     std::unique_ptr<expression_t> expression;
     std::unique_ptr<declaration_t> declaration;
 
+    scr_scope_t* temp_block = 0;
 
     auto statement = script.S_CreateStatement();
     auto statement_type = statement_determine(statement);
@@ -49,8 +50,16 @@ void Codeblock_read(script_t& script, scr_scope_t* block)
         if (block->is_global_scope()) {
             throw scriptError_t(&*statement.it, "found \"}\" but it's not closing anything");
         }
+        
+        script.S_SetIterator(++++statement.end);
 
-        block = block->on_exit();
+
+        temp_block = block->on_exit();
+
+        
+
+        //delete block;
+        block = temp_block;
 
         break;
     case statementType_e::SCOPE:
@@ -58,9 +67,9 @@ void Codeblock_read(script_t& script, scr_scope_t* block)
         script.S_SetIterator(statement.begin);
 
         //FIX MEEEEEEEE
-        scr_scope_t scope(block);
-        std::make_shared<scr_scope_t>(block);
-        *block = std::move(scope);
+        scr_scope_t scope;
+
+        scope.set_lower_scope(*block);
 
         std::optional<token_statement_t> bracket;
         auto remaining = script.S_GiveRemaining();
@@ -75,11 +84,13 @@ void Codeblock_read(script_t& script, scr_scope_t* block)
 
         auto& end = bracket.value();
 
-        block->set_range
+        scope.set_range
         (
             codepos_t{ .line = statement.it->line,  .column = statement.it->column },
             codepos_t{ .line = end.end->line,        .column = end.end->column }
         );
+
+        *block = scope;
 
        // throw scriptError_t(&*statement.it, "gg");
 

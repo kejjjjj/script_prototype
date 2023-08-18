@@ -75,7 +75,7 @@ struct script_t
 	size_t line = 0;
 	size_t column = 0;
 	
-	std::shared_ptr<scr_scope_t> global_scope;
+	class scr_scope_t* global_scope;
 
 	void S_Tokenize();
 	token_statement_t S_CreateStatement();

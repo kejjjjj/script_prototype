@@ -85,13 +85,15 @@ public:
 		table.erase(v);
 	}
 	void erase_all() noexcept(true) {
-		if(table.empty() == false)
-			std::cout << "\n---- killing local variables: ----\n";
+		if (table.empty())
+			return;
+
+		std::cout << "\n---- killing local variables: ----\n\n";
 
 		for (auto& i : table)
 			std::cout << i.second.identifier << '<' << i.second.s_getvariabletype() << '>' << '\n';
 
-
+		std::cout << "\n----------------------------------\n\n";
 
 		table.clear();
 	}
@@ -100,7 +102,7 @@ public:
 			std::cout << "empty script stack\n";
 			return;
 		}
-		std::cout << "script stack:\n\n";
+		//std::cout << "script stack:\n\n";
 			
 		for (const auto& i : table) {
 			i.second.print();

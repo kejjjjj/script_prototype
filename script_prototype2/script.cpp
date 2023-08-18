@@ -51,13 +51,21 @@ token_statement_t script_t::S_CreateStatement()
 	auto& end = token_it;
 	auto begin = token_it;
 
-	while (end++ != tokens.end()) {
+	//if (end == tokens.end()) {
+	//	std::cout << "bye\n";
+	//	return { end,end,end++ };
+	//}
+	std::cout << std::format("statement: [{}, {}] , [{}, {}]\n", begin->line, begin->column, end->line, end->column);
 
-		if (end->tt == tokenType::PUNCTUATION && end->extrainfo == P_SEMICOLON)
+	while (end != tokens.end()) {
+
+		if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_SEMICOLON || LOWORD(end->extrainfo) == P_CURLYBRACKET_CLOSE))
 			return { begin, begin, --end++ };
+
+		end++;
 	}
 
-	throw scriptError_t(this, "unexpected end of file");
+	throw scriptError_t(this, std::format("unexpected end of file\nstatement: [{}, {}], [{}, {}]\n", begin->line, begin->column, end->line, end->column));
 }
 token_statement_t script_t::S_GiveRemaining() noexcept(true)
 {
