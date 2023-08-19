@@ -7,15 +7,15 @@ rvalue::rvalue(const rval_declr_data& declaration_data)
 
 	switch (type) {
 	case dataTypes_e::CHAR:
-		value.buffer = std::make_unique<char*>(new char[sizeof(char)]);
+		value.buffer = std::make_shared<char*>(new char[sizeof(char)]);
 		value.buf_size = sizeof(char);
 		break;
 	case dataTypes_e::INT:
-		value.buffer = std::make_unique<char*>(new char[sizeof(int32_t)]);
+		value.buffer = std::make_shared<char*>(new char[sizeof(int32_t)]);
 		value.buf_size = sizeof(int32_t);
 		break;
 	case dataTypes_e::FLOAT:
-		value.buffer = std::make_unique<char*>(new char[sizeof(float)]);
+		value.buffer = std::make_shared<char*>(new char[sizeof(float)]);
 		value.buf_size = sizeof(float);
 		break;
 

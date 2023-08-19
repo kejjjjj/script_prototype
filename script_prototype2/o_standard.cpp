@@ -28,7 +28,7 @@ expression_token evaluationFunctions::arithmetic_addition(expression_token& left
 	//at this point both operands have the same datatype
 
 	expression_token result;
-	result.rval = std::shared_ptr<rvalue>(new rvalue({.type=left.get_type(), .size=NULL, .token=&left.get_token()}));
+	result.rval = std::unique_ptr<rvalue>(new rvalue({.type=left.get_type(), .size=NULL, .token=&left.get_token()}));
 
 	switch (left.get_type()) {
 	case dataTypes_e::CHAR:
@@ -67,7 +67,7 @@ expression_token evaluationFunctions::assignment(expression_token& left, express
 
 		left.lval->replace_array(right.lval->arrayElements, right.lval->numElements);
 		left.lval->isInitialized = true;
-		return left;
+		return std::move(left);
 	}
 
 	right.lvalue_to_rvalue();
@@ -93,5 +93,5 @@ expression_token evaluationFunctions::assignment(expression_token& left, express
 		break;
 	}
 	left.lval->isInitialized = true;
-	return left;
+	return std::move(left);
 }

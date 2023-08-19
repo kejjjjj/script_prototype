@@ -14,13 +14,37 @@ expression_token expression_t::EvaluateEntireExpression()
 
 	EvaluateExpression();
 
-	return result;
+	return std::move(result);
 }
 void expression_t::EvaluateExpression()
 {
 
 
 	TokenizeExpression();
+
+	size_t size = sortedTokens.size() * sizeof(expression_token_compiler);
+	std::unique_ptr<char[]> data = std::make_unique<char[]>(size);
+
+	auto it = sortedTokens.begin();
+	
+
+	for(size_t i = 0; i < size; i+= sizeof(expression_token_compiler)){
+		expression_token_compiler ye(*it);
+
+		char* copy = ye.get_copy();
+		memcpy(data.get() + i, copy, sizeof(expression_token_compiler));
+		delete copy;
+
+		//std::cout << ((expression_token_compiler*)(data.get() + i))->token.string << '\n';
+
+		++it;
+	}
+
+
+
+	compiler_information info{ .data = std::move(data), .dataSize = size, .type = compiler_statements_e::EXPRESSION };
+	
+	compilerInfo.push_back(std::move(info));
 
 	std::for_each(sortedTokens.begin(), sortedTokens.end(), [this](expression_token& t) {
 		t.eval_postfix(block);
@@ -156,6 +180,7 @@ bool expression_t::ParseExpression()
 
 	while (token_peek_postfix()) {}
 
+	token.set_scope(block);
 	token.set_value_category();
 
 	sortedTokens.push_back(token);
@@ -285,6 +310,8 @@ void expression_t::EvaluateExpressionTokens()
 	const auto& op_end = --sortedTokens.end();
 	OperatorPriority op{}, next_op{};
 
+
+
 	while (sortedTokens.size() > 2) {
 		itr1 = ++sortedTokens.begin();
 		itr2 = itr1;
@@ -333,5 +360,5 @@ void expression_t::EvaluateExpressionTokens()
 		sortedTokens.erase(itr1, itr2);
 	}
 
-	result = *itr2;
+	result = std::move(*itr2);
 }

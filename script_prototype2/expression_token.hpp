@@ -25,10 +25,13 @@ struct expression_token
 	void eval_postfix(scr_scope_t* block);
 	void eval_prefix();
 
+	void set_scope(scr_scope_t* _block) noexcept(true) { block = _block; }
+
 	void lvalue_to_rvalue();
 	template<typename T> T implicit_cast() const;
 
 	void implicit_cast(expression_token& other);
+
 	bool is_literal() const 
 	{ 
 		if (is_lvalue() || is_rvalue())
@@ -73,7 +76,7 @@ struct expression_token
 		throw scriptError_t(&token, "get_char() without value ok");
 	}
 	bool is_lvalue() const noexcept { return lval; }
-	bool is_rvalue() const noexcept { return rval.use_count(); }
+	bool is_rvalue() const noexcept { return rval.get(); }
 
 	template<typename T>
 	void set_value(T value) {
@@ -119,7 +122,52 @@ private:
 	void cast_weaker_operand(expression_token& other);
 
 	token_t token;
+	scr_scope_t* block = 0;
 };
 
+struct expression_token_compiler
+{
+	explicit expression_token_compiler(expression_token& t) {
+
+		if (t.is_rvalue()) {
+			rval = *t.rval;
+			b_rvalue = true;
+		}
+		else if (t.is_lvalue()) {
+			b_lvalue = true;
+		}
+
+		for (auto& i : t.prefix) {
+			prefix.push_back(*i);
+		}
+		for (auto& i : t.postfix) 
+			postfix.push_back(i);
+
+		token = const_cast<expression_token&>(t).get_token();
+
+		op = t.op;
+		op_priority = t.op_priority;
+	}
+
+	char* get_copy(){
+		char* yea = new char[sizeof(expression_token_compiler)];
+
+		memcpy(yea, this, sizeof(expression_token_compiler));
+
+		return yea;
+	}
+
+	std::underlying_type_t<punctuation_e> op = 0;
+	std::underlying_type_t<OperatorPriority> op_priority = 0;
+
+	bool b_rvalue = false;
+	bool b_lvalue = false;
+	rvalue rval;
+
+	std::vector<token_t> prefix;
+	std::vector<std::pair<token_statement_t, punctuation_e>> postfix;
+
+	token_t token;
+};
 
 #endif

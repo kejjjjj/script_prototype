@@ -36,14 +36,12 @@ public:
 	bool is_global_scope() const noexcept { return lower_scope == nullptr; }
 
 	decltype(auto) declare_variable(const Variable& v) {
-		return localVars.declare_variable(v);
+		return localVars.declare_variable((v));
 	}
 	Variable* find_variable(const std::string& v) {
 
 		if (auto var = localVars.find(v))
 			return &var.value()->second;
-
-		std::cout << "lower_scope: " << lower_scope << '\n';
 
 		if (is_global_scope())
 			return nullptr;
@@ -84,4 +82,7 @@ private:
 
 };
 
-void Codeblock_read(script_t& script, scr_scope_t* block);
+void Codeblock_read(script_t& script, scr_scope_t** block);
+
+void create_scope(script_t& script, scr_scope_t** block);
+void delete_scope(script_t& script, scr_scope_t** block);

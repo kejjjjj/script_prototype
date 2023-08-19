@@ -8,6 +8,7 @@
 #include "o_postfix.hpp"
 #include "if_statement.hpp"
 #include "scope.hpp"
+#include "runtime.hpp"
 
 int main()
 {
@@ -42,11 +43,16 @@ int main()
 
         while(!script.is_eof()){
 
-            Codeblock_read(script, script.global_scope);
+            Codeblock_read(script, &script.global_scope);
           
           
 
         }
+
+        if (!script.global_scope->is_global_scope()) {
+            throw scriptError_t(&*script.S_GetIterator(), "expected to find a \"}\"");
+        }
+
     }
     catch (scriptError_t& err) {
         std::cout << "\n******** SCRIPT COMPILE ERROR ********\n"
@@ -59,6 +65,11 @@ int main()
     std::cout << "\n--------------------------------\n";
 
     delete script.global_scope;
+
+    std::cout << "\n******** BEGIN RUNTIME ********\n";
+
+
+    runtime_execute(script);
 
     system("pause");
 }

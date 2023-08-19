@@ -24,20 +24,20 @@ struct rval_declr_data
 struct rvalue
 {
 	rvalue(const rval_declr_data& declaration_data);
-
+	rvalue() = default;
 	char get_char() const { return get_value<char>(); }
 	int get_int() const { return get_value<int>(); }
 	float get_float() const { return get_value<float>(); }
 
 	template<typename T> T get_value() const
 	{
-		if (value.buffer.use_count() == NULL) { throw scriptError_t("rvalue: called get_value() without a value.. how?"); }
+		if (value.buffer.get() == NULL) { throw scriptError_t("rvalue: called get_value() without a value.. how?"); }
 		return *reinterpret_cast<T*>(value.buffer.get());
 	}
 
 	template<typename T> void set_value(const T& _value)
 	{
-		if (value.buffer.use_count() == NULL) { throw scriptError_t("rvalue: called set_value() without a value.. how?"); }
+		if (value.buffer.get() == NULL) { throw scriptError_t("rvalue: called set_value() without a value.. how?"); }
 		*reinterpret_cast<T*>(value.buffer.get()) = _value;
 	}
 	void set_initial_value(const std::string& s);

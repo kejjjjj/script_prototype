@@ -21,10 +21,10 @@ statementType_e statement_determine(const token_statement_t& tokens)
 	else if (tokens.it->tt == tokenType::STATEMENT)
 		return statementType_e::STATEMENT_KEYWORD;
 
-	else if (tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_CURLYBRACKET_OPEN)
-		return statementType_e::SCOPE;
-	else if (tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_CURLYBRACKET_CLOSE)
-		return statementType_e::SCOPE_EXIT;
+	//else if (tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_CURLYBRACKET_OPEN)
+	//	return statementType_e::SCOPE;
+	//else if (tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_CURLYBRACKET_CLOSE)
+	//	return statementType_e::SCOPE_EXIT;
 
 
 	return statementType_e::EXPRESSION;

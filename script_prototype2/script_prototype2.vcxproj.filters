@@ -16,117 +16,162 @@
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{d7c92b0e-324a-4ff5-ab4b-eddecee30b3e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\operations">
+    <Filter Include="Source Files\compile_time">
+      <UniqueIdentifier>{ed7e1f93-c35f-4d02-a72f-7b71d5f4feb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\compile_time\operations">
       <UniqueIdentifier>{339eeeac-5151-4732-8b4c-da3d541640ef}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\statements">
+    <Filter Include="Source Files\compile_time\statements">
       <UniqueIdentifier>{295f01b4-3de3-4766-9a8e-0e5246420df3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\run_time">
+      <UniqueIdentifier>{d9763e45-eccb-4edc-b8a4-184230093be3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\run_time\operators">
+      <UniqueIdentifier>{877105d9-b724-4871-9504-9485eac1abd7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="script_prototype2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="filetools.cpp">
       <Filter>Header Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="script.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="expression.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="punctuation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="rvalue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="expression_token.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="variable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="datatype.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="declaration.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="statement.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="o_unary.cpp">
-      <Filter>Source Files\operations</Filter>
+    <ClCompile Include="o_postfix.cpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClCompile>
     <ClCompile Include="o_standard.cpp">
-      <Filter>Source Files\operations</Filter>
+      <Filter>Source Files\compile_time</Filter>
     </ClCompile>
-    <ClCompile Include="initializer_list.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="o_postfix.cpp">
-      <Filter>Source Files\operations</Filter>
+    <ClCompile Include="o_unary.cpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClCompile>
     <ClCompile Include="if_statement.cpp">
-      <Filter>Source Files\statements</Filter>
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="datatype.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="declaration.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="expression.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="expression_token.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="initializer_list.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="punctuation.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="rvalue.cpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClCompile>
     <ClCompile Include="scope.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="script.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="script_prototype2.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="statement.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="variable.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
+    <ClCompile Include="runtime.cpp">
+      <Filter>Source Files\run_time</Filter>
+    </ClCompile>
+    <ClCompile Include="r_expression.cpp">
+      <Filter>Source Files\run_time</Filter>
+    </ClCompile>
+    <ClCompile Include="r_expression_token.cpp">
+      <Filter>Source Files\run_time</Filter>
+    </ClCompile>
+    <ClCompile Include="r_postfix.cpp">
+      <Filter>Source Files\run_time\operators</Filter>
+    </ClCompile>
+    <ClCompile Include="r_unary.cpp">
+      <Filter>Source Files\run_time\operators</Filter>
+    </ClCompile>
+    <ClCompile Include="r_operator_standard.cpp">
+      <Filter>Source Files\run_time\operators</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="script.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="expression.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="punctuation.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rvalue.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="expression_token.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="variable.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="datatype.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="declaration.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="statement.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="o_unary.hpp">
-      <Filter>Source Files\operations</Filter>
+    <ClInclude Include="o_postfix.hpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClInclude>
     <ClInclude Include="o_standard.hpp">
-      <Filter>Source Files\operations</Filter>
+      <Filter>Source Files\compile_time</Filter>
     </ClInclude>
-    <ClInclude Include="filetools.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="initializer_list.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="o_postfix.hpp">
-      <Filter>Source Files\operations</Filter>
+    <ClInclude Include="o_unary.hpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClInclude>
     <ClInclude Include="if_statement.hpp">
-      <Filter>Source Files\statements</Filter>
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="datatype.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="declaration.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="expression.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="expression_token.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="filetools.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="initializer_list.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="punctuation.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="rvalue.hpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClInclude>
     <ClInclude Include="scope.hpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="script.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="statement.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="variable.hpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClInclude>
+    <ClInclude Include="runtime.hpp">
+      <Filter>Source Files\run_time</Filter>
+    </ClInclude>
+    <ClInclude Include="r_expression.hpp">
+      <Filter>Source Files\run_time</Filter>
+    </ClInclude>
+    <ClInclude Include="r_expression_token.hpp">
+      <Filter>Source Files\run_time</Filter>
+    </ClInclude>
+    <ClInclude Include="r_postfix.hpp">
+      <Filter>Source Files\run_time\operators</Filter>
+    </ClInclude>
+    <ClInclude Include="r_unary.hpp">
+      <Filter>Source Files\run_time\operators</Filter>
+    </ClInclude>
+    <ClInclude Include="r_operator_standard.hpp">
+      <Filter>Source Files\run_time\operators</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

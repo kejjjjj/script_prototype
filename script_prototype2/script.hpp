@@ -78,10 +78,11 @@ struct script_t
 	class scr_scope_t* global_scope;
 
 	void S_Tokenize();
-	token_statement_t S_CreateStatement();
+	std::optional<token_statement_t> S_CreateStatement();
 	token_statement_t S_GiveRemaining() noexcept(true);
 	auto S_GetIterator() noexcept(true) { return token_it; }
 	void S_SetIterator(std::list<token_t>::iterator it) { token_it = it; }
+	void S_ResetIterator() noexcept { token_it = tokens.begin(); }
 	decltype(auto) S_GetEnd() noexcept(true) { return --tokens.end(); }
 
 	bool is_eof() const noexcept { return token_it == tokens.end(); }
@@ -129,5 +130,20 @@ public:
 	const token_t* token = 0;
 
 };
+
+enum class compiler_statements_e
+{
+	EXPRESSION,
+	DECLARATION
+};
+
+struct compiler_information
+{
+	std::unique_ptr<char[]> data = 0;
+	size_t dataSize = 0;
+	compiler_statements_e type;
+};
+
+inline std::list<compiler_information> compilerInfo;
 
 #endif

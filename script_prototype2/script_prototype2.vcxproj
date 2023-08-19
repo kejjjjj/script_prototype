@@ -147,7 +147,13 @@
     <ClCompile Include="o_standard.cpp" />
     <ClCompile Include="o_unary.cpp" />
     <ClCompile Include="punctuation.cpp" />
+    <ClCompile Include="runtime.cpp" />
     <ClCompile Include="rvalue.cpp" />
+    <ClCompile Include="r_expression.cpp" />
+    <ClCompile Include="r_expression_token.cpp" />
+    <ClCompile Include="r_operator_standard.cpp" />
+    <ClCompile Include="r_postfix.cpp" />
+    <ClCompile Include="r_unary.cpp" />
     <ClCompile Include="scope.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="script_prototype2.cpp" />
@@ -168,7 +174,13 @@
     <ClInclude Include="o_unary.hpp" />
     <ClInclude Include="pch.hpp" />
     <ClInclude Include="punctuation.hpp" />
+    <ClInclude Include="runtime.hpp" />
     <ClInclude Include="rvalue.hpp" />
+    <ClInclude Include="r_expression.hpp" />
+    <ClInclude Include="r_expression_token.hpp" />
+    <ClInclude Include="r_operator_standard.hpp" />
+    <ClInclude Include="r_postfix.hpp" />
+    <ClInclude Include="r_unary.hpp" />
     <ClInclude Include="scope.hpp" />
     <ClInclude Include="script.hpp" />
     <ClInclude Include="statement.hpp" />

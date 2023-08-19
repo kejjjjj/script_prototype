@@ -15,14 +15,14 @@ void expression_token::set_value_category()
 		throw scriptError_t(&token, std::format("a datatype was unexpected here"));
 
 	if (token.tt == tokenType::NAME) {
-		auto& instance = VariableTable::getInstance();
-		auto result = instance.find(token.string);
 
-		if (result.has_value() == false) {
+		auto result = block->find_variable(token.string);
+
+		if (result == nullptr) {
 			throw scriptError_t(&token, std::format("the identifier \"{}\" is undefined", token.string));
 		}
 		
-		lval = &result.value()->second;
+		lval = result;
 		return;
 
 	}
@@ -59,7 +59,7 @@ using OptionalPostfixFunctionType = std::optional<PostfixFunctionType>;
 using UnaryFunctionType = std::function<void(expression_token&)>;
 using OptionalUnaryFunctionType = std::optional<UnaryFunctionType>;
 
-void expression_token::eval_postfix(scr_scope_t* block)
+void expression_token::eval_postfix(scr_scope_t* _block)
 {
 	if (postfix.empty())
 		return;
@@ -73,10 +73,10 @@ void expression_token::eval_postfix(scr_scope_t* block)
 		throw scriptError_t(&token, std::format("no function for the {} postfix operator???????", static_cast<int>(front.second)));
 	}
 
-	function.value()(block, *this, &front.first);
+	function.value()(_block, *this, &front.first);
 
 	postfix.pop_front();
-	eval_postfix(block);
+	eval_postfix(_block);
 }
 void expression_token::eval_prefix()
 {
@@ -148,6 +148,10 @@ void expression_token::implicit_cast(expression_token& other)
 		throw scriptError_t("implicit_cast(): right operand should not be an lvalue");
 		return;
 	}
+	std::ostream yea(0, 1);
+
+
+	//std::cout << yea;
 
 	switch (get_type()) {
 	case dataTypes_e::INT:

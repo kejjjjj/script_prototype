@@ -2,6 +2,7 @@
 #include "filetools.hpp"
 #include "datatype.hpp"
 #include "statement.hpp"
+#include "scope.hpp"
 
 script_t::script_t(const std::string& filename)
 {
@@ -46,26 +47,42 @@ void script_t::S_Tokenize()
 	}
 	token_it = tokens.begin();
 }
-token_statement_t script_t::S_CreateStatement()
+std::optional<token_statement_t> script_t::S_CreateStatement()
 {
 	auto& end = token_it;
 	auto begin = token_it;
 
-	//if (end == tokens.end()) {
-	//	std::cout << "bye\n";
-	//	return { end,end,end++ };
-	//}
-	std::cout << std::format("statement: [{}, {}] , [{}, {}]\n", begin->line, begin->column, end->line, end->column);
+	if (begin->tt == tokenType::PUNCTUATION) {
+
+		switch (LOWORD(end->extrainfo)) {
+
+		case P_CURLYBRACKET_OPEN:
+			create_scope(*this, &global_scope);
+			return std::nullopt;
+		case P_CURLYBRACKET_CLOSE:
+			delete_scope(*this, &global_scope);
+			return std::nullopt;
+		default:
+			break;
+		}
+	}
 
 	while (end != tokens.end()) {
 
-		if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_SEMICOLON || LOWORD(end->extrainfo) == P_CURLYBRACKET_CLOSE))
-			return { begin, begin, --end++ };
+		if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_SEMICOLON /*|| LOWORD(end->extrainfo) == P_CURLYBRACKET_CLOSE*/))
+			return token_statement_t{ begin, begin, --end++ };
 
 		end++;
 	}
 
-	throw scriptError_t(this, std::format("unexpected end of file\nstatement: [{}, {}], [{}, {}]\n", begin->line, begin->column, end->line, end->column));
+	const auto last_token = (--end++);
+
+	if (last_token->tt == tokenType::PUNCTUATION && (LOWORD(last_token->extrainfo) == P_SEMICOLON || LOWORD(last_token->extrainfo) == P_CURLYBRACKET_CLOSE)) {
+		end = tokens.end();
+		return token_statement_t{ last_token, last_token, last_token };
+	}
+
+	throw scriptError_t(this, std::format("unexpected end of file"));
 }
 token_statement_t script_t::S_GiveRemaining() noexcept(true)
 {
