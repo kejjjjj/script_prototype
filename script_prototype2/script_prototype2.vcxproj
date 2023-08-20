@@ -149,6 +149,7 @@
     <ClCompile Include="punctuation.cpp" />
     <ClCompile Include="runtime.cpp" />
     <ClCompile Include="rvalue.cpp" />
+    <ClCompile Include="r_declaration.cpp" />
     <ClCompile Include="r_expression.cpp" />
     <ClCompile Include="r_expression_token.cpp" />
     <ClCompile Include="r_operator_standard.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="punctuation.hpp" />
     <ClInclude Include="runtime.hpp" />
     <ClInclude Include="rvalue.hpp" />
+    <ClInclude Include="r_declaration.hpp" />
     <ClInclude Include="r_expression.hpp" />
     <ClInclude Include="r_expression_token.hpp" />
     <ClInclude Include="r_operator_standard.hpp" />

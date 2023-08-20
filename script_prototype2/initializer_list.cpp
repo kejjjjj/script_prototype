@@ -1,7 +1,8 @@
 #include "initializer_list.hpp"
 #include "expression.hpp"
 
-initializer_list_t::initializer_list_t(scr_scope_t* scope, const token_statement_t& _statement, Variable& _target) : statement(_statement), targetVar(_target), block(scope)
+initializer_list_t::initializer_list_t(scr_scope_t* scope, const token_statement_t& _statement, Variable& _target, declaration_t_compiler* _decl_compiler)
+	: statement(_statement), targetVar(_target), block(scope), decl_compiler(_decl_compiler)
 {
 	if (statement.begin == statement.end)
 		throw scriptError_t(&*statement.begin, "how did this initializer list exception occur?");
@@ -70,7 +71,7 @@ void initializer_list_t::evaluate_list(Variable& target)
 				target.set_array_depth(zeroDepth);
 			}
 
-			initializer_list_t ilist(block, _statement, target.arrayElements[elementIndex]);
+			initializer_list_t ilist(block, _statement, target.arrayElements[elementIndex], decl_compiler);
 			(statement.it = ++_statement.end); //iterate to the next character
 
 			if (statement.it != statement.end)
@@ -82,6 +83,13 @@ void initializer_list_t::evaluate_list(Variable& target)
 		else if(const auto expression_statement = read_expression(statement)) {
 			
 			auto expression = expression_t(block, expression_statement.value()).EvaluateEntireExpression();
+			
+			//the expression will be owned by this initializer
+			decl_compiler->add_initializer(std::move(compilerInfo.back()));
+
+			//remove expression from list
+			compilerInfo.pop_back();
+
 			auto l = target.arrayElements[elementIndex].to_expression();
 			l.set_token(expression.get_token());
 			assign_function.value()(l, expression);

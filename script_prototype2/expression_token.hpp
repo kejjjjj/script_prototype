@@ -125,16 +125,20 @@ private:
 	scr_scope_t* block = 0;
 };
 
-struct expression_token_compiler
+struct expression_token_compiler 
 {
 	explicit expression_token_compiler(expression_token& t) {
 
 		if (t.is_rvalue()) {
-			rval = *t.rval;
+			rval.value.buffer = std::make_shared<char*>(*t.rval->value.buffer.get());
+			rval.value.buf_size = t.rval->value.buf_size;
+			rval.set_type(t.rval->get_type());
+
+			//std::cout << "rvalue use count: " << rval.value.buffer.use_count() << '\n';
 			b_rvalue = true;
 		}
 		else if (t.is_lvalue()) {
-			b_lvalue = true;
+			b_lvalue = true; 
 		}
 
 		for (auto& i : t.prefix) {
@@ -147,6 +151,8 @@ struct expression_token_compiler
 
 		op = t.op;
 		op_priority = t.op_priority;
+
+
 	}
 
 	char* get_copy(){

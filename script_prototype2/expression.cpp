@@ -51,6 +51,8 @@ void expression_t::EvaluateExpression()
 		t.eval_prefix();
 	});
 
+	std::cout << sortedTokens.size() << " operands and " << sortedTokens.size() / 2 << " operators in the full expression!\n";
+
 	EvaluateExpressionTokens();
 	
 

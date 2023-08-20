@@ -2,6 +2,13 @@
 #include "variable.hpp"
 #include "expression.hpp"
 #include "initializer_list.hpp"
+
+declaration_t::declaration_t(scr_scope_t* scope, const token_statement_t& expression) : tokens(expression), block(scope)
+{
+	tokens.end++;
+	compiler_declr = std::unique_ptr<declaration_t_compiler>(new declaration_t_compiler);
+};
+
 void declaration_t::declare_and_initialize()
 {
 	get_declaration_type();
@@ -13,11 +20,15 @@ void declaration_t::declare_and_initialize()
 
 	std::cout << "declaring a variable of type \"" << target->s_getvariabletype() << "\" with the name of \"" << target->identifier << "\"\n";
 
+	compiler_declr->identifier = target->identifier;
 
 	if (has_initializer()) {
 		initialize();
 
 	}
+
+
+
 }
 void declaration_t::get_declaration_type()
 {
@@ -30,6 +41,8 @@ void declaration_t::get_declaration_type()
 	tokens.it++;
 	//check for type modifiers
 	get_type_modifiers();
+
+	compiler_declr->typeModifiers = typeModifiers;
 
 }
 void declaration_t::get_identifier_name()
@@ -71,18 +84,26 @@ void declaration_t::initialize()
 	//handle initializer list
 	if(is_initializer_list(*tokens.it))
 	{
+		compiler_declr->initializer_list = true;
 		if (auto substr = initializer_list_t::find_curlybracket_substring(tokens)) {
 			tokens.it++; //ignore first {
 			tokens.end = --(substr.value().end); //ignore last }
 		}
 
-		initializer_list_t ilist(block, tokens, *target);
+		initializer_list_t ilist(block, tokens, *target, compiler_declr.get());
 		ilist.evaluate();
 		return;
 	}
 	tokens.end--; //remove the ;
 	auto result = expression_t(block, tokens);
 	auto value = result.EvaluateEntireExpression();
+
+	//the expression will be owned by this initializer
+	compiler_declr->add_initializer(std::move(compilerInfo.back()));
+
+	//remove expression from list
+	compilerInfo.pop_back();
+
 	const auto f = evaluationFunctions::getInstance().find_function(P_ASSIGN);
 
 	if (!f.has_value())

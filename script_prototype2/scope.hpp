@@ -55,7 +55,7 @@ public:
 		codepos_begin = std::move(begin);
 		codepos_end = std::move(end);
 
-		std::cout << std::format("scope bounds: [{}, {}] to [{}, {}]\n", codepos_begin.line, codepos_begin.column, codepos_end.line, codepos_end.column);
+		//std::cout << std::format("scope bounds: [{}, {}] to [{}, {}]\n", codepos_begin.line, codepos_begin.column, codepos_end.line, codepos_end.column);
 
 	}
 
