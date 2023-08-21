@@ -23,11 +23,12 @@ void declaration_t::declare_and_initialize()
 	compiler_declr->identifier = target->identifier;
 
 	if (has_initializer()) {
+		compiler_declr->has_initializer = true;
 		initialize();
 
 	}
 
-
+	set_compiler_data();
 
 }
 void declaration_t::get_declaration_type()
@@ -42,8 +43,8 @@ void declaration_t::get_declaration_type()
 	//check for type modifiers
 	get_type_modifiers();
 
-	compiler_declr->typeModifiers = typeModifiers;
-
+	std::copy(typeModifiers.begin(), typeModifiers.end(), compiler_declr->typeModifiers.begin());
+	compiler_declr->dtype = dtype;
 }
 void declaration_t::get_identifier_name()
 {
@@ -100,6 +101,10 @@ void declaration_t::initialize()
 
 	//the expression will be owned by this initializer
 	compiler_declr->add_initializer(std::move(compilerInfo.back()));
+
+	//auto ptr = (expression_token_compiler*)compiler_declr->initializer.front().data.get();
+
+	//std::cout << "rvalue? " << ptr->rval.get_int() << '\n';
 
 	//remove expression from list
 	compilerInfo.pop_back();
@@ -171,5 +176,22 @@ void declaration_t::apply_modifiers(Variable& _target)
 
 	
 	
+
+}
+void declaration_t::set_compiler_data()
+{
+	declaration_t_compiler ye(*this);
+
+	size_t size = ye.totalSize();
+	std::unique_ptr<char[]> data = std::make_unique<char[]>(size);
+
+	char* copy = ye.get_copy();
+	memcpy(data.get(), copy, size);
+	delete copy;
+
+	compiler_information info{ .data = std::move(data), .dataSize = size, .type = compiler_statements_e::DECLARATION };
+
+	compilerInfo.push_back(std::move(info));
+
 
 }

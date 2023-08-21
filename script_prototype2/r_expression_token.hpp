@@ -6,6 +6,8 @@
 
 struct r_expression_token
 {
+
+
 	void insert_prefix(token_t& _token) { prefix.push_back(_token); }
 	void insert_postfix(const token_statement_t& _token, const punctuation_e p) { postfix.push_back({ _token, p }); }
 
@@ -52,6 +54,7 @@ struct r_expression_token
 
 	bool is_lvalue() const noexcept { return lval; }
 	bool is_rvalue() const noexcept { return rval.get(); }
+
 
 	template<typename T>
 	void set_value(T value) {

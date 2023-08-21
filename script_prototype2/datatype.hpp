@@ -11,7 +11,7 @@ struct customType
 	size_t size = 0;
 	size_t numElements = 0;
 };
-enum class dataTypes_e
+enum class dataTypes_e : char
 {
 	CHAR,
 	INT,

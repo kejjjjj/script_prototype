@@ -35,8 +35,8 @@ public:
 
 	bool is_global_scope() const noexcept { return lower_scope == nullptr; }
 
-	decltype(auto) declare_variable(const Variable& v) {
-		return localVars.declare_variable((v));
+	decltype(auto) declare_variable(Variable&& v) {
+		return localVars.declare_variable(std::move(v));
 	}
 	Variable* find_variable(const std::string& v) {
 

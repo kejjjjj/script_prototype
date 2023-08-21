@@ -3,7 +3,7 @@
 #include "scope.hpp"
 #include "r_expression_token.hpp"
 #include "expression_token.hpp"
-
+#include "runtime.hpp"
 class r_expression_t {
 public:
 	r_expression_t(scr_scope_t* scope, compiler_information& expression) : block(scope)
@@ -25,6 +25,13 @@ public:
 
 			if (ptr->b_rvalue)
 				token.rval = std::unique_ptr<rvalue>(new rvalue(std::move(ptr->rval)));
+
+			//else if (ptr->b_lvalue) {
+			//	token.lval = block->find_variable(token.get_token().string);
+
+			//	if (!token.lval)
+			//		throw runtimeError_t(&token.get_token(), "what teh fuck?");
+			//}
 
 			token.op = ptr->op;
 			token.op_priority = ptr->op_priority;

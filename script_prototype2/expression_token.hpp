@@ -133,11 +133,13 @@ struct expression_token_compiler
 			rval.value.buffer = std::make_shared<char*>(*t.rval->value.buffer.get());
 			rval.value.buf_size = t.rval->value.buf_size;
 			rval.set_type(t.rval->get_type());
+			std::cout << "oh yea \"" << t.get_token().string << "\" is definitely not an lvalue!\n";
 
 			//std::cout << "rvalue use count: " << rval.value.buffer.use_count() << '\n';
 			b_rvalue = true;
 		}
 		else if (t.is_lvalue()) {
+			std::cout << "oh yea \"" << t.get_token().string << "\" is definitely an lvalue!\n";
 			b_lvalue = true; 
 		}
 

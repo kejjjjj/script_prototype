@@ -5,11 +5,16 @@
 #include "r_operator_standard.hpp"
 #include "r_unary.hpp"
 #include "r_postfix.hpp"
+#include "r_declaration.hpp"
 
 //assumes that the code has no syntax errors
 void runtime_execute(script_t& script)
 {
+    for (auto& i : compilerInfo) {
+        std::cout << "size: " << i.dataSize << " with type: " << static_cast<std::underlying_type_t<decltype(i.type)>>(i.type) << '\n';
+    }
 
+    //return;
     runtimeEvaluationFunctions::getInstance().createFunctions();
 
 	script.S_ResetIterator();
@@ -56,6 +61,7 @@ void runtime_execute(script_t& script)
 void RuntimeCodeblock_read(script_t& script, scr_scope_t** codeblock, compiler_information& codepos)
 {
     std::unique_ptr<r_expression_t> expression;
+    std::unique_ptr<r_declaration_t> declaration;
 
     scr_scope_t* block = *codeblock;
 
@@ -73,6 +79,9 @@ void RuntimeCodeblock_read(script_t& script, scr_scope_t** codeblock, compiler_i
         break;
     case compiler_statements_e::DECLARATION:
 
+        declaration = std::unique_ptr<r_declaration_t>(new r_declaration_t(block, codepos));
+
+        declaration->declare_and_initialize();
         break;
     }
 

@@ -62,7 +62,7 @@ struct rvalue
 private:
 	
 	
-	dataTypes_e type;
+	dataTypes_e type = dataTypes_e::UNKNOWN;
 };
 
 #endif

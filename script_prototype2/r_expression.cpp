@@ -3,6 +3,11 @@
 #include "runtime.hpp"
 r_expression_token r_expression_t::EvaluateEntireExpression()
 {
+	std::cout << "EvaluateEntireExpression(";
+	for (auto& it : sortedTokens) {
+		std::cout << it.get_token().string << ' ';
+	}
+	std::cout << ")\n";
 
 	EvaluateExpression();
 

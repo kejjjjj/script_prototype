@@ -1,6 +1,7 @@
 #include "variable.hpp"
 #include "expression_token.hpp"
 #include "o_standard.hpp"
+#include "r_expression_token.hpp"
 
 Variable::Variable(const var_declr_data& init_data)
 {
@@ -100,7 +101,7 @@ void Variable::set_array_depth(const size_t newSize)
 void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length)
 {
 	std::cout << "replacing array\n";
-	if (length != numElements);
+	if (length != numElements)
 		resize_array(length);
 
 	const auto f = evaluationFunctions::getInstance().find_function(P_ASSIGN);
