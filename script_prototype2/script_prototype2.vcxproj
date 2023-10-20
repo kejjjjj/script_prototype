@@ -141,6 +141,7 @@
     <ClCompile Include="expression.cpp" />
     <ClCompile Include="expression_token.cpp" />
     <ClCompile Include="filetools.cpp" />
+    <ClCompile Include="functions.cpp" />
     <ClCompile Include="if_statement.cpp" />
     <ClCompile Include="initializer_list.cpp" />
     <ClCompile Include="o_postfix.cpp" />
@@ -149,8 +150,6 @@
     <ClCompile Include="punctuation.cpp" />
     <ClCompile Include="runtime.cpp" />
     <ClCompile Include="rvalue.cpp" />
-    <ClCompile Include="r_declaration.cpp" />
-    <ClCompile Include="r_expression.cpp" />
     <ClCompile Include="r_expression_token.cpp" />
     <ClCompile Include="r_operator_standard.cpp" />
     <ClCompile Include="r_postfix.cpp" />
@@ -168,6 +167,7 @@
     <ClInclude Include="expression.hpp" />
     <ClInclude Include="expression_token.hpp" />
     <ClInclude Include="filetools.hpp" />
+    <ClInclude Include="functions.hpp" />
     <ClInclude Include="if_statement.hpp" />
     <ClInclude Include="initializer_list.hpp" />
     <ClInclude Include="o_postfix.hpp" />
@@ -177,8 +177,6 @@
     <ClInclude Include="punctuation.hpp" />
     <ClInclude Include="runtime.hpp" />
     <ClInclude Include="rvalue.hpp" />
-    <ClInclude Include="r_declaration.hpp" />
-    <ClInclude Include="r_expression.hpp" />
     <ClInclude Include="r_expression_token.hpp" />
     <ClInclude Include="r_operator_standard.hpp" />
     <ClInclude Include="r_postfix.hpp" />

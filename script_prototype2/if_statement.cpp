@@ -8,11 +8,11 @@ void if_statement::evaluate_statement()
 	++it;
 
 
-	//std::cout << "evaluate_if_statement( ";
+	//LOG("evaluate_if_statement( ";
 	//for (auto _it = it; _it != statement.end; ++_it) {
-	//	std::cout << _it->string << ' ';
+	//	LOG(_it->string << ' ';
 	//}
-	//std::cout << " )\n";
+	//LOG(" )\n";
 	
 	auto parentheses_statement = token_statement_t{ .it = it, .begin = it, .end = statement.end };
 	parentheses_statement.end++;
@@ -31,9 +31,9 @@ void if_statement::evaluate_statement()
 	}
 
 	if (token.implicit_cast<int>()) {
-		std::cout << "yippee the if statement will execute because the expression evaluated to: " << token.get_int() << '\n';
+		LOG("yippee the if statement will execute because the expression evaluated to: " << token.get_int() << '\n');
 	}else
-		std::cout << "oh no the if statement will not execute because the expression evaluated to: " << token.get_int() << '\n';
+		LOG("oh no the if statement will not execute because the expression evaluated to: " << token.get_int() << '\n');
 
 	it = ++parentheses_statement.it;
 	++it;

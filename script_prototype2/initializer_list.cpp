@@ -1,8 +1,8 @@
 #include "initializer_list.hpp"
 #include "expression.hpp"
 
-initializer_list_t::initializer_list_t(scr_scope_t* scope, const token_statement_t& _statement, Variable& _target, declaration_t_compiler* _decl_compiler)
-	: statement(_statement), targetVar(_target), block(scope), decl_compiler(_decl_compiler)
+initializer_list_t::initializer_list_t(scr_scope_t* scope, const token_statement_t& _statement, Variable* _target)
+	: statement(_statement), targetVar(_target), block(scope)
 {
 	if (statement.begin == statement.end)
 		throw scriptError_t(&*statement.begin, "how did this initializer list exception occur?");
@@ -20,17 +20,17 @@ void initializer_list_t::evaluate()
 {
 	evaluate_list(targetVar);
 }
-void initializer_list_t::evaluate_list(Variable& target)
+void initializer_list_t::evaluate_list(Variable* target)
 {
-	if (!target.is_array()) {
+	if (!target->is_array()) {
 		throw scriptError_t(&*statement.it, "too many braces for an initializer list");
 	}
 
-	//std::cout << "depth: " << target.array_depth() << " | for statement: ";
+	//LOG("depth: " << target.array_depth() << " | for statement: ";
 	//for (auto it = statement.it; it != statement.end; it++) {
-	//	std::cout << it->string;
+	//	LOG(it->string;
 	//}
-	//std::cout << statement.end->string << '\n';
+	//LOG(statement.end->string << '\n';
 
 	const auto is_comma = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_COMMA;
@@ -45,8 +45,8 @@ void initializer_list_t::evaluate_list(Variable& target)
 
 	while (true) {
 
-		if (elementIndex+1ull > target.numElements)
-			target.resize_array(elementIndex+1ull);
+		if (elementIndex+1ull > target->numElements)
+			target->resize_array(elementIndex+1ull);
 
 		if (auto bracket_statement = find_curlybracket_substring(statement)) {
 
@@ -55,23 +55,23 @@ void initializer_list_t::evaluate_list(Variable& target)
 
 			_statement.print();
 			
-			size_t zeroDepth = target.array_depth();
+			size_t zeroDepth = target->array_depth();
 
-			//std::cout << "and the array depth for that is " << zeroDepth-1 << '\n';
+			//LOG("and the array depth for that is " << zeroDepth-1 << '\n';
 
 			_statement.it++;
 			_statement.end--;
 
-			//std::cout << "----- current array tree -----\n";
+			//LOG("----- current array tree -----\n";
 			//target.print();
-			//std::cout << "----- current array tree -----\n";
+			//LOG("----- current array tree -----\n";
 
-			if (target.arrayElements[elementIndex].array_depth() != zeroDepth - 1) {
-				//std::cout << "what the heeeck!\n";
-				target.set_array_depth(zeroDepth);
+			if (target->arrayElements[elementIndex]->array_depth() != zeroDepth - 1) {
+				//LOG("what the heeeck!\n";
+				target->set_array_depth(zeroDepth);
 			}
 
-			initializer_list_t ilist(block, _statement, target.arrayElements[elementIndex], decl_compiler);
+			initializer_list_t ilist(block, _statement, target->arrayElements[elementIndex].get());
 			(statement.it = ++_statement.end); //iterate to the next character
 
 			if (statement.it != statement.end)
@@ -84,13 +84,8 @@ void initializer_list_t::evaluate_list(Variable& target)
 			
 			auto expression = expression_t(block, expression_statement.value()).EvaluateEntireExpression();
 			
-			//the expression will be owned by this initializer
-			decl_compiler->add_initializer(std::move(compilerInfo.back()));
 
-			//remove expression from list
-			compilerInfo.pop_back();
-
-			auto l = target.arrayElements[elementIndex].to_expression();
+			auto l = target->arrayElements[elementIndex]->to_expression();
 			l.set_token(expression.get_token());
 			assign_function.value()(l, expression);
 		}
@@ -107,7 +102,7 @@ void initializer_list_t::evaluate_list(Variable& target)
 		elementIndex++;
 	}
 
-	std::cout << "elements in list: " << elementIndex << '\n';
+	LOG("elements in list: " << elementIndex << '\n');
 }
 
 std::optional<token_statement_t> initializer_list_t::read_expression(token_statement_t& _statement)

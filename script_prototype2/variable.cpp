@@ -43,45 +43,57 @@ expression_token Variable::to_expression()
 void Variable::create_array()
 {
 	numElements = 1;
-	arrayElements = std::shared_ptr<Variable[]>(new Variable[numElements]);
 
-	for (decltype(numElements) i = 0; i < numElements; i++) {
-		arrayElements[i].set_type(get_type());
-		arrayElements[i].AllocateValues();
-		arrayElements[i].isInitialized = true;
-
-	}
+	arrayElements.resize(numElements);
+	arrayElements[0] = std::unique_ptr<Variable>((new Variable()));
+	arrayElements[0]->set_type(get_type());
+	arrayElements[0]->AllocateValues();
+	arrayElements[0]->isInitialized = true;
 
 
 
 }
 void Variable::resize_array(const size_t newSize)
 {
-	if(!is_array())
+	if (!is_array())
 		throw scriptError_t("why are we trying to resize a non-array?");
 
 	if (newSize == numElements)
 		return;
 
-	bool childArray = arrayElements[0].is_array();
+	if (newSize <= numElements) {
+		arrayElements.erase(arrayElements.begin()+newSize, arrayElements.end());
+		return;
+	}
 
-	std::shared_ptr<Variable[]> newArray(new Variable[newSize]);
+	bool childArray = arrayElements[0]->is_array();
 
-	const size_t copySize = std::min(newSize, numElements);
-	std::copy(arrayElements.get(), arrayElements.get() + copySize, newArray.get());
+	//std::vector<std::unique_ptr<Variable>> newArray(newSize);
 
-	arrayElements = newArray;
-	//std::cout << "resized the array from size " << numElements << " to " << newSize << '\n';
-	numElements = newSize;
+	//const size_t copySize = std::min(newSize, numElements);
 
-	for (decltype(numElements) i = copySize; i < newSize; i++) {
-		arrayElements[i].set_type(get_type());
-		arrayElements[i].AllocateValues();
-		arrayElements[i].isInitialized = true;
+	//for (size_t i = 0; i < copySize; ++i) {
+	//	newArray[i] = std::move(arrayElements[i]);
+	//}
+
+	//arrayElements = std::move(newArray);
+
+	const size_t iterations = newSize - numElements;
+
+	for (size_t i = 0; i < iterations; i++) {
+		arrayElements.push_back(std::unique_ptr<Variable>(new Variable()));
+
+		auto& back = arrayElements.back();
+
+		back->set_type(get_type());
+		back->AllocateValues();
+		back->isInitialized = true;
 
 		if (childArray)
-			arrayElements[i].create_array();
+			back->create_array();
 	}
+	
+	numElements = newSize;
 
 }
 void Variable::set_array_depth(const size_t newSize)
@@ -91,14 +103,14 @@ void Variable::set_array_depth(const size_t newSize)
 
 	for (size_t i = 0; i < numElements; i++) {
 
-		if (arrayElements[i].array_depth() != newSize - 1ull) {
-			arrayElements[i].set_array_depth(newSize - 1ull);
+		if (arrayElements[i]->array_depth() != newSize - 1ull) {
+			arrayElements[i]->set_array_depth(newSize - 1ull);
 		}
 
 		
 	}
 }
-void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length)
+void Variable::replace_array(const std::vector<std::unique_ptr<Variable>>& a_arr, const size_t length)
 {
 	std::cout << "replacing array\n";
 	if (length != numElements)
@@ -112,8 +124,8 @@ void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const siz
 		throw scriptError_t("how?");
 
 	for (size_t i = 0; i < length; i++) {
-		l = arrayElements[i].to_expression();
-		r = a_arr[i].to_expression();
+		l = arrayElements[i]->to_expression();
+		r = std::move(a_arr[i]->to_expression());
 		f.value()(l, r);
 	}
 
@@ -121,12 +133,19 @@ void Variable::replace_array(const std::shared_ptr<Variable[]>& a_arr, const siz
 }
 size_t Variable::array_depth() const
 {
-	Variable* a = arrayElements.get();
+	if (!is_array())
+		return 0;
+
+	Variable* a = arrayElements[0].get();
 	size_t size{ 0 };
 
 	while (a) {
 		++size;
-		a = a->arrayElements.get();
+
+		if (!a->is_array())
+			break;
+
+		a = a->arrayElements[0].get();
 	}
 
 	return size;
@@ -138,16 +157,16 @@ void Variable::print(size_t spaces) const
 		std::cout << std::format("{}:\n", identifier);
 	}
 
-	auto getval = [](const Variable& var) -> std::string
+	auto getval = [](const Variable* var) -> std::string
 	{
 		std::string c;
-		switch (var.type) {
+		switch (var->type) {
 		case dataTypes_e::CHAR:
-			 return c.push_back(var.get_char()), c;
+			 return c.push_back(var->get_char()), c;
 		case dataTypes_e::INT:
-			return std::to_string(var.get_int());
+			return std::to_string(var->get_int());
 		case dataTypes_e::FLOAT:
-			return std::to_string(var.get_float());
+			return std::to_string(var->get_float());
 
 		default:
 			return "null";
@@ -163,17 +182,17 @@ void Variable::print(size_t spaces) const
 	}
 
 	for (size_t i = 0; i < numElements; i++) {
-		if (arrayElements[i].is_array() == false) {
-			std::cout << std::format("{}[{}]: <{}> ({})\n", prefix, i, get_type_as_text(type), getval(arrayElements[i]));
+		if (arrayElements[i]->is_array() == false) {
+			std::cout << std::format("{}[{}]: <{}> ({})\n", prefix, i, get_type_as_text(type), getval(arrayElements[i].get()));
 		}
 		else {
 			std::cout << std::format("{}[{}]: <{}>\n", prefix, i, get_type_as_text(type));
 
 		}
-		arrayElements[i].print(spaces + 1);
+		arrayElements[i]->print(spaces + 1);
 	}
 	if (is_array() == false && !identifier.empty())
-		std::cout << std::format("{}: <{}> ({})\n", identifier, get_type_as_text(type), getval(*this));
+		std::cout << std::format("{}: <{}> ({})\n", identifier, get_type_as_text(type), getval(this));
 
 //	std::cout << std::format("{}{}: <{}> ({})\n", prefix, identifier, get_type_as_text(type), getval(*this));
 
@@ -188,7 +207,7 @@ std::string Variable::s_getvariabletype() const
 			return "";
 
 		if (var->is_array())
-			return "[]" + types_to_text(var->arrayElements.get());
+			return "[]" + types_to_text(var->arrayElements[0].get());
 
 		return "";
 

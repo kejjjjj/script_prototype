@@ -1,16 +1,18 @@
 #include "expression.hpp"
 #include "o_postfix.hpp"
+
+
 //each expression sequence will be converted to just one remaining expression
 expression_token expression_t::EvaluateEntireExpression()
 {
 	if (!is_ready())
 		throw scriptError_t(&*tokens.it, "empty expression is not allowed");
 
-	std::cout << "EvaluateEntireExpression(";
+	LOG("EvaluateEntireExpression(");
 	for (auto it = tokens.it; it != tokens.end; ++it) {
-		std::cout << it->string<<' ';
+		LOG(it->string<<' ');
 	}
-	std::cout << ")\n";
+	LOG(")\n");
 
 	EvaluateExpression();
 
@@ -22,36 +24,12 @@ void expression_t::EvaluateExpression()
 
 	TokenizeExpression();
 
-	size_t size = sortedTokens.size() * sizeof(expression_token_compiler);
-	std::unique_ptr<char[]> data = std::make_unique<char[]>(size);
-
-	auto it = sortedTokens.begin();
-	
-
-	for(size_t i = 0; i < size; i+= sizeof(expression_token_compiler)){
-		expression_token_compiler ye(*it);
-
-		char* copy = ye.get_copy();
-		memcpy(data.get() + i, copy, sizeof(expression_token_compiler));
-		delete copy;
-
-		//std::cout << ((expression_token_compiler*)(data.get() + i))->token.string << '\n';
-
-		++it;
-	}
-
-
-
-	compiler_information info{ .data = std::move(data), .dataSize = size, .type = compiler_statements_e::EXPRESSION };
-	
-	compilerInfo.push_back(std::move(info));
-
 	std::for_each(sortedTokens.begin(), sortedTokens.end(), [this](expression_token& t) {
 		t.eval_postfix(block);
 		t.eval_prefix();
 	});
 
-	std::cout << sortedTokens.size() << " operands and " << sortedTokens.size() / 2 << " operators in the full expression!\n";
+	LOG(sortedTokens.size() << " operands and " << sortedTokens.size() / 2 << " operators in the full expression!\n");
 
 	EvaluateExpressionTokens();
 	
@@ -240,7 +218,7 @@ bool expression_t::ParseUnaryCast(expression_token& token)
 
 	tokens.it++;
 
-	std::cout << "unary cast!\n";
+	LOG("unary cast!\n");
 
 	return true;
 }
@@ -270,7 +248,7 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 
 	tokens.it = ++parentheses_statement.it;
 	++tokens.it;
-	//std::cout << "continuing iteration from " << tokens.it->string << '\n';
+	//LOG("continuing iteration from " << tokens.it->string << '\n';
 	return true;
 }
 void expression_t::ExpressionFindMatchingParenthesis(token_statement_t& token)

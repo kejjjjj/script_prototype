@@ -33,9 +33,9 @@ struct token_t
 
 	void print() const noexcept
 	{
-		std::cout << "\ntoken: " << string << '\n'
+		LOG( "\ntoken: " << string << '\n'
 			<< "type: " << int(tt) << '\n'
-			<< "position: [" << line << ", " << column << "]\n";
+			<< "position: [" << line << ", " << column << "]\n");
 	}
 	void reset() noexcept
 	{
@@ -53,13 +53,14 @@ struct token_statement_t
 
 	void print() const noexcept {
 
-		std::cout << "token_statement_t::print():\n";
+		LOG( "token_statement_t::print():\n");
 		for (auto i = it; i != end; i++) {
-			std::cout << i->string;
+			LOG( i->string);
 		}
-		std::cout << end->string << '\n';
+		LOG( end->string << '\n');
 	}
 };
+class scr_scope_t;
 struct script_t
 {
 	script_t(const std::string& filename);
@@ -75,10 +76,10 @@ struct script_t
 	size_t line = 0;
 	size_t column = 0;
 	
-	class scr_scope_t* global_scope;
+	//class scr_scope_t* global_scope;
 
 	void S_Tokenize();
-	std::optional<token_statement_t> S_CreateStatement();
+	std::optional<token_statement_t> S_CreateStatement(scr_scope_t* scope);
 	token_statement_t S_GiveRemaining() noexcept(true);
 	auto S_GetIterator() noexcept(true) { return token_it; }
 	void S_SetIterator(std::list<token_t>::iterator it) { token_it = it; }
@@ -131,7 +132,7 @@ public:
 
 };
 
-enum class compiler_statements_e
+enum class compiler_code_type
 {
 	EXPRESSION,
 	DECLARATION
@@ -141,9 +142,8 @@ struct compiler_information
 {
 	std::unique_ptr<char[]> data = 0;
 	size_t dataSize = 0;
-	compiler_statements_e type;
+	size_t codepos = 0;
+	compiler_code_type type;
 };
-
-inline std::list<compiler_information> compilerInfo;
 
 #endif

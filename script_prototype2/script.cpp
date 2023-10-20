@@ -47,7 +47,7 @@ void script_t::S_Tokenize()
 	}
 	token_it = tokens.begin();
 }
-std::optional<token_statement_t> script_t::S_CreateStatement()
+std::optional<token_statement_t> script_t::S_CreateStatement(scr_scope_t* scope)
 {
 	auto& end = token_it;
 	auto begin = token_it;
@@ -57,10 +57,10 @@ std::optional<token_statement_t> script_t::S_CreateStatement()
 		switch (LOWORD(end->extrainfo)) {
 
 		case P_CURLYBRACKET_OPEN:
-			create_scope(*this, &global_scope);
+			scope = create_scope(*this, scope);
 			return std::nullopt;
 		case P_CURLYBRACKET_CLOSE:
-			delete_scope(*this, &global_scope);
+			scope = delete_scope(*this, scope);
 			return std::nullopt;
 		default:
 			break;

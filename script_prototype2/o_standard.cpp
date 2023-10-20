@@ -32,20 +32,20 @@ expression_token evaluationFunctions::arithmetic_addition(expression_token& left
 
 	switch (left.get_type()) {
 	case dataTypes_e::CHAR:
-		std::cout << left.get_char() << " + " << right.get_char() << " = ";
+		LOG(left.get_char() << " + " << right.get_char() << " = ");
 		result.set_value<int>(left.get_char() + right.get_char());
-		std::cout << result.get_char() << '\n';
+		LOG(result.get_char() << '\n');
 		break;
 	case dataTypes_e::INT:
-		std::cout << left.get_int() << " + " << right.get_int() << " = ";
+		LOG(left.get_int() << " + " << right.get_int() << " = ");
 		result.set_value<int>(left.get_int() + right.get_int());
-		std::cout << result.get_int() << '\n';
+		LOG(result.get_int() << '\n');
 		break;
 	case dataTypes_e::FLOAT:
-		std::cout << left.get_float() << " + " << right.get_float() << " = ";
+		LOG(left.get_float() << " + " << right.get_float() << " = ");
 
 		result.set_value<float>(left.get_float() + right.get_float());
-		std::cout << result.get_float() << '\n';
+		LOG(result.get_float() << '\n');
 
 		break;
 	}
@@ -77,19 +77,19 @@ expression_token evaluationFunctions::assignment(expression_token& left, express
 
 	switch (left.get_type()) {
 	case dataTypes_e::CHAR:
-		std::cout << "assigning from " << left.get_char() << " -> ";
+		LOG("assigning from " << left.get_char() << " -> ");
 		left.set_value<int>(right.get_char());
-		std::cout << left.get_char() << '\n';
+		LOG(left.get_char() << '\n');
 		break;
 	case dataTypes_e::INT:
-		std::cout << "assigning from " << left.get_int() << " -> ";
+		LOG("assigning from " << left.get_int() << " -> ");
 		left.set_value<int>(right.get_int());
-		std::cout << left.get_int() << '\n';
+		LOG(left.get_int() << '\n');
 		break;
 	case dataTypes_e::FLOAT:
-		std::cout << "assigning from " << left.get_float() << " -> ";
+		LOG("assigning from " << left.get_float() << " -> ");
 		left.set_value<float>(right.get_float());
-		std::cout << left.get_float() << '\n';
+		LOG(left.get_float() << '\n');
 		break;
 	}
 	left.lval->isInitialized = true;

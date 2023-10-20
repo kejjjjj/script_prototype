@@ -87,9 +87,6 @@
     <ClCompile Include="runtime.cpp">
       <Filter>Source Files\run_time</Filter>
     </ClCompile>
-    <ClCompile Include="r_expression.cpp">
-      <Filter>Source Files\run_time</Filter>
-    </ClCompile>
     <ClCompile Include="r_expression_token.cpp">
       <Filter>Source Files\run_time</Filter>
     </ClCompile>
@@ -102,8 +99,8 @@
     <ClCompile Include="r_operator_standard.cpp">
       <Filter>Source Files\run_time\operators</Filter>
     </ClCompile>
-    <ClCompile Include="r_declaration.cpp">
-      <Filter>Source Files\run_time</Filter>
+    <ClCompile Include="functions.cpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -161,9 +158,6 @@
     <ClInclude Include="runtime.hpp">
       <Filter>Source Files\run_time</Filter>
     </ClInclude>
-    <ClInclude Include="r_expression.hpp">
-      <Filter>Source Files\run_time</Filter>
-    </ClInclude>
     <ClInclude Include="r_expression_token.hpp">
       <Filter>Source Files\run_time</Filter>
     </ClInclude>
@@ -176,8 +170,8 @@
     <ClInclude Include="r_operator_standard.hpp">
       <Filter>Source Files\run_time\operators</Filter>
     </ClInclude>
-    <ClInclude Include="r_declaration.hpp">
-      <Filter>Source Files\run_time</Filter>
+    <ClInclude Include="functions.hpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

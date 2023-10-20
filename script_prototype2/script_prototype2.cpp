@@ -26,15 +26,18 @@ int main()
     unaryFunctions::getInstance().createFunctions();
     postfixFunctions::getInstance().createFunctions();
 
-    script.global_scope = new scr_scope_t;
+    std::unique_ptr<scr_scope_t> global_scope = std::unique_ptr<scr_scope_t>(new scr_scope_t);
     
+    std::chrono::time_point<std::chrono::steady_clock> old = std::chrono::steady_clock::now();
+
+
     try {
         script.S_Tokenize();
 
         auto it = script.S_GetIterator();
         auto& end = script.S_GetEnd();
 
-        script.global_scope->set_range
+        global_scope->set_range
         (
             codepos_t{ .line = it->line,  .column = it->column },
             codepos_t{ .line = end->line, .column = end->column }
@@ -43,13 +46,13 @@ int main()
 
         while(!script.is_eof()){
 
-            Codeblock_read(script, &script.global_scope);
+            Codeblock_read(script, global_scope);
           
           
 
         }
 
-        if (!script.global_scope->is_global_scope()) {
+        if (!global_scope->is_global_scope()) {
             throw scriptError_t(&*script.S_GetIterator(), "expected to find a \"}\"");
         }
 
@@ -60,16 +63,22 @@ int main()
         //MessageBox(NULL, err.what(), "Syntax Error!", MB_ICONERROR);
     }
 
+    std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+
+    std::chrono::duration<float> difference = now - old;
+
     std::cout << "\n------- global variables -------\n\n";
-    script.global_scope->print_localvars();
+    global_scope->print_localvars();
     std::cout << "\n--------------------------------\n";
 
-    delete script.global_scope;
+    global_scope.reset();
 
-    std::cout << "\n******** BEGIN RUNTIME ********\n";
+    //std::cout << "\n******** BEGIN RUNTIME ********\n";
+
+    printf("\ntime taken: %.6f\n", difference.count());
 
 
-    runtime_execute(script);
+    //runtime_execute(script);
 
     system("pause");
 }

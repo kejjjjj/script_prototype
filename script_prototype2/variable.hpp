@@ -38,11 +38,11 @@ public:
 
 	auto get_type() const noexcept { return type; }
 	void set_type(const dataTypes_e _type) noexcept(true) { type = _type; }
-	bool is_array() const noexcept { return arrayElements.get(); }
+	bool is_array() const noexcept { return arrayElements.empty() == FALSE; }
 	void resize_array(const size_t newSize);
 	void set_array_depth(const size_t newSize);
 	void create_array();
-	void replace_array(const std::shared_ptr<Variable[]>& a_arr, const size_t length);
+	void replace_array(const std::vector<std::unique_ptr<Variable>>&, const size_t length);
 	size_t array_depth() const;
 
 	expression_token to_expression();
@@ -50,11 +50,15 @@ public:
 	std::string identifier;
 	VariableValue value;
 
-	std::shared_ptr<Variable[]> arrayElements;
+	std::vector<std::unique_ptr<Variable>> arrayElements;
 	size_t numElements = 0;
 	
 	
 	bool isInitialized = false;
+	
+	Variable(const Variable&) = delete;
+	Variable& operator=(const Variable&) = delete;
+
 	//Array arr;
 private:
 	
@@ -68,12 +72,9 @@ private:
 class VariableTable
 {
 public:
-	static VariableTable& getInstance() {
-		static VariableTable instance;
-		return instance;
-	}
-	auto declare_variable(const Variable& v) -> Variable* {
-		return &table.insert(std::make_pair(v.identifier, (v))).first->second;
+
+	auto declare_variable(std::unique_ptr<Variable>& v) -> Variable* {
+		return table.insert({ v->identifier, std::move(v) }).first->second.get();
 	}
 
 	auto find(const std::string& v) {
@@ -91,7 +92,7 @@ public:
 		std::cout << "\n---- killing local variables: ----\n\n";
 
 		for (auto& i : table)
-			std::cout << i.second.identifier << '<' << i.second.s_getvariabletype() << '>' << '\n';
+			std::cout << i.second->identifier << '<' << i.second->s_getvariabletype() << '>' << '\n';
 
 		std::cout << "\n----------------------------------\n\n";
 
@@ -105,12 +106,12 @@ public:
 		//std::cout << "script stack:\n\n";
 			
 		for (const auto& i : table) {
-			i.second.print();
+			i.second->print();
 		}
 
 	}
 private:
-	std::unordered_map<std::string, Variable> table;
+	std::unordered_map<std::string, std::unique_ptr<Variable>> table;
 };
 
 #endif

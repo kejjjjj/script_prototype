@@ -3,6 +3,7 @@
 #include "variable.hpp"
 #include "o_unary.hpp"
 #include "o_postfix.hpp"
+
 void expression_token::set_value_category()
 {
 	if (op)
@@ -128,7 +129,7 @@ void expression_token::lvalue_to_rvalue()
 void expression_token::implicit_cast(expression_token& other)
 {
 	if (get_type() == other.get_type()) {
-		//std::cout << "no implicit cast!\n";
+		//LOG("no implicit cast!\n";
 		return;
 	}
 
@@ -151,16 +152,16 @@ void expression_token::implicit_cast(expression_token& other)
 	std::ostream yea(0, 1);
 
 
-	//std::cout << yea;
+	//LOG(yea;
 
 	switch (get_type()) {
 	case dataTypes_e::INT:
-		std::cout << "implicitly casting to 'int'\n";
+		LOG("implicitly casting to 'int'\n");
 		other.set_value<int>(other.implicit_cast<int>());
 		other.rval->set_type(dataTypes_e::INT);
 		break;
 	case dataTypes_e::FLOAT:
-		std::cout << "implicitly casting to 'float'\n";
+		LOG("implicitly casting to 'float'\n");
 		other.set_value<float>(other.implicit_cast<float>());
 		other.rval->set_type(dataTypes_e::FLOAT);
 		break;
@@ -221,7 +222,7 @@ void expression_token::cast_weaker_operand(expression_token& other)
 
 		switch (weaker->get_type()) {
 		case dataTypes_e::CHAR:
-			std::cout << "a char gets promoted to an int\n";
+			LOG("a char gets promoted to an int\n");
 
 			weaker->rval->set_value<int>(weaker->implicit_cast<int>());
 			weaker->rval->set_type(dataTypes_e::INT);
@@ -234,14 +235,14 @@ void expression_token::cast_weaker_operand(expression_token& other)
 
 		switch (weaker->get_type()) {
 		case dataTypes_e::CHAR:
-			std::cout << "a char gets promoted to a float\n";
+			LOG("a char gets promoted to a float\n");
 
 			weaker->rval->set_value<float>(weaker->implicit_cast<float>());
 			weaker->rval->set_type(dataTypes_e::FLOAT);
 			break;
 
 		case dataTypes_e::INT:
-			std::cout << "an int gets promoted to a float\n";
+			LOG("an int gets promoted to a float\n");
 
 			weaker->rval->set_value<float>(weaker->implicit_cast<float>());
 			weaker->rval->set_type(dataTypes_e::FLOAT);

@@ -27,23 +27,23 @@ void unaryFunctions::increment(expression_token& token)
 
 	switch (token.get_type()) {
 	case dataTypes_e::CHAR:
-		std::cout << "incrementing lvalue from " << lvalue->get_char() << " to ";
+		LOG("incrementing lvalue from " << lvalue->get_char() << " to ");
 
 		lvalue->set_value<int>(lvalue->get_char() + 1);
-		std::cout << lvalue->get_char() << '\n';
+		LOG(lvalue->get_char() << '\n');
 
 		break;
 	case dataTypes_e::INT:
-		std::cout << "incrementing lvalue from " << lvalue->get_int() << " to ";
+		LOG("incrementing lvalue from " << lvalue->get_int() << " to ");
 
 		lvalue->set_value<int>(lvalue->get_int() + 1);
-		std::cout << lvalue->get_int() << '\n';
+		LOG(lvalue->get_int() << '\n');
 
 		break;
 	case dataTypes_e::FLOAT:
-		std::cout << "incrementing lvalue from " << lvalue->get_float() << " to ";
+		LOG("incrementing lvalue from " << lvalue->get_float() << " to ");
 		lvalue->set_value<float>(lvalue->get_float() + 1.f);
-		std::cout << lvalue->get_float() << '\n';
+		LOG(lvalue->get_float() << '\n');
 		break;
 	}
 
@@ -62,21 +62,21 @@ void unaryFunctions::decrement(expression_token& token)
 
 	switch (token.get_type()) {
 	case dataTypes_e::CHAR:
-		std::cout << "decrementing lvalue from " << lvalue->get_char() << " to ";
+		LOG("decrementing lvalue from " << lvalue->get_char() << " to ");
 
 		lvalue->set_value<int>(lvalue->get_char() - 1);
-		std::cout << lvalue->get_char() << '\n';
+		LOG(lvalue->get_char() << '\n');
 
 		break;
 	case dataTypes_e::INT:
-		std::cout << "decrementing lvalue from " << lvalue->get_int() << " to ";
+		LOG("decrementing lvalue from " << lvalue->get_int() << " to ");
 		lvalue->set_value<int>(lvalue->get_int() - 1);
-		std::cout << lvalue->get_int() << '\n';
+		LOG(lvalue->get_int() << '\n');
 		break;
 	case dataTypes_e::FLOAT:
-		std::cout << "decrementing from " << lvalue->get_float() << " to ";
+		LOG("decrementing from " << lvalue->get_float() << " to ");
 		lvalue->set_value<float>(lvalue->get_float() - 1.f);
-		std::cout << lvalue->get_float() << '\n';
+		LOG(lvalue->get_float() << '\n');
 
 		break;
 	}
@@ -88,19 +88,19 @@ void unaryFunctions::negate(expression_token& token)
 {
 	switch (token.get_type()) {
 	case dataTypes_e::CHAR:
-		std::cout << "negating from " << token.get_char() << " to ";
+		LOG("negating from " << token.get_char() << " to ");
 		token.set_value<int>(-token.get_char());
-		std::cout << token.get_char() << '\n';
+		LOG(token.get_char() << '\n');
 		return;
 	case dataTypes_e::INT:
-		std::cout << "negating from " << token.get_int() << " to ";
+		LOG("negating from " << token.get_int() << " to ");
 		token.set_value<int>(-token.get_int());
-		std::cout << token.get_int() << '\n';
+		LOG(token.get_int() << '\n');
 		return;
 	case dataTypes_e::FLOAT:
-		std::cout << "negating from " << token.get_float() << " to ";
+		LOG("negating from " << token.get_float() << " to ");
 		token.set_value<float>(-token.get_float());
-		std::cout << token.get_float() << '\n';
+		LOG(token.get_float() << '\n');
 		return;
 	}
 

@@ -34,9 +34,9 @@ void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, 
 
 	}
 
-	operand.lval = &operand.lval->arrayElements[index];
+	operand.lval = operand.lval->arrayElements[index].get();
 
-	std::cout << "array lvalue updated\n";
+	LOG("array lvalue updated\n");
 
 	statement.it++; //skip the ]
 	return;

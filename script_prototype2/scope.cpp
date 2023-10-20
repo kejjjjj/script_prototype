@@ -5,13 +5,16 @@
 #include "if_statement.hpp"
 #include "initializer_list.hpp"
 
-void Codeblock_read(script_t& script, scr_scope_t** codeblock)
+void Codeblock_read(script_t& script, std::unique_ptr<scr_scope_t>& codeblock)
 {
 
     std::unique_ptr<expression_t> expression;
-    std::unique_ptr<declaration_t> declaration;
+    std::unique_ptr<variable_declaration_t> declaration;
 
-    auto statement_opt = script.S_CreateStatement();
+
+    scr_scope_t* block = codeblock.get();
+
+    auto statement_opt = script.S_CreateStatement(block);
 
     if (!statement_opt) {
         //no value means no statement
@@ -22,10 +25,6 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
     auto statement_type = statement_determine(statement);
 
-    //if (script.is_eof() && statement_type != statementType_e::SCOPE_EXIT)
-    //    return;
-
-    scr_scope_t* block = *codeblock;
 
     switch (statement_type) {
     case statementType_e::EXPRESSION:
@@ -36,7 +35,7 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
         break;
     case statementType_e::DECLARATION:
-        declaration = std::unique_ptr<declaration_t>(new declaration_t(block, statement));
+        declaration = std::unique_ptr<variable_declaration_t>(new variable_declaration_t(block, statement));
 
         if ((declaration->is_ready()))
             declaration->declare_and_initialize();
@@ -71,13 +70,12 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
 }
 
-void create_scope(script_t& script, scr_scope_t** codeblock)
+scr_scope_t* create_scope(script_t& script, const scr_scope_t* block)
 {
-    std::cout << "creating a new scope\n";
-    scr_scope_t scope;
-    scr_scope_t* block = *codeblock;
+    LOG("creating a new scope\n");
+    scr_scope_t* scope = (new scr_scope_t);
 
-    scope.set_lower_scope(*block);
+    scope->set_lower_scope(block);
 
     std::optional<token_statement_t> bracket;
     auto remaining = script.S_GiveRemaining();
@@ -92,28 +90,27 @@ void create_scope(script_t& script, scr_scope_t** codeblock)
 
     auto& end = bracket.value();
 
-    scope.set_range
+    scope->set_range
     (
         codepos_t{ .line = remaining.it->line,  .column = remaining.it->column },
         codepos_t{ .line = end.end->line,        .column = end.end->column }
     );
 
-    *block = scope;
+    return scope;
 }
-void delete_scope(script_t& script, scr_scope_t** codeblock)
+scr_scope_t* delete_scope(script_t& script, scr_scope_t* codeblock)
 {
-    scr_scope_t* block = *codeblock;
     scr_scope_t* temp_block = 0;
 
-    if (block->is_global_scope()) {
+    if (codeblock->is_global_scope()) {
         throw scriptError_t(&*script.S_GetIterator(), "found \"}\" but it's not closing anything");
     }
 
     if (!script.is_eof())
         script.S_SetIterator(++script.S_GetIterator());
 
-    temp_block = block->on_exit();
+    temp_block = codeblock->on_exit(); //get the lower scope ptr
+    delete codeblock;
 
-    //delete block;
-    *codeblock = temp_block;
+    return temp_block;
 }

@@ -12,36 +12,28 @@ class scr_scope_t
 {
 public:
 
-	scr_scope_t() = default;
+	scr_scope_t() {
+		localVars = std::unique_ptr<VariableTable>(new VariableTable);
+	};
+	scr_scope_t(const scr_scope_t&) = delete;
+	scr_scope_t& operator=(const scr_scope_t&) = delete;
 
-	//scr_scope_t(std::shared_ptr<scr_scope_t>& lower_scope)
-	//	: lower_scope(lower_scope)
-	//{
-	//	std::shared_ptr<scr_scope_t> previous = lower_scope;
+	void set_lower_scope(const scr_scope_t* scope) {
 
-
-	//}
-
-	void set_lower_scope(const scr_scope_t& scope) {
-
-		lower_scope = std::shared_ptr<scr_scope_t>(new scr_scope_t(scope));
-
-		
-
-
+		lower_scope = const_cast<scr_scope_t*>(scope);
 	}
 
 	//~scr_scope_t() { on_exit(); }
 
 	bool is_global_scope() const noexcept { return lower_scope == nullptr; }
 
-	decltype(auto) declare_variable(Variable&& v) {
-		return localVars.declare_variable(std::move(v));
+	decltype(auto) declare_variable(std::unique_ptr<Variable>&& v) {
+		return localVars->declare_variable((v));
 	}
 	Variable* find_variable(const std::string& v) {
 
-		if (auto var = localVars.find(v))
-			return &var.value()->second;
+		if (auto var = localVars->find(v))
+			return var.value()->second.get();
 
 		if (is_global_scope())
 			return nullptr;
@@ -60,29 +52,29 @@ public:
 	}
 
 	void print_localvars() const noexcept {
-		localVars.print();
+		localVars->print();
 	}
 
 	auto on_exit(){
 
-		if (!lower_scope.get())
+		if (!lower_scope)
 			throw scriptError_t("how the hell is lowerscope a null pointer");
 
-		std::cout << "exiting scope\n";
+		LOG("exiting scope\n");
 		print_localvars();
-		localVars.erase_all();
-		return lower_scope.get();
+		localVars->erase_all();
+		return lower_scope;
 	}
-	auto& get_lower() noexcept { return lower_scope; }
+	auto get_lower() noexcept { return lower_scope; }
 private:
 	codepos_t codepos_begin{};
-	std::shared_ptr<scr_scope_t> lower_scope = 0;
-	VariableTable localVars;
+	scr_scope_t* lower_scope = 0;
+	std::unique_ptr<VariableTable> localVars;
 	codepos_t codepos_end{};
 
 };
 
-void Codeblock_read(script_t& script, scr_scope_t** block);
+void Codeblock_read(script_t& script, std::unique_ptr<scr_scope_t>& block);
 
-void create_scope(script_t& script, scr_scope_t** block);
-void delete_scope(script_t& script, scr_scope_t** block);
+scr_scope_t* create_scope(script_t& script, const scr_scope_t* block);
+scr_scope_t* delete_scope(script_t& script, scr_scope_t* block);
