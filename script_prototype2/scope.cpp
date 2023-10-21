@@ -4,18 +4,17 @@
 #include "declaration.hpp"
 #include "if_statement.hpp"
 #include "initializer_list.hpp"
+#include "functions.hpp"
 
-void Codeblock_read(script_t& script, std::unique_ptr<scr_scope_t>& codeblock)
+void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 {
 
     std::unique_ptr<expression_t> expression;
     std::unique_ptr<variable_declaration_t> declaration;
 
 
-    scr_scope_t* block = codeblock.get();
-
-    auto statement_opt = script.S_CreateStatement(block);
-
+    scr_scope_t*& block = *codeblock;
+    auto statement_opt = script.create_code_segment(&block);
     if (!statement_opt) {
         //no value means no statement
         return;
@@ -38,7 +37,7 @@ void Codeblock_read(script_t& script, std::unique_ptr<scr_scope_t>& codeblock)
         declaration = std::unique_ptr<variable_declaration_t>(new variable_declaration_t(block, statement));
 
         if ((declaration->is_ready()))
-            declaration->declare_and_initialize();
+            declaration->declare_and_initialize(true);
 
         break;
     case statementType_e::STATEMENT_KEYWORD:
@@ -59,8 +58,11 @@ void Codeblock_read(script_t& script, std::unique_ptr<scr_scope_t>& codeblock)
 
         break;
     case statementType_e::SCOPE:
-        
+        break;
 
+    case statementType_e::FUNCTION_DECLARATION:
+
+        std::unique_ptr<function_c>(new function_c(block, statement))->parse_declaration();
 
         break;
 
@@ -77,7 +79,7 @@ scr_scope_t* create_scope(script_t& script, const scr_scope_t* block)
 
     scope->set_lower_scope(block);
 
-    std::optional<token_statement_t> bracket;
+    std::optional<code_segment_t> bracket;
     auto remaining = script.S_GiveRemaining();
 
     remaining.it = script.S_GetIterator();
@@ -100,6 +102,8 @@ scr_scope_t* create_scope(script_t& script, const scr_scope_t* block)
 }
 scr_scope_t* delete_scope(script_t& script, scr_scope_t* codeblock)
 {
+    LOG("deleting the scope\n");
+
     scr_scope_t* temp_block = 0;
 
     if (codeblock->is_global_scope()) {

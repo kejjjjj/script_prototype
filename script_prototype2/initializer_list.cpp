@@ -1,7 +1,7 @@
 #include "initializer_list.hpp"
 #include "expression.hpp"
 
-initializer_list_t::initializer_list_t(scr_scope_t* scope, const token_statement_t& _statement, Variable* _target)
+initializer_list_t::initializer_list_t(scr_scope_t* scope, const code_segment_t& _statement, Variable* _target)
 	: statement(_statement), targetVar(_target), block(scope)
 {
 	if (statement.begin == statement.end)
@@ -105,7 +105,7 @@ void initializer_list_t::evaluate_list(Variable* target)
 	LOG("elements in list: " << elementIndex << '\n');
 }
 
-std::optional<token_statement_t> initializer_list_t::read_expression(token_statement_t& _statement)
+std::optional<code_segment_t> initializer_list_t::read_expression(code_segment_t& _statement)
 {
 	const auto is_comma = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_COMMA;
@@ -114,7 +114,7 @@ std::optional<token_statement_t> initializer_list_t::read_expression(token_state
 	auto& it = _statement.it;
 	std::list<token_t>::iterator beginning = it;
 	
-	token_statement_t result;
+	code_segment_t result;
 
 	while (it != _statement.end) {
 
@@ -131,7 +131,7 @@ std::optional<token_statement_t> initializer_list_t::read_expression(token_state
 	return result = {.it = beginning, .begin = beginning, .end = it };
 }
 //accepts } as statement.end iterator
-std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring(const token_statement_t& statement_)
+std::optional<code_segment_t> initializer_list_t::find_curlybracket_substring(const code_segment_t& statement_)
 {
 	const auto is_opening = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_CURLYBRACKET_OPEN;
@@ -140,7 +140,7 @@ std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_CURLYBRACKET_CLOSE;
 	};
 
-	token_statement_t token = statement_;
+	code_segment_t token = statement_;
 
 	if (is_opening(*token.it) == false)
 		return std::nullopt;
@@ -157,7 +157,7 @@ std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring
 			numClosing++;
 
 			if (numOpen == numClosing) {
-				return token_statement_t{.it = statement_.it, .begin = statement_.it, .end = token.it };
+				return code_segment_t{.it = statement_.it, .begin = statement_.it, .end = token.it };
 			}
 		}
 
@@ -169,7 +169,7 @@ std::optional<token_statement_t> initializer_list_t::find_curlybracket_substring
 		numClosing++;
 
 		if (numOpen == numClosing) {
-			return token_statement_t{ .it = statement_.it, .begin = statement_.it, .end = token.it };
+			return code_segment_t{ .it = statement_.it, .begin = statement_.it, .end = token.it };
 		}
 	}
 

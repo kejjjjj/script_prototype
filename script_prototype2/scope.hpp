@@ -74,7 +74,7 @@ private:
 
 };
 
-void Codeblock_read(script_t& script, std::unique_ptr<scr_scope_t>& block);
+void Codeblock_read(script_t& script, scr_scope_t** block);
 
 scr_scope_t* create_scope(script_t& script, const scr_scope_t* block);
 scr_scope_t* delete_scope(script_t& script, scr_scope_t* block);

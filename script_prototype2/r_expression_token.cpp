@@ -3,7 +3,7 @@
 #include "r_unary.hpp"
 #include "runtime.hpp"
 
-using PostfixFunctionType = std::function<void(scr_scope_t*, expression_token&, std::optional<token_statement_t*>)>;
+using PostfixFunctionType = std::function<void(scr_scope_t*, expression_token&, std::optional<code_segment_t*>)>;
 using OptionalPostfixFunctionType = std::optional<PostfixFunctionType>;
 
 using UnaryFunctionType = std::function<void(expression_token&)>;

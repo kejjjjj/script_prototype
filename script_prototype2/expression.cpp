@@ -228,14 +228,14 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 		return false;
 
 	//creates a copy that will find the matching )
-	auto parentheses_statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = tokens.end };
+	auto parentheses_statement = code_segment_t{ .it = tokens.it, .begin = tokens.it, .end = tokens.end };
 	ExpressionFindMatchingParenthesis(parentheses_statement);
 
 	//skip the (
 	++tokens.it;
 
 	//parentheses_statement.it contains the position of the matching ), so it will be the end
-	const token_statement_t statement = token_statement_t{ .it = tokens.it, .begin = tokens.it, .end = --parentheses_statement.it };
+	const code_segment_t statement = code_segment_t{ .it = tokens.it, .begin = tokens.it, .end = --parentheses_statement.it };
 
 	std::list<token_t*> backup_prefix = token.prefix;
 	decltype(token.postfix) backup_postfix = token.postfix;
@@ -251,7 +251,7 @@ bool expression_t::ExpressionParseParentheses(expression_token& token)
 	//LOG("continuing iteration from " << tokens.it->string << '\n';
 	return true;
 }
-void expression_t::ExpressionFindMatchingParenthesis(token_statement_t& token)
+void expression_t::ExpressionFindMatchingParenthesis(code_segment_t& token)
 {
 	const auto is_opening = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_PAR_OPEN;

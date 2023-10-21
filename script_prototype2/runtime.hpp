@@ -34,7 +34,3 @@ public:
 	const token_t* token = 0;
 
 };
-
-void runtime_execute(script_t& script);
-void RuntimeCodeblock_read(script_t& script, scr_scope_t** block, compiler_information& codepos);
-

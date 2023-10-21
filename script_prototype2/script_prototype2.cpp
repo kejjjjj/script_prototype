@@ -26,7 +26,7 @@ int main()
     unaryFunctions::getInstance().createFunctions();
     postfixFunctions::getInstance().createFunctions();
 
-    std::unique_ptr<scr_scope_t> global_scope = std::unique_ptr<scr_scope_t>(new scr_scope_t);
+    scr_scope_t* global_scope = (new scr_scope_t);
     
     std::chrono::time_point<std::chrono::steady_clock> old = std::chrono::steady_clock::now();
 
@@ -46,7 +46,7 @@ int main()
 
         while(!script.is_eof()){
 
-            Codeblock_read(script, global_scope);
+            Codeblock_read(script, &global_scope);
           
           
 
@@ -71,7 +71,7 @@ int main()
     global_scope->print_localvars();
     std::cout << "\n--------------------------------\n";
 
-    global_scope.reset();
+    delete global_scope;
 
     //std::cout << "\n******** BEGIN RUNTIME ********\n";
 

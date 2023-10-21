@@ -5,6 +5,21 @@
 #include "pch.hpp"
 #include "script.hpp"
 
+class code_segment
+{
+	code_segment(scr_scope_t* _scope, const code_segment_t& _code) : 
+		scope(_scope), 
+		code(_code)
+	{
+	}
+
+	virtual void evaluate() = 0;
+
+private:
+	scr_scope_t* scope;
+	code_segment_t code;
+};
+
 enum class statementKeywords_e : short
 {
 	IF
@@ -40,9 +55,13 @@ enum class statementType_e : char
 	DECLARATION,
 	STATEMENT_KEYWORD,
 	SCOPE,
-	SCOPE_EXIT
+	SCOPE_EXIT,
+	FUNCTION_DECLARATION
 };
-statementType_e statement_resolve_datatype_ambiguity(token_statement_t& tokens);
-statementType_e statement_determine(const token_statement_t& tokens);
+
+
+
+statementType_e statement_resolve_datatype_ambiguity(code_segment_t& tokens);
+statementType_e statement_determine(const code_segment_t& tokens);
 
 #endif

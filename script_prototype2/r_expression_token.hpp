@@ -9,7 +9,7 @@ struct r_expression_token
 
 
 	void insert_prefix(token_t& _token) { prefix.push_back(_token); }
-	void insert_postfix(const token_statement_t& _token, const punctuation_e p) { postfix.push_back({ _token, p }); }
+	void insert_postfix(const code_segment_t& _token, const punctuation_e p) { postfix.push_back({ _token, p }); }
 
 	void set_token(token_t& _token) { token = _token; }
 	token_t& get_token() noexcept {
@@ -81,7 +81,7 @@ struct r_expression_token
 	Variable* lval = 0;
 
 	std::list<token_t> prefix;
-	std::list<std::pair<token_statement_t, punctuation_e>> postfix;
+	std::list<std::pair<code_segment_t, punctuation_e>> postfix;
 private:
 
 	token_t token;

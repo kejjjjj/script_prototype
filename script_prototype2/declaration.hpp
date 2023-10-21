@@ -20,9 +20,9 @@ enum class declaration_modifiers_e : char
 class variable_declaration_t {
 public:
 
-	variable_declaration_t(scr_scope_t* scope, const token_statement_t& expression);
+	variable_declaration_t(scr_scope_t* scope, const code_segment_t& expression);
 	bool is_ready() const noexcept { return tokens.it != tokens.end; }
-	void declare_and_initialize();
+	void declare_and_initialize(bool initializer_allowed);
 private:
 
 	void get_variable_declaration_type();
@@ -32,12 +32,12 @@ private:
 
 	bool parse_subscript();
 
-	bool has_initializer();
+	bool has_initializer(bool initializer_allowed);
 	void initialize();
 
 	dataTypes_e dtype = dataTypes_e::UNKNOWN;
 	std::string identifier;
-	token_statement_t tokens;
+	code_segment_t tokens;
 	Variable* target = 0;
 	std::list<declaration_modifiers_e> typeModifiers;
 	scr_scope_t* block = 0;

@@ -3,13 +3,13 @@
 #include "expression.hpp"
 #include "initializer_list.hpp"
 
-variable_declaration_t::variable_declaration_t(scr_scope_t* scope, const token_statement_t& expression) : tokens(expression), block(scope)
+variable_declaration_t::variable_declaration_t(scr_scope_t* scope, const code_segment_t& expression) : tokens(expression), block(scope)
 {
 	tokens.end++;
 	//compiler_declr = std::unique_ptr<variable_declaration_t_compiler>(new variable_declaration_t_compiler);
 };
 
-void variable_declaration_t::declare_and_initialize()
+void variable_declaration_t::declare_and_initialize(bool initializer_allowed)
 {
 	get_variable_declaration_type();
 	get_identifier_name();
@@ -22,7 +22,8 @@ void variable_declaration_t::declare_and_initialize()
 
 	//compiler_declr->identifier = target->identifier;
 
-	if (has_initializer()) {
+	if (has_initializer(initializer_allowed)) {
+
 		//compiler_declr->has_initializer = true;
 		initialize();
 
@@ -59,12 +60,16 @@ void variable_declaration_t::get_identifier_name()
 		throw scriptError_t(&*tokens.it, std::format("the variable \"{}\" is already defined", identifier));
 	}
 }
-bool variable_declaration_t::has_initializer()
+bool variable_declaration_t::has_initializer(bool initializer_allowed)
 {
 	++tokens.it;
 
 	if (tokens.it == tokens.end)
 		return false;
+
+	if (initializer_allowed == false) {
+		throw scriptError_t(&*tokens.it, std::format("expected for the declaration to end, but found \"{}\"", tokens.it->string));
+	}
 
 	if (tokens.it->tt != tokenType::PUNCTUATION || LOWORD(tokens.it->extrainfo) != punctuation_e::P_ASSIGN) {
 		throw scriptError_t(&*tokens.it, "expected a \"=\" or \";\"");

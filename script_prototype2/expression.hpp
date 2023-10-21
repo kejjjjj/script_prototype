@@ -8,17 +8,19 @@
 #include "o_standard.hpp"
 #include "scope.hpp"
 
-class expression_t {
+class expression_t{
 public:
-	expression_t(scr_scope_t* scope, const token_statement_t& expression) : tokens(expression), block(scope)
+	expression_t(scr_scope_t* scope, const code_segment_t& expression) : tokens(expression), block(scope)
 	{
 		++tokens.end;
 	};
 
+	//void evaluate() override;
+
 	bool is_ready() const noexcept { return tokens.it != tokens.end; }
 	expression_token EvaluateEntireExpression();
 	
-	static void ExpressionFindMatchingParenthesis(token_statement_t& token);
+	static void ExpressionFindMatchingParenthesis(code_segment_t& token);
 
 
 private:
@@ -40,7 +42,7 @@ private:
 	void EvaluateExpressionTokens();
 
 	expression_token result;
-	token_statement_t tokens;
+	code_segment_t tokens;
 	std::list<expression_token> sortedTokens;
 	scr_scope_t* block = 0;
 };

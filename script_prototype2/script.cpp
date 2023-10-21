@@ -47,7 +47,7 @@ void script_t::S_Tokenize()
 	}
 	token_it = tokens.begin();
 }
-std::optional<token_statement_t> script_t::S_CreateStatement(scr_scope_t* scope)
+std::optional<code_segment_t> script_t::create_code_segment(scr_scope_t** scope)
 {
 	auto& end = token_it;
 	auto begin = token_it;
@@ -57,20 +57,32 @@ std::optional<token_statement_t> script_t::S_CreateStatement(scr_scope_t* scope)
 		switch (LOWORD(end->extrainfo)) {
 
 		case P_CURLYBRACKET_OPEN:
-			scope = create_scope(*this, scope);
+			*scope = create_scope(*this, *scope);
 			return std::nullopt;
 		case P_CURLYBRACKET_CLOSE:
-			scope = delete_scope(*this, scope);
+			*scope = delete_scope(*this, *scope);
 			return std::nullopt;
 		default:
 			break;
 		}
 	}
+	else if (begin->tt == tokenType::FUNCTION){
+		while (end != tokens.end()) {
+			if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_CURLYBRACKET_OPEN)) {
+				--end;
+				return code_segment_t{ begin, begin, end };
+			}
+			end++;
+		}
+
+		throw scriptError_t(this, std::format("unexpected end of file"));
+
+	}
 
 	while (end != tokens.end()) {
 
 		if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_SEMICOLON /*|| LOWORD(end->extrainfo) == P_CURLYBRACKET_CLOSE*/))
-			return token_statement_t{ begin, begin, --end++ };
+			return code_segment_t{ begin, begin, --end++ };
 
 		end++;
 	}
@@ -79,14 +91,14 @@ std::optional<token_statement_t> script_t::S_CreateStatement(scr_scope_t* scope)
 
 	if (last_token->tt == tokenType::PUNCTUATION && (LOWORD(last_token->extrainfo) == P_SEMICOLON || LOWORD(last_token->extrainfo) == P_CURLYBRACKET_CLOSE)) {
 		end = tokens.end();
-		return token_statement_t{ last_token, last_token, last_token };
+		return code_segment_t{ last_token, last_token, last_token };
 	}
 
 	throw scriptError_t(this, std::format("unexpected end of file"));
 }
-token_statement_t script_t::S_GiveRemaining() noexcept(true)
+code_segment_t script_t::S_GiveRemaining() noexcept(true)
 {
-	return token_statement_t{ token_it, token_it, --tokens.end()};
+	return code_segment_t{ token_it, token_it, --tokens.end()};
 }
 bool script_t::S_ReadToken(token_t& token)
 {
@@ -251,6 +263,10 @@ bool script_t::S_ReadName(token_t& token)
 	else if (const auto statement_it = statementKeywordTable::getInstance().find_builtin(token.string)) {
 		token.tt = tokenType::STATEMENT;
 		token.extrainfo = static_cast<std::underlying_type_t<statementKeywords_e>>((statement_it->first->second));
+	}
+	else if (token.string == "fn") {
+		token.tt = tokenType::FUNCTION;
+		token.extrainfo = 0;
 	}
 
 	//token.print();

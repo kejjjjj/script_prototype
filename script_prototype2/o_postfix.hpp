@@ -22,12 +22,12 @@ public:
 	}
 
 private:
-	std::unordered_map<punctuation_e, std::function<void(scr_scope_t*,expression_token&, std::optional<token_statement_t*> statement)>> postfix_functions;
+	std::unordered_map<punctuation_e, std::function<void(scr_scope_t*,expression_token&, std::optional<code_segment_t*> statement)>> postfix_functions;
 
-	static void subscript(scr_scope_t* block, expression_token&, std::optional<token_statement_t*> statement);
+	static void subscript(scr_scope_t* block, expression_token&, std::optional<code_segment_t*> statement);
 
 };
 
-bool ExpressionFindMatchingBracket(token_statement_t& token);
+bool ExpressionFindMatchingBracket(code_segment_t& token);
 
 #endif

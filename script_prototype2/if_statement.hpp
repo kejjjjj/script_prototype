@@ -7,7 +7,7 @@
 class if_statement
 {
 public:
-	if_statement(scr_scope_t* scope, const token_statement_t& _statement) : statement(_statement), block(scope) {
+	if_statement(scr_scope_t* scope, const code_segment_t& _statement) : statement(_statement), block(scope) {
 
 	}
 
@@ -15,7 +15,7 @@ public:
 
 private:
 	scr_scope_t* block = 0;
-	token_statement_t statement;
+	code_segment_t statement;
 };
 
 #endif

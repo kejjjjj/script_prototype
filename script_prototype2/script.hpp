@@ -15,7 +15,8 @@ enum class tokenType : char
 	BUILT_IN_TYPE,
 	STATEMENT,
 	NAME,
-	PUNCTUATION
+	PUNCTUATION,
+	FUNCTION
 };
 enum class literalSuffixType : DWORD
 {
@@ -45,7 +46,7 @@ struct token_t
 		column = 0;
 	}
 };
-struct token_statement_t
+struct code_segment_t
 {
 	std::list<token_t>::iterator it;
 	std::list<token_t>::iterator begin;
@@ -53,7 +54,7 @@ struct token_statement_t
 
 	void print() const noexcept {
 
-		LOG( "token_statement_t::print():\n");
+		LOG( "code_segment_t::print():\n");
 		for (auto i = it; i != end; i++) {
 			LOG( i->string);
 		}
@@ -79,8 +80,8 @@ struct script_t
 	//class scr_scope_t* global_scope;
 
 	void S_Tokenize();
-	std::optional<token_statement_t> S_CreateStatement(scr_scope_t* scope);
-	token_statement_t S_GiveRemaining() noexcept(true);
+	std::optional<code_segment_t> create_code_segment(scr_scope_t** scope);
+	code_segment_t S_GiveRemaining() noexcept(true);
 	auto S_GetIterator() noexcept(true) { return token_it; }
 	void S_SetIterator(std::list<token_t>::iterator it) { token_it = it; }
 	void S_ResetIterator() noexcept { token_it = tokens.begin(); }
@@ -132,18 +133,6 @@ public:
 
 };
 
-enum class compiler_code_type
-{
-	EXPRESSION,
-	DECLARATION
-};
 
-struct compiler_information
-{
-	std::unique_ptr<char[]> data = 0;
-	size_t dataSize = 0;
-	size_t codepos = 0;
-	compiler_code_type type;
-};
 
 #endif

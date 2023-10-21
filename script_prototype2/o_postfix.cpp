@@ -12,14 +12,14 @@ void postfixFunctions::createFunctions()
 	init = true;
 }
 
-void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, std::optional<token_statement_t*> Arg_statement)
+void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, std::optional<code_segment_t*> Arg_statement)
 {
 
 	if (operand.is_lvalue() == false) throw scriptError_t(&operand.get_token(), "[] operand must be an lvalue");
 	if (operand.lval->is_array() == false)  throw scriptError_t(&operand.get_token(), "[] operand must have an array type");
 	if (Arg_statement.has_value() == false) throw scriptError_t("how the frick was subscript postfix called without a value???");
 
-	token_statement_t statement = *Arg_statement.value();
+	code_segment_t statement = *Arg_statement.value();
 
 	const auto result = expression_t(block, statement).EvaluateEntireExpression();
 
@@ -47,7 +47,7 @@ void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, 
 
 //misc
 
-bool ExpressionFindMatchingBracket(token_statement_t& token)
+bool ExpressionFindMatchingBracket(code_segment_t& token)
 {
 	const auto is_opening = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_BRACKET_OPEN;

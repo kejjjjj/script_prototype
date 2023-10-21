@@ -14,7 +14,7 @@ void if_statement::evaluate_statement()
 	//}
 	//LOG(" )\n";
 	
-	auto parentheses_statement = token_statement_t{ .it = it, .begin = it, .end = statement.end };
+	auto parentheses_statement = code_segment_t{ .it = it, .begin = it, .end = statement.end };
 	parentheses_statement.end++;
 	expression_t::ExpressionFindMatchingParenthesis(parentheses_statement);
 
@@ -22,7 +22,7 @@ void if_statement::evaluate_statement()
 	++it;
 
 	//_statement.it contains the position of the matching ), so it will be the end
-	const token_statement_t _statement = token_statement_t{ .it = it, .begin = it, .end = --parentheses_statement.it };
+	const code_segment_t _statement = code_segment_t{ .it = it, .begin = it, .end = --parentheses_statement.it };
 
 	auto token = expression_t(block, _statement).EvaluateEntireExpression();
 
