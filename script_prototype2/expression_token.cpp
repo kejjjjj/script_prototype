@@ -15,6 +15,10 @@ void expression_token::set_value_category()
 	if(token.tt == tokenType::BUILT_IN_TYPE)
 		throw scriptError_t(&token, std::format("a datatype was unexpected here"));
 
+	else if (token.tt == tokenType::FUNCTION)
+		throw scriptError_t(&token, std::format("a function was unexpected here"));
+
+
 	if (token.tt == tokenType::NAME) {
 
 		auto result = block->find_variable(token.string);

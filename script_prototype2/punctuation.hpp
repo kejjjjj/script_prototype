@@ -45,6 +45,8 @@ enum punctuation_e : WORD
 	P_CURLYBRACKET_OPEN,
 	P_CURLYBRACKET_CLOSE,
 
+	P_ARROW,
+
 	P_COMMA,
 	P_SEMICOLON
 };
@@ -62,6 +64,8 @@ constexpr punctuation_t punctuations[] =
 
 	{"++", P_INCR, FAILURE},
 	{"--", P_DECR, FAILURE},
+
+	{"->", P_ARROW, FAILURE},
 
 	{"+", P_ADD, ADDITIVE},
 	{"-", P_SUB, ADDITIVE},

@@ -147,6 +147,7 @@
     <ClCompile Include="o_postfix.cpp" />
     <ClCompile Include="o_standard.cpp" />
     <ClCompile Include="o_unary.cpp" />
+    <ClCompile Include="parsing_utils.cpp" />
     <ClCompile Include="punctuation.cpp" />
     <ClCompile Include="runtime.cpp" />
     <ClCompile Include="rvalue.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="o_postfix.hpp" />
     <ClInclude Include="o_standard.hpp" />
     <ClInclude Include="o_unary.hpp" />
+    <ClInclude Include="parsing_utils.hpp" />
     <ClInclude Include="pch.hpp" />
     <ClInclude Include="punctuation.hpp" />
     <ClInclude Include="runtime.hpp" />

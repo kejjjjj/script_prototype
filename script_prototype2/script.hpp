@@ -60,6 +60,16 @@ struct code_segment_t
 		}
 		LOG( end->string << '\n');
 	}
+	std::list<token_t>::iterator find_token(tokenType tt, DWORD extrainfo) {
+
+		for (auto i = it; i != end; i++) {
+			if (i->tt == tt && i->extrainfo == extrainfo)
+				return i;
+		}
+
+		return end;
+	}
+
 };
 class scr_scope_t;
 struct script_t

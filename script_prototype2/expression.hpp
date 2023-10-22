@@ -21,6 +21,7 @@ public:
 	expression_token EvaluateEntireExpression();
 	
 	static void ExpressionFindMatchingParenthesis(code_segment_t& token);
+	static std::optional<code_segment_t> find_matching_parenthesis(const code_segment_t& token);
 
 
 private:

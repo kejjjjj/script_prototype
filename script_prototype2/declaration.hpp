@@ -16,13 +16,43 @@ enum class declaration_modifiers_e : char
 	ARRAY
 };
 
+struct datatype_declaration
+{
+	dataTypes_e dtype = dataTypes_e::UNKNOWN;
+	std::list<declaration_modifiers_e> typeModifiers;
+
+	std::string get_as_text() {
+
+		std::string type = get_type_as_text(dtype);
+		
+		if (typeModifiers.empty())
+			return type;
+
+		std::string modifiers;
+		for (auto& i : typeModifiers) {
+			switch (i) {
+			case declaration_modifiers_e::ARRAY:
+				modifiers += "[]";
+				break;
+			default:
+				break;
+			}
+		}
+
+		return type + modifiers;
+	}
+
+};
 
 class variable_declaration_t {
 public:
 
 	variable_declaration_t(scr_scope_t* scope, const code_segment_t& expression);
 	bool is_ready() const noexcept { return tokens.it != tokens.end; }
-	void declare_and_initialize(bool initializer_allowed);
+	code_segment_t declare_and_initialize(bool initializer_allowed);
+	datatype_declaration get_type() noexcept { return datatype; }
+	datatype_declaration get_variable_declaration_type(code_segment_t& iterator);
+
 private:
 
 	void get_variable_declaration_type();
@@ -35,11 +65,10 @@ private:
 	bool has_initializer(bool initializer_allowed);
 	void initialize();
 
-	dataTypes_e dtype = dataTypes_e::UNKNOWN;
 	std::string identifier;
 	code_segment_t tokens;
 	Variable* target = 0;
-	std::list<declaration_modifiers_e> typeModifiers;
+	datatype_declaration datatype;
 	scr_scope_t* block = 0;
 };
 

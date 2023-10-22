@@ -9,12 +9,12 @@ variable_declaration_t::variable_declaration_t(scr_scope_t* scope, const code_se
 	//compiler_declr = std::unique_ptr<variable_declaration_t_compiler>(new variable_declaration_t_compiler);
 };
 
-void variable_declaration_t::declare_and_initialize(bool initializer_allowed)
+code_segment_t variable_declaration_t::declare_and_initialize(bool initializer_allowed)
 {
 	get_variable_declaration_type();
 	get_identifier_name();
 		
-	target = block->declare_variable(std::move(std::unique_ptr<Variable>(new Variable(var_declr_data{ dtype, identifier, NULL }))));
+	target = block->declare_variable(std::move(std::unique_ptr<Variable>(new Variable(var_declr_data{ datatype.dtype, identifier, NULL }))));
 
 	apply_modifiers(target);
 
@@ -29,14 +29,16 @@ void variable_declaration_t::declare_and_initialize(bool initializer_allowed)
 
 	}
 
+	return { --tokens.it, tokens.it, --tokens.end };
+
 }
 void variable_declaration_t::get_variable_declaration_type()
 {
 	if (tokens.it->tt != tokenType::BUILT_IN_TYPE) {
-		throw scriptError_t(&*tokens.it, "how?");
+		throw scriptError_t(&*tokens.it, std::format("expected a datatype, found \"{}\"", tokens.it->string));
 	}
 
-	dtype = static_cast<dataTypes_e>(tokens.it->extrainfo);
+	datatype.dtype = static_cast<dataTypes_e>(tokens.it->extrainfo);
 
 	tokens.it++;
 	//check for type modifiers
@@ -64,12 +66,15 @@ bool variable_declaration_t::has_initializer(bool initializer_allowed)
 {
 	++tokens.it;
 
+	if (initializer_allowed == false) {
+		target->isInitialized = true; //can't initialize so make this true to remove unnecessary errors
+		return false;
+		//throw scriptError_t(&*tokens.it, std::format("expected for the declaration to end, but found \"{}\"", tokens.it->string));
+	}
+
 	if (tokens.it == tokens.end)
 		return false;
 
-	if (initializer_allowed == false) {
-		throw scriptError_t(&*tokens.it, std::format("expected for the declaration to end, but found \"{}\"", tokens.it->string));
-	}
 
 	if (tokens.it->tt != tokenType::PUNCTUATION || LOWORD(tokens.it->extrainfo) != punctuation_e::P_ASSIGN) {
 		throw scriptError_t(&*tokens.it, "expected a \"=\" or \";\"");
@@ -144,7 +149,7 @@ bool variable_declaration_t::parse_subscript()
 		throw scriptError_t(&*tokens.it, "expected a \"]\"");
 
 	LOG("adding [] type modifier!\n");
-	typeModifiers.push_back(declaration_modifiers_e::ARRAY);
+	datatype.typeModifiers.push_back(declaration_modifiers_e::ARRAY);
 	tokens.it++;
 	return true;
 
@@ -152,12 +157,12 @@ bool variable_declaration_t::parse_subscript()
 
 void variable_declaration_t::apply_modifiers(Variable* _target)
 {
-	if (typeModifiers.empty()) {
+	if (datatype.typeModifiers.empty()) {
 		return;
 	}
 
-	auto modifier = typeModifiers.front();
-	typeModifiers.pop_front();
+	auto modifier = datatype.typeModifiers.front();
+	datatype.typeModifiers.pop_front();
 
 	switch (modifier) {
 	case declaration_modifiers_e::ARRAY:
@@ -170,4 +175,15 @@ void variable_declaration_t::apply_modifiers(Variable* _target)
 	
 	
 
+}
+
+
+datatype_declaration variable_declaration_t::get_variable_declaration_type(code_segment_t& iterator)
+{
+	get_variable_declaration_type();
+
+	iterator.it = tokens.it;
+	iterator.begin = tokens.it;
+
+	return datatype;
 }

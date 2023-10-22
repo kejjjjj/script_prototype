@@ -47,7 +47,7 @@ public:
 		codepos_begin = std::move(begin);
 		codepos_end = std::move(end);
 
-		//std::cout << std::format("scope bounds: [{}, {}] to [{}, {}]\n", codepos_begin.line, codepos_begin.column, codepos_end.line, codepos_end.column);
+		std::cout << std::format("scope bounds: [{}, {}] to [{}, {}]\n", codepos_begin.line, codepos_begin.column, codepos_end.line, codepos_end.column);
 
 	}
 
@@ -76,5 +76,7 @@ private:
 
 void Codeblock_read(script_t& script, scr_scope_t** block);
 
+scr_scope_t* create_scope_without_range(const scr_scope_t* block);
 scr_scope_t* create_scope(script_t& script, const scr_scope_t* block);
+void set_range_for_scope(script_t& script, scr_scope_t* scope);
 scr_scope_t* delete_scope(script_t& script, scr_scope_t* block);

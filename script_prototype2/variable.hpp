@@ -103,7 +103,7 @@ public:
 			std::cout << "empty script stack\n";
 			return;
 		}
-		//std::cout << "script stack:\n\n";
+		std::cout << "---- script stack: ----\n\n";
 			
 		for (const auto& i : table) {
 			i.second->print();

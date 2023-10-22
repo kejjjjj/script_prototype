@@ -62,7 +62,7 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
     case statementType_e::FUNCTION_DECLARATION:
 
-        std::unique_ptr<function_c>(new function_c(block, statement))->parse_declaration();
+        std::unique_ptr<function_c>(new function_c(block, statement))->parse_declaration(script);
 
         break;
 
@@ -74,21 +74,30 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
 scr_scope_t* create_scope(script_t& script, const scr_scope_t* block)
 {
-    LOG("creating a new scope\n");
+    scr_scope_t* scope = create_scope_without_range(block);
+    set_range_for_scope(script, scope);
+
+    return scope;
+}
+scr_scope_t* create_scope_without_range(const scr_scope_t* block)
+{
     scr_scope_t* scope = (new scr_scope_t);
 
     scope->set_lower_scope(block);
 
+    return scope;
+}
+void set_range_for_scope(script_t& script, scr_scope_t* scope)
+{
     std::optional<code_segment_t> bracket;
     auto remaining = script.S_GiveRemaining();
 
     remaining.it = script.S_GetIterator();
 
     if ((bracket = initializer_list_t::find_curlybracket_substring(remaining)) == std::nullopt) {
-        throw scriptError_t("HOW ON EARTH!!!!");
+        throw scriptError_t("expected a \"{\"");
     }
 
-    script.S_SetIterator(++remaining.it);
 
     auto& end = bracket.value();
 
@@ -98,7 +107,8 @@ scr_scope_t* create_scope(script_t& script, const scr_scope_t* block)
         codepos_t{ .line = end.end->line,        .column = end.end->column }
     );
 
-    return scope;
+    script.S_SetIterator(++remaining.it);
+
 }
 scr_scope_t* delete_scope(script_t& script, scr_scope_t* codeblock)
 {
