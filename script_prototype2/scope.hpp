@@ -24,9 +24,9 @@ public:
 	}
 
 	//~scr_scope_t() { on_exit(); }
-
+	void make_function_scope() noexcept { function_scope = true; }
 	bool is_global_scope() const noexcept { return lower_scope == nullptr; }
-
+	bool is_function_scope() const noexcept { return function_scope; }
 	decltype(auto) declare_variable(std::unique_ptr<Variable>&& v) {
 		return localVars->declare_variable((v));
 	}
@@ -71,6 +71,7 @@ private:
 	scr_scope_t* lower_scope = 0;
 	std::unique_ptr<VariableTable> localVars;
 	codepos_t codepos_end{};
+	bool function_scope = false;
 
 };
 

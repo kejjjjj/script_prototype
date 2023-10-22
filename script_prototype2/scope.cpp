@@ -5,7 +5,7 @@
 #include "if_statement.hpp"
 #include "initializer_list.hpp"
 #include "functions.hpp"
-
+#include "return_statement.hpp"
 void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 {
 
@@ -64,6 +64,9 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
         std::unique_ptr<function_c>(new function_c(block, statement))->parse_declaration(script);
 
+        break;
+    case statementType_e::RETURN:
+        eval_return_statement(statement, block);
         break;
 
     }

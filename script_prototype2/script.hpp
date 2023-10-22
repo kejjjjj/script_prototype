@@ -16,7 +16,8 @@ enum class tokenType : char
 	STATEMENT,
 	NAME,
 	PUNCTUATION,
-	FUNCTION
+	FUNCTION,
+	RETURN
 };
 enum class literalSuffixType : DWORD
 {

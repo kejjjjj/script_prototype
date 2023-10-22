@@ -149,6 +149,7 @@
     <ClCompile Include="o_unary.cpp" />
     <ClCompile Include="parsing_utils.cpp" />
     <ClCompile Include="punctuation.cpp" />
+    <ClCompile Include="return_statement.cpp" />
     <ClCompile Include="runtime.cpp" />
     <ClCompile Include="rvalue.cpp" />
     <ClCompile Include="r_expression_token.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="parsing_utils.hpp" />
     <ClInclude Include="pch.hpp" />
     <ClInclude Include="punctuation.hpp" />
+    <ClInclude Include="return_statement.hpp" />
     <ClInclude Include="runtime.hpp" />
     <ClInclude Include="rvalue.hpp" />
     <ClInclude Include="r_expression_token.hpp" />

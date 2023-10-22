@@ -105,6 +105,9 @@
     <ClCompile Include="parsing_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="return_statement.cpp">
+      <Filter>Source Files\compile_time</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
@@ -178,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="parsing_utils.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="return_statement.hpp">
+      <Filter>Source Files\compile_time</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

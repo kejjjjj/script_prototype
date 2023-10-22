@@ -18,6 +18,8 @@ void expression_token::set_value_category()
 	else if (token.tt == tokenType::FUNCTION)
 		throw scriptError_t(&token, std::format("a function was unexpected here"));
 
+	else if (token.tt == tokenType::RETURN)
+		throw scriptError_t(&token, std::format("the return keyword was unexpected"));
 
 	if (token.tt == tokenType::NAME) {
 

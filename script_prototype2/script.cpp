@@ -268,6 +268,10 @@ bool script_t::S_ReadName(token_t& token)
 		token.tt = tokenType::FUNCTION;
 		token.extrainfo = 0;
 	}
+	else if (token.string == "return") {
+		token.tt = tokenType::RETURN;
+		token.extrainfo = 0;
+	}
 
 	//token.print();
 	column += token.string.length();
