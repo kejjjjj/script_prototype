@@ -1,6 +1,6 @@
 #include "expression.hpp"
 #include "o_postfix.hpp"
-
+#include "o_standard.hpp"
 
 //each expression sequence will be converted to just one remaining expression
 expression_token expression_t::EvaluateEntireExpression()

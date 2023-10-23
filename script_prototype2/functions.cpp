@@ -18,7 +18,7 @@ void function_c::parse_declaration(script_t& script)
 		throw scriptError_t(&*it, std::format("expected an identifier, found \"{}\"", it->string));
 	}
 
-	identifier = it->string;
+	function->identifier = it->string;
 
 	++it; //skip identifier
 
@@ -31,9 +31,9 @@ void function_c::parse_declaration(script_t& script)
 
 		args.print();
 
-		numArgs = parse_parameters(args, 1);
+		function->numArgs = parse_parameters(args, 1);
 
-		LOG("function with " << numArgs << " parameters!\n");
+		LOG("function with " << function->numArgs << " parameters!\n");
 
 		it = ++args.end;
 	}
@@ -49,24 +49,26 @@ void function_c::parse_declaration(script_t& script)
 	create_function(script, code);
 
 	LOG("\n--- function info ---\n");
-	LOG("name: " << identifier << '\n');
+	LOG("name: " << function->identifier << '\n');
 	LOG("params: (");
-	for (auto it = param_types.begin(); it != param_types.end(); ++it) {
+	for (auto it = function->param_types.begin(); it != function->param_types.end(); ++it) {
 		
 		auto next = it;
 		++next;
 
-		if (next == param_types.end()) {
+		if (next == function->param_types.end()) {
 			LOG(it->get_as_text() << ")\n");
 			continue;
 		}
 
 		LOG(it->get_as_text() << ", ");
 	}
-	LOG("return type: " << return_datatype.get_as_text() << '\n');
-	LOG("num params: " << numArgs << '\n');
+	LOG("return type: " << function->return_datatype.get_as_text() << '\n');
+	LOG("num params: " << function->numArgs << '\n');
 
+	scope->make_function_scope(function);
 
+	std::cout << "function -> " << scope->is_function_scope() << '\n';
 
 	//throw scriptError_t(&*it, "gg");
 }
@@ -77,7 +79,7 @@ size_t function_c::parse_parameters(code_segment_t& declarations, size_t numArgs
 
 	declarations = decl.declare_and_initialize(false); //initializers are not allowed here
 
-	param_types.push_back(std::move(decl.get_type()));
+	function->param_types.push_back(std::move(decl.get_type()));
 
 	if (declarations.it == declarations.end) {
 		return numArgs;
@@ -113,7 +115,7 @@ void function_c::parse_returntype(code_segment_t& code)
 
 	variable_declaration_t decl(scope, code);
 
-	return_datatype = decl.get_variable_declaration_type(code);
+	function->return_datatype = decl.get_variable_declaration_type(code);
 
 	//std::cout << datatype.get_as_text() << '\n';
 

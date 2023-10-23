@@ -57,4 +57,52 @@ private:
 	std::unordered_map<std::string, customType> table;
 };
 
+enum class declaration_modifiers_e : char
+{
+	ARRAY
+};
+
+struct datatype_declaration
+{
+	dataTypes_e dtype = dataTypes_e::UNKNOWN;
+	std::list<declaration_modifiers_e> typeModifiers;
+	
+	bool has_same_modifiers(const datatype_declaration& other) const noexcept {
+
+		if (typeModifiers.size() != other.typeModifiers.size())
+			return false;
+
+		auto other_it = other.typeModifiers.begin();
+		for (auto it = typeModifiers.begin(); it != typeModifiers.end(); it++, other_it++) {
+
+			if (*it != *other_it)
+				return false;
+
+		}
+		return true;
+	}
+
+	std::string get_as_text() const noexcept {
+
+		std::string type = get_type_as_text(dtype);
+
+		if (typeModifiers.empty())
+			return type;
+
+		std::string modifiers;
+		for (auto& i : typeModifiers) {
+			switch (i) {
+			case declaration_modifiers_e::ARRAY:
+				modifiers += "[]";
+				break;
+			default:
+				break;
+			}
+		}
+
+		return type + modifiers;
+	}
+
+};
+
 #endif

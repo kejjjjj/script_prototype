@@ -3,6 +3,7 @@
 #include "variable.hpp"
 #include "o_unary.hpp"
 #include "o_postfix.hpp"
+#include "o_standard.hpp"
 
 void expression_token::set_value_category()
 {
@@ -155,25 +156,59 @@ void expression_token::implicit_cast(expression_token& other)
 		throw scriptError_t("implicit_cast(): right operand should not be an lvalue");
 		return;
 	}
-	std::ostream yea(0, 1);
 
-
-	//LOG(yea;
-
-	switch (get_type()) {
+	other.cast_to_type(get_type());
+}
+void expression_token::cast_to_type(const dataTypes_e target)
+{
+	switch (target) {
 	case dataTypes_e::INT:
 		LOG("implicitly casting to 'int'\n");
-		other.set_value<int>(other.implicit_cast<int>());
-		other.rval->set_type(dataTypes_e::INT);
+		set_value<int>(implicit_cast<int>());
+		rval->set_type(dataTypes_e::INT);
 		break;
 	case dataTypes_e::FLOAT:
 		LOG("implicitly casting to 'float'\n");
-		other.set_value<float>(other.implicit_cast<float>());
-		other.rval->set_type(dataTypes_e::FLOAT);
+		set_value<float>(implicit_cast<float>());
+		rval->set_type(dataTypes_e::FLOAT);
 		break;
 	}
 }
+void expression_token::implicit_force_cast(const datatype_declaration& target)
+{
+	if (is_compatible_with_type(target) == false) {
+		throw scriptError_t(&token, std::format("cannot implicitly cast from \"{}\" to \"{}\"", get_datatype().get_as_text(), target.get_as_text()).c_str());
+	}
+	
+	
 
+	if (is_lvalue()) {
+
+		if (lval->is_array()) { //no cast needed
+			return;
+		}
+
+		lvalue_to_rvalue();
+	}
+
+
+	cast_to_type(target.dtype);
+
+}
+datatype_declaration expression_token::get_datatype() const noexcept
+{
+	datatype_declaration type;
+
+	type.dtype = get_type();
+
+	if (is_rvalue() || lval->is_array() == false)
+		return type;
+
+	for (size_t i = 0; i < lval->array_depth(); i++)
+		type.typeModifiers.push_back(declaration_modifiers_e::ARRAY);
+
+	return type;
+}
 template<typename T>
 T expression_token::implicit_cast() const {
 	if (typeid(T) == typeid(int)) {
@@ -270,6 +305,19 @@ void expression_token::test_operand_compatibility(const expression_token& other)
 
 	throw scriptError_t(&token, std::format("an operand of type \"{}\" is incompatible with \"{}\"", left_type, right_type).c_str());
 	
+}
+bool expression_token::is_compatible_with_type(const datatype_declaration& other) const noexcept
+{
+	const auto thistype = get_datatype();
+
+	if (thistype.has_same_modifiers(other) == false) {
+		return false;
+	}
+
+	//needs to be handled when new types are added
+
+	return true;
+
 }
 bool expression_token::compatible_operand(const expression_token& other) const
 {

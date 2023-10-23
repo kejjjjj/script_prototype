@@ -31,7 +31,8 @@ struct expression_token
 	template<typename T> T implicit_cast() const;
 
 	void implicit_cast(expression_token& other);
-
+	void implicit_force_cast(const datatype_declaration& target);
+	datatype_declaration get_datatype() const noexcept;
 	bool is_literal() const 
 	{ 
 		if (is_lvalue() || is_rvalue())
@@ -106,6 +107,7 @@ struct expression_token
 
 	void test_operand_compatibility(const expression_token& other) const;
 	bool compatible_operand(const expression_token& other) const;
+	bool is_compatible_with_type(const datatype_declaration& other) const noexcept;
 	bool is_integral() const noexcept { return get_type() > dataTypes_e::CHAR && get_type() < dataTypes_e::FLOAT && array_depth() == NULL; }
 
 	std::underlying_type_t<punctuation_e> op = 0;
@@ -116,66 +118,15 @@ struct expression_token
 
 	std::list<token_t*> prefix;
 	std::list<std::pair<code_segment_t, punctuation_e>> postfix;
+
+	void cast_to_type(const dataTypes_e target);
+
 private:
 	bool compatible_array_operand(const expression_token& other) const;
-
 	void cast_weaker_operand(expression_token& other);
 
 	token_t token;
 	scr_scope_t* block = 0;
-};
-
-struct expression_token_compiler 
-{
-	explicit expression_token_compiler(expression_token& t) {
-
-		if (t.is_rvalue()) {
-			rval.value.buffer = std::make_shared<char*>(*t.rval->value.buffer.get());
-			rval.value.buf_size = t.rval->value.buf_size;
-			rval.set_type(t.rval->get_type());
-			std::cout << "oh yea \"" << t.get_token().string << "\" is definitely not an lvalue!\n";
-
-			//std::cout << "rvalue use count: " << rval.value.buffer.use_count() << '\n';
-			b_rvalue = true;
-		}
-		else if (t.is_lvalue()) {
-			std::cout << "oh yea \"" << t.get_token().string << "\" is definitely an lvalue!\n";
-			b_lvalue = true; 
-		}
-
-		for (auto& i : t.prefix) {
-			prefix.push_back(*i);
-		}
-		for (auto& i : t.postfix) 
-			postfix.push_back(i);
-
-		token = const_cast<expression_token&>(t).get_token();
-
-		op = t.op;
-		op_priority = t.op_priority;
-
-
-	}
-
-	char* get_copy(){
-		char* yea = new char[sizeof(expression_token_compiler)];
-
-		memcpy(yea, this, sizeof(expression_token_compiler));
-
-		return yea;
-	}
-
-	std::underlying_type_t<punctuation_e> op = 0;
-	std::underlying_type_t<OperatorPriority> op_priority = 0;
-
-	bool b_rvalue = false;
-	bool b_lvalue = false;
-	rvalue rval;
-
-	std::vector<token_t> prefix;
-	std::vector<std::pair<code_segment_t, punctuation_e>> postfix;
-
-	token_t token;
 };
 
 #endif

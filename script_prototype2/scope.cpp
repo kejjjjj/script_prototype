@@ -40,18 +40,9 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
             declaration->declare_and_initialize(true);
 
         break;
-    case statementType_e::STATEMENT_KEYWORD:
+    case statementType_e::IF_STATEMENT:
+        eval_if_statement(script, block, statement);
 
-        switch (static_cast<statementKeywords_e>(statement.it->extrainfo)) {
-
-        case statementKeywords_e::IF:
-            if_statement(block, statement).evaluate_statement();
-            break;
-
-        default:
-            throw scriptError_t(&*statement.it, "statementKeywords_e: default case");
-
-        }
 
         break;
     case statementType_e::SCOPE_EXIT:
@@ -84,7 +75,9 @@ scr_scope_t* create_scope(script_t& script, const scr_scope_t* block)
 }
 scr_scope_t* create_scope_without_range(const scr_scope_t* block)
 {
-    scr_scope_t* scope = (new scr_scope_t);
+    scr_scope_t* scope = (new scr_scope_t); //one could say this is bad but it's so well memory managed that it's ok :)
+    //it gets freed if the script comes across a }
+    //or if an exception occurs
 
     scope->set_lower_scope(block);
 
@@ -121,6 +114,18 @@ scr_scope_t* delete_scope(script_t& script, scr_scope_t* codeblock)
 
     if (codeblock->is_global_scope()) {
         throw scriptError_t(&*script.S_GetIterator(), "found \"}\" but it's not closing anything");
+    }
+
+    if (function_scope* function_scope = codeblock->is_function_scope()) {
+
+        if (codeblock->get_lower()->is_global_scope()) {
+            if (function_scope->function_will_return == false) {
+                throw scriptError_t(&*script.S_GetIterator(), "the function must return a value at the lowest scope");
+            }
+            LOG("the function \"" << function_scope->identifier << "\" returns a value\n");
+
+        }
+
     }
 
     if (!script.is_eof())

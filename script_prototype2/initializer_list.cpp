@@ -1,5 +1,6 @@
 #include "initializer_list.hpp"
 #include "expression.hpp"
+#include "o_standard.hpp"
 
 initializer_list_t::initializer_list_t(scr_scope_t* scope, const code_segment_t& _statement, Variable* _target)
 	: statement(_statement), targetVar(_target), block(scope)

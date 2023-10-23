@@ -66,7 +66,7 @@ std::optional<code_segment_t> script_t::create_code_segment(scr_scope_t** scope)
 			break;
 		}
 	}
-	else if (begin->tt == tokenType::FUNCTION){
+	else if (begin->tt == tokenType::FUNCTION || begin->tt == tokenType::IF_STATEMENT){
 		while (end != tokens.end()) {
 			if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_CURLYBRACKET_OPEN)) {
 				--end;
@@ -261,8 +261,9 @@ bool script_t::S_ReadName(token_t& token)
 	}
 	//built-in statement keyword
 	else if (const auto statement_it = statementKeywordTable::getInstance().find_builtin(token.string)) {
-		token.tt = tokenType::STATEMENT;
-		token.extrainfo = static_cast<std::underlying_type_t<statementKeywords_e>>((statement_it->first->second));
+
+		token.tt = statement_it->first->second;
+		token.extrainfo = 0;
 	}
 	else if (token.string == "fn") {
 		token.tt = tokenType::FUNCTION;

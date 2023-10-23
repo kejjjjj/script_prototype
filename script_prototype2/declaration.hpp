@@ -11,38 +11,6 @@
 #include "expression.hpp"
 
 
-enum class declaration_modifiers_e : char
-{
-	ARRAY
-};
-
-struct datatype_declaration
-{
-	dataTypes_e dtype = dataTypes_e::UNKNOWN;
-	std::list<declaration_modifiers_e> typeModifiers;
-
-	std::string get_as_text() {
-
-		std::string type = get_type_as_text(dtype);
-		
-		if (typeModifiers.empty())
-			return type;
-
-		std::string modifiers;
-		for (auto& i : typeModifiers) {
-			switch (i) {
-			case declaration_modifiers_e::ARRAY:
-				modifiers += "[]";
-				break;
-			default:
-				break;
-			}
-		}
-
-		return type + modifiers;
-	}
-
-};
 
 class variable_declaration_t {
 public:

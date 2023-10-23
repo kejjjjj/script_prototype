@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Variable.hpp"
+#include "functions.hpp"
 
 struct codepos_t
 {
 	size_t line;
 	size_t column;
 };
+
+struct function_scope;
 
 class scr_scope_t
 {
@@ -22,11 +25,33 @@ public:
 
 		lower_scope = const_cast<scr_scope_t*>(scope);
 	}
+	auto get_lower() noexcept { return lower_scope; }
 
 	//~scr_scope_t() { on_exit(); }
-	void make_function_scope() noexcept { function_scope = true; }
 	bool is_global_scope() const noexcept { return lower_scope == nullptr; }
-	bool is_function_scope() const noexcept { return function_scope; }
+
+	void make_function_scope(std::unique_ptr<function_scope>& function)
+	{
+		function_scope = std::move(function);
+	};
+
+	function_scope* is_function_scope() noexcept {
+		
+		if (is_global_scope())
+			return nullptr;
+
+		scr_scope_t* s = this;
+		do {
+
+			if (s->function_scope)
+				return s->function_scope.get();
+			
+			s = s->get_lower();
+		} while (s->is_global_scope() == false);
+
+		return nullptr;
+	}
+
 	decltype(auto) declare_variable(std::unique_ptr<Variable>&& v) {
 		return localVars->declare_variable((v));
 	}
@@ -65,14 +90,12 @@ public:
 		localVars->erase_all();
 		return lower_scope;
 	}
-	auto get_lower() noexcept { return lower_scope; }
 private:
 	codepos_t codepos_begin{};
 	scr_scope_t* lower_scope = 0;
 	std::unique_ptr<VariableTable> localVars;
 	codepos_t codepos_end{};
-	bool function_scope = false;
-
+	std::unique_ptr<function_scope> function_scope;
 };
 
 void Codeblock_read(script_t& script, scr_scope_t** block);

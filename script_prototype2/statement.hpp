@@ -20,11 +20,6 @@ private:
 	code_segment_t code;
 };
 
-enum class statementKeywords_e : short
-{
-	IF
-};
-
 class statementKeywordTable
 {
 public:
@@ -34,7 +29,7 @@ public:
 	}
 
 	auto find_builtin(const std::string& v) const {
-		auto found = std::find_if(built_in.begin(), built_in.end(), [&v](const std::pair<std::string, statementKeywords_e>& str) { return !v.compare(str.first); });
+		auto found = std::find_if(built_in.begin(), built_in.end(), [&v](const std::pair<std::string, tokenType>& str) { return !v.compare(str.first); });
 		return found != built_in.end() ? std::make_optional(std::make_pair(found, std::distance(built_in.begin(), found))) : std::nullopt;
 	}
 
@@ -43,8 +38,8 @@ public:
 	};
 
 private:
-	const std::list<std::pair<std::string, statementKeywords_e>> built_in = {
-		{"if", statementKeywords_e::IF },
+	const std::list<std::pair<std::string, tokenType>> built_in = {
+		{"if", tokenType::IF_STATEMENT },
 	};
 
 	
@@ -53,7 +48,7 @@ enum class statementType_e : char
 {
 	EXPRESSION,
 	DECLARATION,
-	STATEMENT_KEYWORD,
+	IF_STATEMENT,
 	SCOPE,
 	SCOPE_EXIT,
 	FUNCTION_DECLARATION,

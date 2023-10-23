@@ -2,6 +2,7 @@
 #include "variable.hpp"
 #include "expression.hpp"
 #include "initializer_list.hpp"
+#include "o_standard.hpp"
 
 variable_declaration_t::variable_declaration_t(scr_scope_t* scope, const code_segment_t& expression) : tokens(expression), block(scope)
 {
@@ -26,6 +27,7 @@ code_segment_t variable_declaration_t::declare_and_initialize(bool initializer_a
 
 		//compiler_declr->has_initializer = true;
 		initialize();
+		target->isInitialized = true;
 
 	}
 

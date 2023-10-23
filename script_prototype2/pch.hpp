@@ -30,7 +30,6 @@
 #include <any>
 #include <numeric>
 
-
 #define MAKE_LOWORD(dword, word) ((dword) = ((dword) & 0xFFFF0000) | (WORD)(word))
 #define MAKE_HIWORD(dword, word) ((dword) = ((dword) & 0x0000FFFF) | ((DWORD)(word) << 16))
 

@@ -2,10 +2,19 @@
 #include "scope.hpp"
 #include "expression.hpp"
 
+
 void eval_return_statement(code_segment_t code, scr_scope_t* block)
 {
-	if (block->is_global_scope()) {
+	function_scope* function_scope = block->is_function_scope();
+
+
+	if (function_scope == nullptr) {
 		throw scriptError_t(&*code.it, "the return keyword is only allowed in function scopes");
+	}
+	
+	//lowest scope
+	if (block->get_lower()->is_global_scope()) {
+		function_scope->function_will_return = true;
 	}
 
 	code.print();
@@ -15,9 +24,11 @@ void eval_return_statement(code_segment_t code, scr_scope_t* block)
 	expression_t expression(block, code);
 	expression_token result = expression.EvaluateEntireExpression();
 
-	//todo -> test if result has a matching type with the function return type
+	//convert the return type to an lvalue for a moment
 
-	throw scriptError_t(&*code.it, "gg");
+	result.implicit_force_cast(function_scope->return_datatype);
+
+	//throw scriptError_t(&*code.it, "gg");
 
 
 }

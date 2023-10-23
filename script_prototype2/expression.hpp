@@ -3,10 +3,9 @@
 #ifndef __expres
 #define __expres
 
-#include "script.hpp"
+//#include "script.hpp"
 #include "expression_token.hpp"
-#include "o_standard.hpp"
-#include "scope.hpp"
+//#include "o_standard.hpp"
 
 class expression_t{
 public:
