@@ -40,6 +40,11 @@ public:
 private:
 	const std::list<std::pair<std::string, tokenType>> built_in = {
 		{"if", tokenType::IF_STATEMENT },
+		{"else", tokenType::ELSE_STATEMENT },
+		{"fn", tokenType::FUNCTION },
+		{"return", tokenType::RETURN},
+
+
 	};
 
 	
@@ -49,6 +54,8 @@ enum class statementType_e : char
 	EXPRESSION,
 	DECLARATION,
 	IF_STATEMENT,
+	//ELSE_IF_STATEMENT,
+	ELSE_STATEMENT,
 	SCOPE,
 	SCOPE_EXIT,
 	FUNCTION_DECLARATION,

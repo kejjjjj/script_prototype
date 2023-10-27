@@ -1,11 +1,20 @@
 #include "functions.hpp"
 #include "expression.hpp"
 #include "declaration.hpp"
+#include "parsing_utils.hpp"
 
-void function_c::parse_declaration(script_t& script)
+size_t parse_parameters(scr_scope_t*& scope, code_segment_t& declarations, size_t numArgs, std::unique_ptr<function_scope>& function);
+void parse_returntype(scr_scope_t*& scope, code_segment_t& _code, std::unique_ptr<function_scope>& function);
+void create_function(script_t& script, scr_scope_t*& scope, code_segment_t& _code);
+
+
+void emit_function_declaration(script_t& script, scr_scope_t*& scope, code_segment_t code)
 {
 	if (scope->is_global_scope() == false)
 		throw scriptError_t(&*code.it, "a function declaration is only allowed in the global scope");
+
+
+	std::unique_ptr<function_scope> function = std::move(std::unique_ptr<function_scope>(new function_scope));
 
 	scope = create_scope_without_range(scope);
 
@@ -26,12 +35,12 @@ void function_c::parse_declaration(script_t& script)
 		throw scriptError_t(&*it, std::format("expected a \"(\""));
 	}
 
-	if (auto args_opt = expression_t::find_matching_parenthesis(code_segment_t{ .it = code.it, .begin = code.it, .end = (++code.end--) })) {
+	if (auto args_opt = find_matching_parenthesis(code_segment_t{ .it = code.it, .begin = code.it, .end = (++code.end--) })) {
 		auto& args = args_opt.value();
 
 		args.print();
 
-		function->numArgs = parse_parameters(args, 1);
+		function->numArgs = parse_parameters(scope, args, 1, function);
 
 		LOG("function with " << function->numArgs << " parameters!\n");
 
@@ -44,24 +53,24 @@ void function_c::parse_declaration(script_t& script)
 
 	++it; //skip )
 	code.end = end;
-	parse_returntype(code);
+	parse_returntype(scope, code, function);
 
-	create_function(script, code);
+	create_function(script, scope, code);
 
 	LOG("\n--- function info ---\n");
 	LOG("name: " << function->identifier << '\n');
 	LOG("params: (");
-	for (auto it = function->param_types.begin(); it != function->param_types.end(); ++it) {
+	for (auto iter = function->param_types.begin(); iter != function->param_types.end(); ++iter) {
 		
-		auto next = it;
+		auto next = iter;
 		++next;
 
 		if (next == function->param_types.end()) {
-			LOG(it->get_as_text() << ")\n");
+			LOG(iter->get_as_text() << ")\n");
 			continue;
 		}
 
-		LOG(it->get_as_text() << ", ");
+		LOG(iter->get_as_text() << ", ");
 	}
 	LOG("return type: " << function->return_datatype.get_as_text() << '\n');
 	LOG("num params: " << function->numArgs << '\n');
@@ -73,7 +82,7 @@ void function_c::parse_declaration(script_t& script)
 	//throw scriptError_t(&*it, "gg");
 }
 
-size_t function_c::parse_parameters(code_segment_t& declarations, size_t numArgs)
+size_t parse_parameters(scr_scope_t*& scope, code_segment_t& declarations, size_t numArgs, std::unique_ptr<function_scope>& function)
 {
 	variable_declaration_t decl(scope, declarations);
 
@@ -97,11 +106,11 @@ size_t function_c::parse_parameters(code_segment_t& declarations, size_t numArgs
 
 	++declarations.it; //skip comma
 
-	return parse_parameters(declarations, numArgs + 1);
+	return parse_parameters(scope, declarations, numArgs + 1, function);
 
 }
 
-void function_c::parse_returntype(code_segment_t& code)
+void parse_returntype(scr_scope_t*& scope, code_segment_t& code, std::unique_ptr<function_scope>& function)
 {
 	const auto is_arrow = [](const token_t& token) {
 		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_ARROW;
@@ -121,7 +130,7 @@ void function_c::parse_returntype(code_segment_t& code)
 
 
 }
-void function_c::create_function(script_t& script, code_segment_t& _code)
+void create_function(script_t& script, scr_scope_t*& scope, code_segment_t& _code)
 {
 
 	if (const auto is_opening_curly_bracket = [](const token_t& token) {
@@ -134,6 +143,7 @@ void function_c::create_function(script_t& script, code_segment_t& _code)
 
 	set_range_for_scope(script, scope);
 
+	scope->emit_to_lower_scope(statementType_e::FUNCTION_DECLARATION);
 
 
 }

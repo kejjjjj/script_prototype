@@ -21,8 +21,7 @@ void eval_return_statement(code_segment_t code, scr_scope_t* block)
 
 	code.it++; //skip the return keyword
 
-	expression_t expression(block, code);
-	expression_token result = expression.EvaluateEntireExpression();
+	expression_token result = eval_expression(block, code);
 
 	//convert the return type to an lvalue for a moment
 

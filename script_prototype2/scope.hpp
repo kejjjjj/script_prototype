@@ -2,7 +2,7 @@
 
 #include "Variable.hpp"
 #include "functions.hpp"
-
+#include "statement.hpp"
 struct codepos_t
 {
 	size_t line;
@@ -21,12 +21,14 @@ public:
 	scr_scope_t(const scr_scope_t&) = delete;
 	scr_scope_t& operator=(const scr_scope_t&) = delete;
 
-	void set_lower_scope(const scr_scope_t* scope) {
-
-		lower_scope = const_cast<scr_scope_t*>(scope);
+	void set_lower_scope(const scr_scope_t* scope) noexcept {
+		lower_scope = const_cast<scr_scope_t*>(scope); 
 	}
 	auto get_lower() noexcept { return lower_scope; }
-
+	void emit_to_lower_scope(const statementType_e type) noexcept { 
+		if(lower_scope)
+			lower_scope->upper_scope_type = type; 
+	}
 	//~scr_scope_t() { on_exit(); }
 	bool is_global_scope() const noexcept { return lower_scope == nullptr; }
 
@@ -68,6 +70,8 @@ public:
 
 	}
 
+	std::optional<statementType_e> get_scope_context() const noexcept { return upper_scope_type; }
+
 	void set_range(codepos_t&& begin, codepos_t&& end) noexcept {
 		codepos_begin = std::move(begin);
 		codepos_end = std::move(end);
@@ -96,6 +100,7 @@ private:
 	std::unique_ptr<VariableTable> localVars;
 	codepos_t codepos_end{};
 	std::unique_ptr<function_scope> function_scope;
+	std::optional<statementType_e> upper_scope_type;
 };
 
 void Codeblock_read(script_t& script, scr_scope_t** block);

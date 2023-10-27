@@ -14,6 +14,7 @@ enum class tokenType : char
 	CHAR_LITERAL,
 	BUILT_IN_TYPE,
 	IF_STATEMENT,
+	ELSE_STATEMENT,
 	NAME,
 	PUNCTUATION,
 	FUNCTION,
@@ -55,9 +56,9 @@ struct code_segment_t
 
 	void print() const noexcept {
 
-		LOG( "code_segment_t::print():\n");
+		//LOG( "code_segment_t::print():\n");
 		for (auto i = it; i != end; i++) {
-			LOG( i->string);
+			LOG( i->string) << ' ';
 		}
 		LOG( end->string << '\n');
 	}

@@ -83,7 +83,7 @@ void initializer_list_t::evaluate_list(Variable* target)
 		}
 		else if(const auto expression_statement = read_expression(statement)) {
 			
-			auto expression = expression_t(block, expression_statement.value()).EvaluateEntireExpression();
+			auto expression = eval_expression(block, expression_statement.value());
 			
 
 			auto l = target->arrayElements[elementIndex]->to_expression();

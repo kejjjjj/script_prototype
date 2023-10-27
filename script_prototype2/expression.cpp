@@ -1,57 +1,57 @@
 #include "expression.hpp"
 #include "o_postfix.hpp"
 #include "o_standard.hpp"
+#include "parsing_utils.hpp"
 
-//each expression sequence will be converted to just one remaining expression
-expression_token expression_t::EvaluateEntireExpression()
+std::list<expression_token> tokenize_expression(code_segment_t& code, scr_scope_t* scope);
+bool parse_expression(scr_scope_t* scope, code_segment_t& tokens, std::list<expression_token>& sortedTokens);
+bool parse_operator(code_segment_t& tokens, std::list<expression_token>& sortedTokens);
+bool expression_parse_parentheses(scr_scope_t* scope, expression_token& token, code_segment_t& tokens);
+
+expression_token evaluate_expression_tokens(std::list<expression_token>& sortedTokens);
+
+postfix_squarebracket postfix_square_bracket(code_segment_t& tokens);
+postfix_parenthesis postfix_opening_parenthesis(code_segment_t& tokens);
+
+expression_token eval_expression(scr_scope_t* scope, code_segment_t tokens)
 {
-	if (!is_ready())
-		throw scriptError_t(&*tokens.it, "empty expression is not allowed");
 
 	LOG("EvaluateEntireExpression(");
 	for (auto it = tokens.it; it != tokens.end; ++it) {
-		LOG(it->string<<' ');
+		LOG(it->string << ' ');
 	}
 	LOG(")\n");
 
-	EvaluateExpression();
+	++tokens.end;
 
-	return std::move(result);
-}
-void expression_t::EvaluateExpression()
-{
+	auto sortedtokens = tokenize_expression(tokens, scope);
 
-
-	TokenizeExpression();
-
-	std::for_each(sortedTokens.begin(), sortedTokens.end(), [this](expression_token& t) {
-		t.eval_postfix(block);
+	std::for_each(sortedtokens.begin(), sortedtokens.end(), [scope](expression_token& t) {
+		t.eval_postfix(scope);
 		t.eval_prefix();
 	});
 
-	//LOG(sortedTokens.size() << " operands and " << sortedTokens.size() / 2 << " operators in the full expression!\n");
+	return evaluate_expression_tokens(sortedtokens);
 
-	EvaluateExpressionTokens();
-	
-
-	return;
 }
 
 
-void expression_t::TokenizeExpression()
+std::list<expression_token> tokenize_expression(code_segment_t& tokens, scr_scope_t* scope)
 {
+	std::list<expression_token> sortedTokens;
+
 	if (tokens.it == tokens.end)
-		return;
+		return sortedTokens;
 
 	while (tokens.it != tokens.end) {
-		if (!ParseExpression()) {
+		if (!parse_expression(scope, tokens, sortedTokens)) {
 			throw scriptError_t(&*tokens.it, std::format("expected an expression instead of \"{}\"\n", tokens.it->string));
 		}
 
 		if (tokens.it == tokens.end)
 			break;
 
-		if (!ParseOperator()) {
+		if (!parse_operator(tokens, sortedTokens)) {
 			if (tokens.it == tokens.end)
 				throw scriptError_t(&*tokens.it, std::format("expected an expression before \"{}\"\n", tokens.it->string));
 
@@ -63,19 +63,16 @@ void expression_t::TokenizeExpression()
 	if (sortedTokens.back().op) {
 		throw scriptError_t(&*tokens.it, std::format("unexpected end-of-expression \"{}\"", tokens.it->string));
 	}
+
+	return sortedTokens;
+
 }
-bool expression_t::ParseExpression()
+bool parse_expression(scr_scope_t* scope, code_segment_t& tokens, std::list<expression_token>& sortedTokens)
 {
 	auto& it = tokens.it;
 	expression_token token;
 	const auto token_peek_unary = [&]()
 	{
-		const auto cast_exists = ParseUnaryCast(token);
-		if (cast_exists) {
-			return true;
-		}
-		
-
 		if (it == tokens.end || it->tt != tokenType::PUNCTUATION)
 			return false;
 
@@ -118,20 +115,19 @@ bool expression_t::ParseExpression()
 			return false;
 		}
 
-		auto copy = tokens;
+		if (tokens.it->tt == tokenType::PUNCTUATION) {
 
-		if (ExpressionFindMatchingBracket(tokens)) {
-			copy.begin++; //skip [
-			copy.it++; // skip [
-			copy.end = --tokens.it; //ignore ]
+			switch (LOWORD(tokens.it->extrainfo)) {
+			case P_BRACKET_OPEN:
+				token.insert_postfix(std::move(std::shared_ptr<postfix_squarebracket>(new postfix_squarebracket(postfix_square_bracket(tokens)))));
+				return true;
+			case P_PAR_OPEN:
+				token.insert_postfix(std::move(std::shared_ptr<postfix_parenthesis>(new postfix_parenthesis(postfix_opening_parenthesis(tokens)))));
+				return true;
+			default:
+				break;
+			}
 
-
-			token.insert_postfix(copy, P_BRACKET_OPEN);
-
-			it++; //go to ]
-			it++; //skip ]
-
-			return true;
 		}
 		
 		
@@ -145,7 +141,7 @@ bool expression_t::ParseExpression()
 
 	if (!token_peek_name()) {
 
-		if (ExpressionParseParentheses(token) == false) {
+		if (expression_parse_parentheses(scope, token, tokens) == false) {
 
 			if (token.prefix.empty() == false)
 				throw scriptError_t(&*it, "expected an expression because parentheses failed lol");
@@ -160,14 +156,14 @@ bool expression_t::ParseExpression()
 
 	while (token_peek_postfix()) {}
 
-	token.set_scope(block);
+	token.set_scope(scope);
 	token.set_value_category();
 
 	sortedTokens.push_back(token);
 
 	return true; //expression has valid syntax
 }
-bool expression_t::ParseOperator()
+bool parse_operator(code_segment_t& tokens, std::list<expression_token>& sortedTokens)
 {
 	
 
@@ -196,138 +192,36 @@ bool expression_t::ParseOperator()
 
 	return true; //operator has valid syntax
 }
-
-bool expression_t::ParseUnaryCast(expression_token& token)
+bool expression_parse_parentheses(scr_scope_t* scope, expression_token& token, code_segment_t& tokens)
 {
 	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
 		return false;
-	
-	tokens.it++;
-		
-	if (tokens.it->tt != tokenType::BUILT_IN_TYPE) {
-		tokens.it--;
-		return false;
+
+	auto substr = find_matching_parenthesis(tokens);
+
+	if (!substr) {
+		throw scriptError_t(&*tokens.it, "empty expression is not allowed here");
 	}
-
-	token.insert_prefix(*tokens.it);
-
-	tokens.it++;
-	
-	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_CLOSE) == false)
-		throw scriptError_t(&*tokens.it, "expected to find a \")\"");
-
-	tokens.it++;
-
-	LOG("unary cast!\n");
-
-	return true;
-}
-bool expression_t::ExpressionParseParentheses(expression_token& token)
-{
-	if ((tokens.it->tt == tokenType::PUNCTUATION && LOWORD(tokens.it->extrainfo) == punctuation_e::P_PAR_OPEN) == false)
-		return false;
-
-	//creates a copy that will find the matching )
-	auto parentheses_statement = code_segment_t{ .it = tokens.it, .begin = tokens.it, .end = tokens.end };
-	ExpressionFindMatchingParenthesis(parentheses_statement);
-
-	//skip the (
-	++tokens.it;
-
-	//parentheses_statement.it contains the position of the matching ), so it will be the end
-	const code_segment_t statement = code_segment_t{ .it = tokens.it, .begin = tokens.it, .end = --parentheses_statement.it };
 
 	std::list<token_t*> backup_prefix = token.prefix;
 	decltype(token.postfix) backup_postfix = token.postfix;
 
-	token = expression_t(block, statement).EvaluateEntireExpression();
+	token = eval_expression(scope, substr.value());
+
+	//token = expression_t(block, statement).EvaluateEntireExpression();
 
 	token.prefix = backup_prefix;
 	token.postfix = backup_postfix;
 
 
-	tokens.it = ++parentheses_statement.it;
-	++tokens.it;
-	//LOG("continuing iteration from " << tokens.it->string << '\n';
+	tokens.it = substr.value().end;
+	++tokens.it; //)
+	++tokens.it; //the token after )
+
+	LOG("continuing iteration from " << tokens.it->string << '\n');
 	return true;
 }
-void expression_t::ExpressionFindMatchingParenthesis(code_segment_t& token)
-{
-	const auto is_opening = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_PAR_OPEN;
-	};
-	const auto is_closing = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_PAR_CLOSE;
-	};
-
-	if (is_opening(*token.it) == false)
-		throw scriptError_t(&*token.it, "expected to find a \"(\"\n");
-
-	token.it++;
-	size_t numOpen = 1;
-	size_t numClosing = 0;
-
-	while (token.it != token.end) {
-		if (is_opening(*token.it))
-			numOpen++;
-
-		else if (is_closing(*token.it)) {
-			numClosing++;
-
-			if (numOpen == numClosing) {
-				return;
-			}
-		}
-
-		token.it++;
-	}
-	throw scriptError_t(&*token.it, "expected to find a \")\"");
-
-}
-std::optional<code_segment_t> expression_t::find_matching_parenthesis(const code_segment_t& token)
-{
-	code_segment_t copy = token;
-
-	const auto is_opening = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_PAR_OPEN;
-	};
-	const auto is_closing = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_PAR_CLOSE;
-	};
-
-	if (is_opening(*copy.it) == false)
-		throw scriptError_t(&*copy.it, "expected to find a \"(\"\n");
-
-	copy.it++;
-	auto begin = copy.it;
-
-	size_t numOpen = 1;
-	size_t numClosing = 0;
-
-	size_t numIterations = 0;
-
-	while (copy.it != copy.end) {
-		if (is_opening(*copy.it))
-			numOpen++;
-
-		else if (is_closing(*copy.it)) {
-			numClosing++;
-
-			if (numOpen == numClosing) {
-
-				if (numIterations == NULL)
-					return std::nullopt;
-
-				return std::make_optional<code_segment_t>({ begin, begin , --copy.it });
-			}
-		}
-
-		copy.it++;
-		numIterations++;
-	}
-	throw scriptError_t(&*copy.it, "expected to find a \")\"");
-}
-void expression_t::EvaluateExpressionTokens()
+expression_token evaluate_expression_tokens(std::list<expression_token>& sortedTokens)
 {
 	std::list<expression_token>::iterator itr1, itr2 = sortedTokens.begin();
 	const auto& op_end = --sortedTokens.end();
@@ -383,5 +277,88 @@ void expression_t::EvaluateExpressionTokens()
 		sortedTokens.erase(itr1, itr2);
 	}
 
-	result = std::move(*itr2);
+	return std::move(*itr2);
+}
+
+postfix_squarebracket postfix_square_bracket(code_segment_t& tokens)
+{
+	auto substr = find_matching_square_bracket(tokens);
+
+	if (substr) {
+		tokens.it = substr.value().end;
+		tokens.it++; //go to ]
+		tokens.it++; //skip the ]
+
+		postfix_squarebracket v;
+		v.expression = substr.value();
+		return v;
+	}
+	throw scriptError_t(&*tokens.it, "expected an expression after the [ operator");
+	
+}
+postfix_parenthesis postfix_opening_parenthesis(code_segment_t& tokens)
+{
+	const auto is_comma = [](const token_t& token) {
+		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_COMMA;
+		};
+
+	auto substr = find_matching_parenthesis(tokens);
+	postfix_parenthesis v;
+
+	bool comma_used = false;
+
+	auto next_it = tokens.it;
+
+	if (substr) { //if the function call has > 0 arguments
+		code_segment_t copy = substr.value();
+
+		tokens.it = substr.value().end;
+		tokens.it++; //go to )
+		copy.end = tokens.it;
+		tokens.it++; //skip the )
+		code_segment_t arg;
+
+		do {
+			comma_used = false;
+			auto arg_opt = find_appropriate_comma_delimiter(copy);
+
+			if (!arg_opt) { //no expression
+				v.args.push_back(std::nullopt);
+				++copy.it;
+				continue;
+			}
+
+			arg = arg_opt.value();
+			
+			if (is_comma(*arg.end)) //don't include the comma in the expression, so remove it
+				arg.end--;
+
+			v.args.push_back(arg);
+			v.args.back()->print();
+
+			copy.it = arg_opt.value().end; //go back to the parsed end
+
+			if (is_comma(*copy.it))
+				comma_used = true;
+
+			copy.it++; //skip one character to avoid an infinite loop
+
+		} while (copy.it != copy.end);
+
+		if(comma_used) // a lazy way to check if the last argument was valid
+			v.args.push_back(std::nullopt);
+
+		LOG("calling a function with " << v.args.size() << " args!\n");
+
+		return v;
+	}
+
+	LOG("NO ARGS\n");
+
+	tokens.it++; //skip the (
+	tokens.it++; //skip the )
+
+	return v;
+
+	
 }

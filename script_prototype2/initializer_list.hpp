@@ -17,7 +17,6 @@ public:
 	
 	static std::optional<code_segment_t> find_curlybracket_substring(const code_segment_t& token);
 
-	friend class variable_declaration_t_compiler;
 private:
 	void evaluate_list(Variable* target);
 	std::optional<code_segment_t> read_expression(code_segment_t& _statement);

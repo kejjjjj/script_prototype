@@ -66,7 +66,9 @@ std::optional<code_segment_t> script_t::create_code_segment(scr_scope_t** scope)
 			break;
 		}
 	}
-	else if (begin->tt == tokenType::FUNCTION || begin->tt == tokenType::IF_STATEMENT){
+
+	//a keyword that requires more than a hardcoded amount of context
+	else if (begin->tt == tokenType::FUNCTION || begin->tt == tokenType::IF_STATEMENT || begin->tt == tokenType::ELSE_STATEMENT){
 		while (end != tokens.end()) {
 			if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_CURLYBRACKET_OPEN)) {
 				--end;
@@ -74,14 +76,13 @@ std::optional<code_segment_t> script_t::create_code_segment(scr_scope_t** scope)
 			}
 			end++;
 		}
-
-		throw scriptError_t(this, std::format("unexpected end of file"));
+		throw scriptError_t(this, std::format("unexpected end of file (2)"));
 
 	}
-
+	
 	while (end != tokens.end()) {
 
-		if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_SEMICOLON /*|| LOWORD(end->extrainfo) == P_CURLYBRACKET_CLOSE*/))
+		if (end->tt == tokenType::PUNCTUATION && (LOWORD(end->extrainfo) == P_SEMICOLON))
 			return code_segment_t{ begin, begin, --end++ };
 
 		end++;
@@ -263,14 +264,6 @@ bool script_t::S_ReadName(token_t& token)
 	else if (const auto statement_it = statementKeywordTable::getInstance().find_builtin(token.string)) {
 
 		token.tt = statement_it->first->second;
-		token.extrainfo = 0;
-	}
-	else if (token.string == "fn") {
-		token.tt = tokenType::FUNCTION;
-		token.extrainfo = 0;
-	}
-	else if (token.string == "return") {
-		token.tt = tokenType::RETURN;
 		token.extrainfo = 0;
 	}
 

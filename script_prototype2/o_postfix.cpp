@@ -12,25 +12,26 @@ void postfixFunctions::createFunctions()
 	init = true;
 }
 
-void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, std::optional<code_segment_t*> Arg_statement)
+void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, postfixBase* code)
 {
 
 	if (operand.is_lvalue() == false) throw scriptError_t(&operand.get_token(), "[] operand must be an lvalue");
 	if (operand.lval->is_array() == false)  throw scriptError_t(&operand.get_token(), "[] operand must have an array type");
-	if (Arg_statement.has_value() == false) throw scriptError_t("how the frick was subscript postfix called without a value???");
+	//if (Arg_statement.has_value() == false) throw scriptError_t("how the frick was subscript postfix called without a value???");
 
-	code_segment_t statement = *Arg_statement.value();
 
-	const auto result = expression_t(block, statement).EvaluateEntireExpression();
+	postfix_squarebracket* statement = dynamic_cast<postfix_squarebracket*>(code);
+
+	const auto result = eval_expression(block, statement->expression);
 
 	if (result.is_integral() == false) {
-		throw scriptError_t(&*statement.it, "expression must evaluate to an integral type");
+		throw scriptError_t(&*statement->expression.it, "expression must evaluate to an integral type");
 	}
 
 	const int index = result.get_int();
 
-	if (index > operand.lval->numElements) {
-		throw scriptError_t(&*statement.it, std::format("attempted to access array index {} when maxSize was {}", index, operand.lval->numElements));
+	if (index >= operand.lval->numElements) {
+		throw scriptError_t(&*statement->expression.it, std::format("attempted to access array index {} when maxSize was {}", index, operand.lval->numElements));
 
 	}
 
@@ -38,7 +39,6 @@ void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, 
 
 	LOG("array lvalue updated\n");
 
-	statement.it++; //skip the ]
 	return;
 }
 

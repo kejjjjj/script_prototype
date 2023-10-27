@@ -9,7 +9,6 @@
 void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 {
 
-    std::unique_ptr<expression_t> expression;
     std::unique_ptr<variable_declaration_t> declaration;
 
 
@@ -27,11 +26,7 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
     switch (statement_type) {
     case statementType_e::EXPRESSION:
-        expression = std::unique_ptr<expression_t>(new expression_t(block, statement));
-
-        if ((expression->is_ready()))
-            expression->EvaluateEntireExpression();
-
+        eval_expression(block, statement);
         break;
     case statementType_e::DECLARATION:
         declaration = std::unique_ptr<variable_declaration_t>(new variable_declaration_t(block, statement));
@@ -42,27 +37,18 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
         break;
     case statementType_e::IF_STATEMENT:
         eval_if_statement(script, block, statement);
-
-
         break;
-    case statementType_e::SCOPE_EXIT:
-
+    case statementType_e::ELSE_STATEMENT:
+        eval_else_statement(script, block, statement);
         break;
-    case statementType_e::SCOPE:
-        break;
-
     case statementType_e::FUNCTION_DECLARATION:
-
-        std::unique_ptr<function_c>(new function_c(block, statement))->parse_declaration(script);
-
+        emit_function_declaration(script, block, statement);
         break;
     case statementType_e::RETURN:
         eval_return_statement(statement, block);
         break;
 
     }
-
-
 
 }
 

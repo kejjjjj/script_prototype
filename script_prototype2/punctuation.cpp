@@ -35,6 +35,13 @@ bool is_postfix_operator(const punctuation_e p)
 	if (p == P_BRACKET_OPEN)
 		return true;
 
+	if (p == P_PAR_OPEN)
+		return true;
+
+	if (p == P_ARROW)
+		return true;
+
+
 	return false;
 }
 

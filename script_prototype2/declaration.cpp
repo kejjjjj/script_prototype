@@ -106,8 +106,7 @@ void variable_declaration_t::initialize()
 		return;
 	}
 	tokens.end--; //remove the ;
-	auto result = expression_t(block, tokens);
-	auto value = result.EvaluateEntireExpression();
+	auto value = eval_expression(block, tokens);
 
 	const auto f = evaluationFunctions::getInstance().find_function(P_ASSIGN);
 

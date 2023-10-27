@@ -20,7 +20,8 @@ statementType_e statement_determine(const code_segment_t& tokens)
 
 	else if (tokens.it->tt == tokenType::IF_STATEMENT)
 		return statementType_e::IF_STATEMENT;
-
+	else if (tokens.it->tt == tokenType::ELSE_STATEMENT)
+		return statementType_e::ELSE_STATEMENT;
 	else if (tokens.it->tt == tokenType::FUNCTION)
 		return statementType_e::FUNCTION_DECLARATION;
 	else if (tokens.it->tt == tokenType::RETURN)

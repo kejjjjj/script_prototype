@@ -7,6 +7,32 @@
 #include "variable.hpp"
 #include "scope.hpp"
 
+struct postfixBase
+{
+
+	virtual punctuation_e getType() const = 0;
+
+private:
+	
+};
+
+struct postfix_squarebracket : public postfixBase
+{
+	punctuation_e getType() const override { 
+		return punctuation_e::P_BRACKET_OPEN; 
+	}
+
+	code_segment_t expression;
+};
+struct postfix_parenthesis : public postfixBase
+{
+	punctuation_e getType() const override {
+		return punctuation_e::P_PAR_OPEN;
+	}
+
+	std::list<std::optional<code_segment_t>> args;
+};
+
 struct expression_token
 {
 	expression_token() = default;
@@ -14,7 +40,7 @@ struct expression_token
 
 	}
 	void insert_prefix(token_t& _token) { prefix.push_back(&_token); }
-	void insert_postfix(const code_segment_t& _token, const punctuation_e p) { postfix.push_back( { _token, p } ); }
+	void insert_postfix(std::shared_ptr<postfixBase>&& _token) { postfix.push_back( (_token) ); }
 	void set_token(token_t& _token) { token = _token; }
 	token_t& get_token() noexcept { 
 		if(is_rvalue()) 
@@ -108,7 +134,7 @@ struct expression_token
 	void test_operand_compatibility(const expression_token& other) const;
 	bool compatible_operand(const expression_token& other) const;
 	bool is_compatible_with_type(const datatype_declaration& other) const noexcept;
-	bool is_integral() const noexcept { return get_type() > dataTypes_e::CHAR && get_type() < dataTypes_e::FLOAT && array_depth() == NULL; }
+	bool is_integral() const noexcept { return get_type() >= dataTypes_e::CHAR && get_type() < dataTypes_e::FLOAT && array_depth() == NULL; }
 
 	std::underlying_type_t<punctuation_e> op = 0;
 	std::underlying_type_t<OperatorPriority> op_priority = 0;
@@ -117,7 +143,7 @@ struct expression_token
 	Variable* lval = 0;
 
 	std::list<token_t*> prefix;
-	std::list<std::pair<code_segment_t, punctuation_e>> postfix;
+	std::list<std::shared_ptr<postfixBase>> postfix;
 
 	void cast_to_type(const dataTypes_e target);
 
