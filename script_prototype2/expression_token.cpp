@@ -13,16 +13,20 @@ void expression_token::set_value_category()
 	if (is_lvalue() || is_rvalue())
 		return;
 
-	if(token.tt == tokenType::BUILT_IN_TYPE)
-		throw scriptError_t(&token, std::format("a datatype was unexpected here"));
+	if(token.tt >= tokenType::BUILT_IN_TYPE)
+		throw scriptError_t(&token, std::format("expected an expression, but found \"{}\"", token.string));
 
-	else if (token.tt == tokenType::FUNCTION)
-		throw scriptError_t(&token, std::format("a function was unexpected here"));
-
-	else if (token.tt == tokenType::RETURN)
-		throw scriptError_t(&token, std::format("the return keyword was unexpected"));
+	
 
 	if (token.tt == tokenType::NAME) {
+
+		auto function_table = block->get_function_table();
+		auto func = function_table->find(token.string);
+
+		if (func != function_table->end()) {
+			function = &func->second;
+			return;
+		}
 
 		auto result = block->find_variable(token.string);
 
@@ -167,12 +171,12 @@ void expression_token::cast_to_type(const dataTypes_e target)
 	switch (target) {
 	case dataTypes_e::INT:
 		LOG("implicitly casting to 'int'\n");
-		set_value<int>(implicit_cast<int>());
+		//set_value<int>(implicit_cast<int>());
 		rval->set_type(dataTypes_e::INT);
 		break;
 	case dataTypes_e::FLOAT:
 		LOG("implicitly casting to 'float'\n");
-		set_value<float>(implicit_cast<float>());
+		//set_value<float>(implicit_cast<float>());
 		rval->set_type(dataTypes_e::FLOAT);
 		break;
 	}
@@ -214,30 +218,30 @@ datatype_declaration expression_token::get_datatype() const noexcept
 }
 template<typename T>
 T expression_token::implicit_cast() const {
-	if (typeid(T) == typeid(int)) {
-		switch (get_type()) {
-		case dataTypes_e::CHAR:
-			return static_cast<int>(get_char());
-		case dataTypes_e::INT:
-			return get_int();
-		case dataTypes_e::FLOAT:
-			return static_cast<int>(get_float());
-		default:
-			throw std::exception("this cast is illegal - this should never execute");
-		}
-	}
-	else if (typeid(T) == typeid(float)) {
-		switch (get_type()) {
-		case dataTypes_e::CHAR:
-			return static_cast<float>(get_char());
-		case dataTypes_e::INT:
-			return static_cast<float>(get_int());
-		case dataTypes_e::FLOAT:
-			return get_float();
-		default:
-			throw std::exception("this cast is illegal - this should never execute");
-		}
-	}
+	//if (typeid(T) == typeid(int)) {
+	//	switch (get_type()) {
+	//	case dataTypes_e::CHAR:
+	//		return static_cast<int>(get_char());
+	//	case dataTypes_e::INT:
+	//		return get_int();
+	//	case dataTypes_e::FLOAT:
+	//		return static_cast<int>(get_float());
+	//	default:
+	//		throw std::exception("this cast is illegal - this should never execute");
+	//	}
+	//}
+	//else if (typeid(T) == typeid(float)) {
+	//	switch (get_type()) {
+	//	case dataTypes_e::CHAR:
+	//		return static_cast<float>(get_char());
+	//	case dataTypes_e::INT:
+	//		return static_cast<float>(get_int());
+	//	case dataTypes_e::FLOAT:
+	//		return get_float();
+	//	default:
+	//		throw std::exception("this cast is illegal - this should never execute");
+	//	}
+	//}
 	throw std::exception("this cast is illegal - this should never execute");
 
 }

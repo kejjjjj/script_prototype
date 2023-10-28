@@ -75,6 +75,7 @@ void emit_function_declaration(script_t& script, scr_scope_t*& scope, code_segme
 	LOG("return type: " << function->return_datatype.get_as_text() << '\n');
 	LOG("num params: " << function->numArgs << '\n');
 
+	scope->add_to_function_table(*function.get());
 	scope->make_function_scope(function);
 
 	std::cout << "function -> " << scope->is_function_scope() << '\n';

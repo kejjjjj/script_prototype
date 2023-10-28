@@ -26,7 +26,7 @@ private:
 	void get_variable_declaration_type();
 	void get_identifier_name();
 	void get_type_modifiers();
-	void apply_modifiers(Variable* _target);
+	void apply_modifiers(Variable* _target, std::list<declaration_modifiers_e>::iterator& modifier);
 
 	bool parse_subscript();
 

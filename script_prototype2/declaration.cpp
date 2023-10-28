@@ -17,7 +17,8 @@ code_segment_t variable_declaration_t::declare_and_initialize(bool initializer_a
 		
 	target = block->declare_variable(std::move(std::unique_ptr<Variable>(new Variable(var_declr_data{ datatype.dtype, identifier, NULL }))));
 
-	apply_modifiers(target);
+	auto modifier = datatype.typeModifiers.begin();
+	apply_modifiers(target, modifier);
 
 	LOG("declaring a variable of type \"" << target->s_getvariabletype() << "\" with the name of \"" << target->identifier << "\"\n");
 
@@ -156,19 +157,16 @@ bool variable_declaration_t::parse_subscript()
 
 }
 
-void variable_declaration_t::apply_modifiers(Variable* _target)
+void variable_declaration_t::apply_modifiers(Variable* _target, std::list<declaration_modifiers_e>::iterator& modifier)
 {
-	if (datatype.typeModifiers.empty()) {
+	if (modifier == datatype.typeModifiers.end()) {
 		return;
 	}
 
-	auto modifier = datatype.typeModifiers.front();
-	datatype.typeModifiers.pop_front();
-
-	switch (modifier) {
+	switch (*modifier) {
 	case declaration_modifiers_e::ARRAY:
 		_target->create_array(); //create an array of size 1
-		return apply_modifiers(_target->arrayElements[0].get()); //and then do this to every child
+		return apply_modifiers(_target->arrayElements[0].get(), ++modifier); //and then do this to every child
 	default:
 		throw scriptError_t("this modifier case should never execute!");
 	}

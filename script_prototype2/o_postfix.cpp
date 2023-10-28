@@ -8,6 +8,7 @@ void postfixFunctions::createFunctions()
 		return;
 
 	postfix_functions.insert({ P_BRACKET_OPEN, subscript });
+	postfix_functions.insert({ P_PAR_OPEN, function_call });
 
 	init = true;
 }
@@ -28,56 +29,59 @@ void postfixFunctions::subscript(scr_scope_t* block, expression_token& operand, 
 		throw scriptError_t(&*statement->expression.it, "expression must evaluate to an integral type");
 	}
 
-	const int index = result.get_int();
+	//const int index = result.get_int();
 
-	if (index >= operand.lval->numElements) {
-		throw scriptError_t(&*statement->expression.it, std::format("attempted to access array index {} when maxSize was {}", index, operand.lval->numElements));
+	//if (index >= operand.lval->numElements) {
+	//	throw scriptError_t(&*statement->expression.it, std::format("attempted to access array index {} when maxSize was {}", index, operand.lval->numElements));
 
-	}
+	//}
 
-	operand.lval = operand.lval->arrayElements[index].get();
+	operand.lval = operand.lval->arrayElements[0].get();
 
 	LOG("array lvalue updated\n");
 
 	return;
 }
 
-
-
-
-//misc
-
-bool ExpressionFindMatchingBracket(code_segment_t& token)
+void postfixFunctions::function_call(scr_scope_t* block, expression_token& operand, postfixBase* code)
 {
-	const auto is_opening = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_BRACKET_OPEN;
-	};
-	const auto is_closing = [](const token_t& token) {
-		return token.tt == tokenType::PUNCTUATION && LOWORD(token.extrainfo) == punctuation_e::P_BRACKET_CLOSE;
-	};
-
-	if (is_opening(*token.it) == false)
-		return 0;
-
-	token.it++;
-	size_t numOpen = 1;
-	size_t numClosing = 0;
-
-	while (token.it != token.end) {
-		if (is_opening(*token.it))
-			numOpen++;
-
-		else if (is_closing(*token.it)) {
-			numClosing++;
-
-			if (numOpen == numClosing) {
-				return 1;
-			}
-		}
-
-		token.it++;
+	if (!operand.is_function()) {
+		throw scriptError_t(&operand.get_token(), std::format("\"{}\" does not have a function type", operand.get_token().string));
 	}
 
-	throw scriptError_t(&*token.it, "expected to find a \"]\"");
+	LOG("CALLING FUNCTION\n");
+
+	postfix_parenthesis* callee = dynamic_cast<postfix_parenthesis*>(code);
+	auto target_function = operand.function;
+
+	LOG("source args: " << callee->args.size() << " and target args: " << target_function->numArgs << '\n');
+
+	if (callee->args.size() != target_function->numArgs) {
+		throw scriptError_t(&operand.get_token(), std::format("expected {} arguments to function call but got {}", target_function->numArgs, callee->args.size()));
+	}
+
+	auto target_it = target_function->args.begin();
+	size_t currentArg = 1;
+
+	for (auto callee_it = callee->args.begin(); callee_it != callee->args.end(); callee_it++) {
+
+		if (!callee_it->has_value()) {
+			throw scriptError_t(&operand.get_token(), std::format("argument {}: empty expression not allowed", currentArg));
+			continue;
+		}
+
+		const expression_token result = eval_expression(block, callee_it->value());
+		const auto left_type = result.is_lvalue() ? result.lval->s_getvariabletype() : get_type_as_text(result.get_type());
+
+		if (!result.is_compatible_with_type(*target_it)) {
+			throw scriptError_t(&operand.get_token(), std::format("argument {}: cannot cast from {} to {}", currentArg, left_type, target_it->get_as_text()));
+
+		}
+
+		++target_it;
+		++currentArg;
+	}
+
+	//todo: expression_token to return type
 
 }

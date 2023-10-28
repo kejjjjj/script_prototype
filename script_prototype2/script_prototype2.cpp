@@ -28,6 +28,8 @@ int main()
 
     scr_scope_t* global_scope = (new scr_scope_t);
     
+    global_scope->set_function_table(new std::unordered_map<std::string, function_table_s>);
+
     std::chrono::time_point<std::chrono::steady_clock> old = std::chrono::steady_clock::now();
 
 
@@ -71,7 +73,15 @@ int main()
     global_scope->print_localvars();
     std::cout << "\n--------------------------------\n";
 
-    delete global_scope;
+    while (global_scope) {
+
+        if (global_scope->is_global_scope()) {
+            delete global_scope->get_function_table();
+        }
+
+        global_scope = global_scope->on_exit();
+    }
+    //delete global_scope;
 
     //std::cout << "\n******** BEGIN RUNTIME ********\n";
 

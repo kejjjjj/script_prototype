@@ -55,13 +55,13 @@ std::list<expression_token> tokenize_expression(code_segment_t& tokens, scr_scop
 			if (tokens.it == tokens.end)
 				throw scriptError_t(&*tokens.it, std::format("expected an expression before \"{}\"\n", tokens.it->string));
 
-			throw scriptError_t(&*tokens.it, std::format("expected an operator or \";\" instead of \"{}\"\n", tokens.it->string));
+			throw scriptError_t(&*tokens.it, std::format("expected an operator or end of expression instead of \"{}\"\n", tokens.it->string));
 
 		}
 
 	}
 	if (sortedTokens.back().op) {
-		throw scriptError_t(&*tokens.it, std::format("unexpected end-of-expression \"{}\"", tokens.it->string));
+		throw scriptError_t(&*tokens.it, std::format("unexpected end of expression \"{}\"", tokens.it->string));
 	}
 
 	return sortedTokens;

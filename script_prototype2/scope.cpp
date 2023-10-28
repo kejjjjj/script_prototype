@@ -52,20 +52,22 @@ void Codeblock_read(script_t& script, scr_scope_t** codeblock)
 
 }
 
-scr_scope_t* create_scope(script_t& script, const scr_scope_t* block)
+scr_scope_t* create_scope(script_t& script, scr_scope_t* block)
 {
     scr_scope_t* scope = create_scope_without_range(block);
     set_range_for_scope(script, scope);
 
     return scope;
 }
-scr_scope_t* create_scope_without_range(const scr_scope_t* block)
+scr_scope_t* create_scope_without_range(scr_scope_t* block)
 {
     scr_scope_t* scope = (new scr_scope_t); //one could say this is bad but it's so well memory managed that it's ok :)
     //it gets freed if the script comes across a }
     //or if an exception occurs
 
     scope->set_lower_scope(block);
+    scope->set_function_table(block->get_function_table());
+
 
     return scope;
 }

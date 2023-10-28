@@ -11,6 +11,21 @@ struct codepos_t
 
 struct function_scope;
 
+struct function_table_s
+{
+	size_t numArgs = 0;
+	std::list<datatype_declaration> args;
+	datatype_declaration return_datatype;
+};
+struct function_scope
+{
+	std::string identifier;
+	size_t numArgs = 0;
+	std::list<datatype_declaration> param_types;
+	datatype_declaration return_datatype;
+	bool function_will_return = false;
+};
+
 class scr_scope_t
 {
 public:
@@ -23,6 +38,7 @@ public:
 
 	void set_lower_scope(const scr_scope_t* scope) noexcept {
 		lower_scope = const_cast<scr_scope_t*>(scope); 
+
 	}
 	auto get_lower() noexcept { return lower_scope; }
 	void emit_to_lower_scope(const statementType_e type) noexcept { 
@@ -36,7 +52,6 @@ public:
 	{
 		function_scope = std::move(function);
 	};
-
 	function_scope* is_function_scope() noexcept {
 		
 		if (is_global_scope())
@@ -70,6 +85,20 @@ public:
 
 	}
 
+	void set_function_table(std::unordered_map<std::string, function_table_s>* table) { function_table = table; }
+	decltype(auto) get_function_table() noexcept { return function_table; }
+
+	void add_to_function_table(const function_scope& data) {
+		function_table->insert({
+			data.identifier,
+			function_table_s
+			{
+				.numArgs = data.numArgs,
+				.args = data.param_types,
+				.return_datatype = data.return_datatype
+			} });
+	}
+
 	std::optional<statementType_e> get_scope_context() const noexcept { return upper_scope_type; }
 
 	void set_range(codepos_t&& begin, codepos_t&& end) noexcept {
@@ -86,26 +115,29 @@ public:
 
 	auto on_exit(){
 
-		if (!lower_scope)
-			throw scriptError_t("how the hell is lowerscope a null pointer");
 
 		LOG("exiting scope\n");
 		print_localvars();
 		localVars->erase_all();
+
 		return lower_scope;
 	}
 private:
+
+
 	codepos_t codepos_begin{};
 	scr_scope_t* lower_scope = 0;
 	std::unique_ptr<VariableTable> localVars;
 	codepos_t codepos_end{};
 	std::unique_ptr<function_scope> function_scope;
 	std::optional<statementType_e> upper_scope_type;
+	std::unordered_map<std::string, function_table_s>* function_table = 0;
+
 };
 
 void Codeblock_read(script_t& script, scr_scope_t** block);
 
-scr_scope_t* create_scope_without_range(const scr_scope_t* block);
-scr_scope_t* create_scope(script_t& script, const scr_scope_t* block);
+scr_scope_t* create_scope_without_range(scr_scope_t* block);
+scr_scope_t* create_scope(script_t& script, scr_scope_t* block);
 void set_range_for_scope(script_t& script, scr_scope_t* scope);
 scr_scope_t* delete_scope(script_t& script, scr_scope_t* block);

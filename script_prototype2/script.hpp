@@ -12,10 +12,10 @@ enum class tokenType : char
 	FLOAT_LITERAL,
 	STRING_LITERAL,
 	CHAR_LITERAL,
+	NAME,
 	BUILT_IN_TYPE,
 	IF_STATEMENT,
 	ELSE_STATEMENT,
-	NAME,
 	PUNCTUATION,
 	FUNCTION,
 	RETURN
@@ -101,6 +101,7 @@ struct script_t
 
 	bool is_eof() const noexcept { return token_it == tokens.end(); }
 
+
 private:
 	bool eof_allowed = true;
 
@@ -112,7 +113,6 @@ private:
 	bool S_ReadCharacterLiteral(token_t& token);
 	bool S_ReadPunctuation(token_t& token);
 	bool S_ParseInt(token_t& token);
-
 	std::list<token_t> tokens;
 	decltype(tokens)::iterator token_it;
 };

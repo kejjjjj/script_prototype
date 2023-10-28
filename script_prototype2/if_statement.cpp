@@ -40,12 +40,6 @@ void eval_if_statement(script_t& script, scr_scope_t*& scope, code_segment_t cod
 		throw scriptError_t(&token.get_token(), "expression must be convertible to a boolean type");
 	}
 
-	if (token.implicit_cast<int>()) {
-		LOG("yippee the if statement will execute because the expression evaluated to: " << token.get_int() << '\n');
-	}
-	else
-		LOG("oh no the if statement will not execute because the expression evaluated to: " << token.get_int() << '\n');
-
 	code.it = code.end;
 	code.it++; // go to the { token
 

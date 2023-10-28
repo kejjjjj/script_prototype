@@ -30,25 +30,17 @@ expression_token evaluationFunctions::arithmetic_addition(expression_token& left
 	expression_token result;
 	result.rval = std::unique_ptr<rvalue>(new rvalue({.type=left.get_type(), .size=NULL, .token=&left.get_token()}));
 
-	switch (left.get_type()) {
-	case dataTypes_e::CHAR:
-		LOG(left.get_char() << " + " << right.get_char() << " = ");
-		result.set_value<int>(left.get_char() + right.get_char());
-		LOG(result.get_char() << '\n');
-		break;
-	case dataTypes_e::INT:
-		LOG(left.get_int() << " + " << right.get_int() << " = ");
-		result.set_value<int>(left.get_int() + right.get_int());
-		LOG(result.get_int() << '\n');
-		break;
-	case dataTypes_e::FLOAT:
-		LOG(left.get_float() << " + " << right.get_float() << " = ");
-
-		result.set_value<float>(left.get_float() + right.get_float());
-		LOG(result.get_float() << '\n');
-
-		break;
-	}
+	//switch (left.get_type()) {
+	//case dataTypes_e::CHAR:
+	//	result.set_value<int>(left.get_char() + right.get_char());
+	//	break;
+	//case dataTypes_e::INT:
+	//	result.set_value<int>(left.get_int() + right.get_int());
+	//	break;
+	//case dataTypes_e::FLOAT:
+	//	result.set_value<float>(left.get_float() + right.get_float());
+	//	break;
+	//}
 
 	return result;
 
@@ -75,23 +67,17 @@ expression_token evaluationFunctions::assignment(expression_token& left, express
 	left.implicit_cast(right);
 
 
-	switch (left.get_type()) {
-	case dataTypes_e::CHAR:
-		LOG("assigning from " << left.get_char() << " -> ");
-		left.set_value<int>(right.get_char());
-		LOG(left.get_char() << '\n');
-		break;
-	case dataTypes_e::INT:
-		LOG("assigning from " << left.get_int() << " -> ");
-		left.set_value<int>(right.get_int());
-		LOG(left.get_int() << '\n');
-		break;
-	case dataTypes_e::FLOAT:
-		LOG("assigning from " << left.get_float() << " -> ");
-		left.set_value<float>(right.get_float());
-		LOG(left.get_float() << '\n');
-		break;
-	}
+	//switch (left.get_type()) {
+	//case dataTypes_e::CHAR:
+	//	left.set_value<int>(right.get_char());
+	//	break;
+	//case dataTypes_e::INT:
+	//	left.set_value<int>(right.get_int());
+	//	break;
+	//case dataTypes_e::FLOAT:
+	//	left.set_value<float>(right.get_float());
+	//	break;
+	//}
 	left.lval->isInitialized = true;
 	return std::move(left);
 }

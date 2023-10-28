@@ -88,7 +88,7 @@ std::optional<code_segment_t> script_t::create_code_segment(scr_scope_t** scope)
 		end++;
 	}
 
-	const auto last_token = (--end++);
+	const auto& last_token = (--end++);
 
 	if (last_token->tt == tokenType::PUNCTUATION && (LOWORD(last_token->extrainfo) == P_SEMICOLON || LOWORD(last_token->extrainfo) == P_CURLYBRACKET_CLOSE)) {
 		end = tokens.end();

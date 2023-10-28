@@ -29,7 +29,6 @@ struct postfix_parenthesis : public postfixBase
 	punctuation_e getType() const override {
 		return punctuation_e::P_PAR_OPEN;
 	}
-
 	std::list<std::optional<code_segment_t>> args;
 };
 
@@ -67,7 +66,7 @@ struct expression_token
 		return token.tt >= tokenType::NUMBER_LITERAL && token.tt <= tokenType::CHAR_LITERAL;
 	}
 
-	void print() const noexcept;
+	//void print() const noexcept;
 
 	auto get_type() const {
 		if (is_lvalue())
@@ -78,33 +77,33 @@ struct expression_token
 		throw scriptError_t(&token, "get_type() without value ok");
 	}
 
-	int get_int() const { 
-		if (is_lvalue())
-			return lval->get_int();
-		else if (is_rvalue())
-			return rval->get_int();
+	//int get_int() const { 
+	//	if (is_lvalue())
+	//		return lval->get_int();
+	//	else if (is_rvalue())
+	//		return rval->get_int();
 
-		throw scriptError_t(&token, "get_int() without value ok");
-	}
-	float get_float() const {
-		if (is_lvalue())
-			return lval->get_float();
-		else if (is_rvalue())
-			return rval->get_float();
+	//	throw scriptError_t(&token, "get_int() without value ok");
+	//}
+	//float get_float() const {
+	//	if (is_lvalue())
+	//		return lval->get_float();
+	//	else if (is_rvalue())
+	//		return rval->get_float();
 
-		throw scriptError_t(&token, "get_float() without value ok");
-	}
-	char get_char() const {
-		if (is_lvalue())
-			return lval->get_char();
-		else if (is_rvalue())
-			return rval->get_char();
+	//	throw scriptError_t(&token, "get_float() without value ok");
+	//}
+	//char get_char() const {
+	//	if (is_lvalue())
+	//		return lval->get_char();
+	//	else if (is_rvalue())
+	//		return rval->get_char();
 
-		throw scriptError_t(&token, "get_char() without value ok");
-	}
+	//	throw scriptError_t(&token, "get_char() without value ok");
+	//}
 	bool is_lvalue() const noexcept { return lval; }
 	bool is_rvalue() const noexcept { return rval.get(); }
-
+	bool is_function() const noexcept { return function; }
 	template<typename T>
 	void set_value(T value) {
 		if (is_rvalue())
@@ -119,7 +118,6 @@ struct expression_token
 			return lval->value.buf_size;
 
 		throw scriptError_t(&token, "unknown expression used in size_of()");
-
 
 	}
 	size_t array_depth() const {
@@ -141,6 +139,7 @@ struct expression_token
 
 	std::shared_ptr<rvalue> rval;
 	Variable* lval = 0;
+	const function_table_s* function = 0;
 
 	std::list<token_t*> prefix;
 	std::list<std::shared_ptr<postfixBase>> postfix;
